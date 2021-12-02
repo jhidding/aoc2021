@@ -1,0 +1,66 @@
+cabal-version:      2.4
+name:               x2021
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+-- license:
+author:             Johan Hidding
+maintainer:         j.hidding@esciencecenter.nl
+
+-- A copyright notice.
+-- copyright:
+-- category:
+extra-source-files:
+    CHANGELOG.md
+    README.md
+
+executable x2021
+    main-is:          Main.hs
+
+    -- Modules included in this executable, other than Main.
+    other-modules:    Day01
+                    , Day02
+                    , Day03
+                    , Day04
+                    , Day05
+                    , Day06
+                    , Day07
+                    , Day08
+                    , Day09
+                    , Day10
+                    , Day11
+                    , Day12
+                    , Day13
+                    , Day14
+                    , Day15
+                    , Day16
+                    , Day17
+                    , Day18
+                    , Day19
+                    , Day20
+                    , Day21
+                    , Day22
+                    , Day23
+                    , Day24
+                    , Parsing
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:   base ^>=4.14.3.0
+                   , rio
+                   , optparse-applicative
+                   , megaparsec
+    hs-source-dirs:   app
+    default-language: Haskell2010
+    default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns
+                         FlexibleContexts FlexibleInstances TypeFamilies GeneralizedNewtypeDeriving
+                         UndecidableSuperClasses

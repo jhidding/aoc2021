@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Advent of Code 2021</title>
+    <link>http://jhidding.github.io/aoc2021/</link>
+    <description>Recent content on Advent of Code 2021</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language><atom:link href="http://jhidding.github.io/aoc2021/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>http://jhidding.github.io/aoc2021/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://jhidding.github.io/aoc2021/</guid>
+      <description>Advent of Code 2021: my solutions in Haskell #  This year I will publish my solutions for Advent of Code in Haskell, using Entangled to do Literate Programming.
+Advent of Code #  Advent of Code is an anual coding challenge keeping nerds off the street for the entire merry month of decemeber. This is officially the best way to learn a new programming language or improve on your existing skills.</description>
+    </item>
+    
+  </channel>
+</rss>

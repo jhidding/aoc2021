@@ -1,0 +1,15 @@
+{
+  "name": "Advent of Code 2021",
+  "short_name": "Advent of Code 2021",
+  "start_url": "/aoc2021/",
+  "scope": "/aoc2021/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/aoc2021/favicon.svg",
+      "sizes": "512x512"
+    }
+  ]
+}

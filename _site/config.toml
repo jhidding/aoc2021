@@ -1,0 +1,13 @@
+baseURL = "http://jhidding.github.io/aoc2021"
+languageCode = "en-us"
+title = "Advent of Code 2021"
+subtitle = "solutions in Haskell"
+theme = ["hugo-book"]
+
+[params]
+BookTheme = 'dark'
+BookSection = 'lit'
+
+[markup.goldmark.renderer]
+unsafe= true
+
