@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300&display=swap');
+@import url(https://cdn.jsdelivr.net/npm/firacode@6.0.0/distr/fira_code.css);
+
+body {
+        margin: 0;
+        padding: 0;
+        color: #ddd;
+        background: #112;
+        font-family: "Fira Sans", sans-serif;
+        font-size: 13pt;
+}
+
+a {
+        color: #66ccff;
+        text-shadow: 0 0 5px #f0f;
+}
+
+a:hover {
+        color: #ffaadd;
+        text-shadow: 0 0 10px white;
+}
+
+.warning blockquote {
+        padding: 5pt 20pt 5pt 20pt;
+        margin-right: 100pt;
+        background: #324;
+        border-radius: 5pt;
+}
+
+#main h1 {
+      border-bottom: thin solid #ddd;  
+}
+
+#main p {
+}
+
+header {
+        background-image: url("./structure.jpg");
+        background-size: auto;
+        background-repeat: no-repeat;
+        margin: 0;
+        padding: 10pt 300pt 10pt 100pt;
+        text-shadow: 0 0 5pt black;
+}
+
+.footer {
+        background-image: url("./structure.jpg");
+        background-size: auto;
+        background-repeat: no-repeat;
+        margin: 0;
+        padding: 10pt 300pt 10pt 100pt;
+        text-shadow: 0 0 5pt black;
+}
+
+header h1 {
+        font-size: 40pt;
+        background: #00000080;
+        padding: 20pt 20pt 0 20pt;
+        margin-bottom: 0;
+}
+
+header .subtitle {
+        background: #00000080;
+        padding: 20pt;
+        padding-top: 0;
+        margin-top: 0;
+}
+
+header .author {
+        background: #00000080;
+        padding: 20pt;
+        margin-top: 0;
+}
+
+.named-code-block {
+        background: #332244;
+        border-radius: 5pt;
+        margin: 0 20pt 0 20pt;
+}
+
+.named-code-block p {
+        padding-top: 5pt;
+        margin-bottom: 2pt;
+        margin-left: 15pt;
+}
+.named-code-block .sourceCode {
+        margin-top: 0;
+}
+
+.named-code-block pre.sourceCode {
+        padding: 5pt 20pt 10pt 15pt;
+        border-top: double thick #435;
+        border-radius: 0 0 10pt 5pt;
+}
+
+.named-code-block div.sourceCode {
+        border-radius: 0 0 10pt 5pt;
+}
+
+:not(.named-code-block) > div.sourceCode {
+        margin: 0 20pt 0 20pt;
+        padding: 5pt;
+        border-radius: 5pt 5pt 5pt 5pt;
+}
+
+code {
+        font-size: smaller;
+        font-family: "Fira Code", monospace;
+}
+
+@supports (font-variation-settings: normal) {
+  code { font-family: 'Fira Code VF', monospace; }
+}
+
+/* Responsive design from w3schools */
+* {
+  box-sizing: border-box;
+}
+.row::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+[class*="col-"] {
+  float: left;
+  padding: 15px;
+}
+
+.header {
+  background-color: #9933cc;
+  color: #ffffff;
+  padding: 15px;
+}
+
+.menu ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu li {
+  padding: 8px;
+  margin-bottom: 7px;
+  color: #ffffff;
+}
+
+.menu li:hover {
+}
+
+.aside {
+  background-color: #33b5e5;
+  padding: 15px;
+  color: #ffffff;
+  text-align: center;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.footer {
+  background-color: #0099cc;
+  color: #ffffff;
+  text-align: center;
+  font-size: 12px;
+  padding: 15px;
+}
+
+/* For mobile phones: */
+[class*="col-"] {
+  width: 100%;
+}
+
+@media only screen and (min-width: 600px) {
+  .menu {
+          position: sticky;
+          top: 0;
+  }
+      
+  /* For tablets: */
+  .col-s-1 {width: 8.33%;}
+  .col-s-2 {width: 16.66%;}
+  .col-s-3 {width: 25%;}
+  .col-s-4 {width: 33.33%;}
+  .col-s-5 {width: 41.66%;}
+  .col-s-6 {width: 50%;}
+  .col-s-7 {width: 58.33%;}
+  .col-s-8 {width: 66.66%;}
+  .col-s-9 {width: 75%;}
+  .col-s-10 {width: 83.33%;}
+  .col-s-11 {width: 91.66%;}
+  .col-s-12 {width: 100%;}
+}
+
+@media only screen and (min-width: 768px) {
+  .menu {
+          position: sticky;
+          top: 0;
+  }
+  /* For desktop: */
+  .col-1 {width: 8.33%;}
+  .col-2 {width: 16.66%;}
+  .col-3 {width: 25%;}
+  .col-4 {width: 33.33%;}
+  .col-5 {width: 41.66%;}
+  .col-6 {width: 50%;}
+  .col-7 {width: 58.33%;}
+  .col-8 {width: 66.66%;}
+  .col-9 {width: 75%;}
+  .col-10 {width: 83.33%;}
+  .col-11 {width: 91.66%;}
+  .col-12 {width: 100%;}
+}

@@ -59,6 +59,7 @@ executable x2021
                    , rio
                    , optparse-applicative
                    , megaparsec
+                   , vector ^>=0.12
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns

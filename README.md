@@ -1,9 +1,18 @@
-# Advent of Code 2021: my solutions in Haskell
+---
+title: "Advent of Code 2021"
+subtitle: "solutions, literally in Haskell"
+author: "Johan Hidding"
+---
+[![Entangled badge](https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff)](https://entangled.github.io/)
+[![Github badge](https://img.shields.io/badge/github-clone%20me-%44ee55ff)](https://github.com/jhidding/aoc2021/)
+
+# Advent of Code 2021
 This year I will publish my solutions for Advent of Code in Haskell, using Entangled to do **Literate Programming**.
 
 ## Advent of Code
 [Advent of Code](https://www.adventofcode.com) is an anual coding challenge keeping nerds off the street for the entire merry month of decemeber. This is officially the best way to learn a new programming language or improve on your existing skills.
 
+{.warning}
 > ### Spoiler warning
 > If you're still trying to solve AOC2021, this site contains spoilers.
 

@@ -1,10 +1,4 @@
----
-title: "Day 1: Sonar Sweep"
-date: 2021-12-01
-summary: "Ascending data sequences"
-weight: 2
----
-
+# Day 1: Sonar Sweep
 It seems we are going on a deep dive this year! We are given the height data of a sonar sweep of the bottom of the sea.
 
 ``` {.haskell file=app/Day01.hs}
@@ -21,7 +15,7 @@ import qualified RIO.Text as Text
 ``` {.gnuplot action=plot output=fig/day01.svg}
 My input data
 ---
-plot "data/day01.txt" w l
+plot "data/day01.txt" w l ls 1
 ```
 
 The question is: how often do we find this sequence ascending? We may solve this by computing the difference between each consecutive element in the input list. Then we need to know the number of possitive numbers in the difference list:

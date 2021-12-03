@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Johan Hidding" />
+  <title>Advent of Code 2021</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cccccc; background-color: #332244; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ffcfaf; } /* Alert */
+    code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+    code span.at { } /* Attribute */
+    code span.bn { color: #dca3a3; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #f0dfaf; } /* ControlFlow */
+    code span.ch { color: #dca3a3; } /* Char */
+    code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+    code span.co { color: #7f9f7f; } /* Comment */
+    code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+    code span.do { color: #7f9f7f; } /* Documentation */
+    code span.dt { color: #dfdfbf; } /* DataType */
+    code span.dv { color: #dcdccc; } /* DecVal */
+    code span.er { color: #c3bf9f; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #c0bed1; } /* Float */
+    code span.fu { color: #efef8f; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+    code span.kw { color: #f0dfaf; } /* Keyword */
+    code span.op { color: #f0efd0; } /* Operator */
+    code span.ot { color: #efef8f; } /* Other */
+    code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+    code span.sc { color: #dca3a3; } /* SpecialChar */
+    code span.ss { color: #cc9393; } /* SpecialString */
+    code span.st { color: #cc9393; } /* String */
+    code span.va { } /* Variable */
+    code span.vs { color: #cc9393; } /* VerbatimString */
+    code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="dark.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Advent of Code 2021</h1>
+<p class="subtitle">solutions, literally in Haskell</p>
+<p class="author">Johan Hidding</p>
+</header>
+<div class="row">
+         <div class="col-3 col-s-3 menu">
+                <nav id="TOC" role="doc-toc">
+                                <ul>
+                                <li><a href="#advent-of-code-2021">Advent of Code 2021</a>
+                                <ul>
+                                <li><a href="#advent-of-code">Advent of Code</a></li>
+                                <li><a href="#entangled">Entangled</a></li>
+                                <li><a href="#instructions">Instructions</a></li>
+                                <li><a href="#license">License</a></li>
+                                </ul></li>
+                                <li><a href="#day-1-sonar-sweep">Day 1: Sonar Sweep</a></li>
+                                <li><a href="#day-2-dive">Day 2: Dive!</a></li>
+                                <li><a href="#appendix-boiler-plate">Appendix: Boiler plate</a></li>
+                                <li><a href="#appendix-parsing">Appendix: Parsing</a></li>
+                                </ul>
+                </nav>
+        </div> 
+        <div class="col-6 col-s-9" id="main">
+<p><a href="https://entangled.github.io/"><img src="https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff" alt="Entangled badge" /></a> <a href="https://github.com/jhidding/aoc2021/"><img src="https://img.shields.io/badge/github-clone%20me-%44ee55ff" alt="Github badge" /></a></p>
+<h1 id="advent-of-code-2021">Advent of Code 2021</h1>
+<p>This year I will publish my solutions for Advent of Code in Haskell, using Entangled to do <strong>Literate Programming</strong>.</p>
+<h2 id="advent-of-code">Advent of Code</h2>
+<p><a href="https://www.adventofcode.com">Advent of Code</a> is an anual coding challenge keeping nerds off the street for the entire merry month of decemeber. This is officially the best way to learn a new programming language or improve on your existing skills.</p>
+<div class="warning">
+<blockquote>
+<h3 id="spoiler-warning">Spoiler warning</h3>
+<p>If you’re still trying to solve AOC2021, this site contains spoilers.</p>
+</blockquote>
+</div>
+<h2 id="entangled">Entangled</h2>
+<p><a href="https://entangled.github.io">Entangled</a> is a tool for Literate Programming. My challenge for this years’ Advent of Code is to create a set of beautifull solutions, that are completely documented in a literate form. The idea is that the code you see here is the complete solution to a problem. Think of Entangled as a content-management system for code blocks in your Markdown documents. The code blocks are assembled into compilable code, while changes are also tracked back to your markdown files. This means you can still debug and work with your favourite IDE.</p>
+<h2 id="instructions">Instructions</h2>
+<p>To run this code, I recommend installing Haskell using the <a href="https://www.haskell.org/ghcup/">GHCUp installer</a>. Run all solutions:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cabal</span> run x2021 <span class="at">--</span> <span class="at">-a</span></span></code></pre></div>
+<h2 id="license">License</h2>
+<p>This code is licensed under the Apache v2 license, see <code>LICENSE</code> file in this repository.</p>
+<h1 id="day-1-sonar-sweep">Day 1: Sonar Sweep</h1>
+<p>It seems we are going on a deep dive this year! We are given the height data of a sonar sweep of the bottom of the sea.</p>
+<div class="named-code-block">
+<p>file:app/Day01.hs</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day01</span> <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span><span class="fu">read</span><span class="op">-</span>integer<span class="op">-</span>list<span class="op">&gt;&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">1</span><span class="op">&gt;&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+</div>
+<p><img src="../../fig/day01.svg" alt="My input data" /></p>
+<p>The question is: how often do we find this sequence ascending? We may solve this by computing the difference between each consecutive element in the input list. Then we need to know the number of possitive numbers in the difference list:</p>
+<div class="named-code-block">
+<p>«solution-day-1»</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">.</span> diff</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> diff (a1<span class="op">:</span>a2<span class="op">:</span>as) <span class="ot">=</span> a2 <span class="op">-</span> a1 <span class="op">:</span> diff (a2<span class="op">:</span>as)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>          diff _          <span class="ot">=</span> []</span></code></pre></div>
+</div>
+<p>In the second part we need to do a sliding sum over the list of input numbers, reducing the problem to that of part A:</p>
+<div class="named-code-block">
+<p>«solution-day-1»</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> solutionA <span class="op">.</span> slidingSum</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> slidingSum (a1<span class="op">:</span>a2<span class="op">:</span>a3<span class="op">:</span>as) <span class="ot">=</span> a1 <span class="op">+</span> a2 <span class="op">+</span> a3 <span class="op">:</span> slidingSum (a2<span class="op">:</span>a3<span class="op">:</span>as)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>          slidingSum _             <span class="ot">=</span> []</span></code></pre></div>
+</div>
+<p>In hindsight, a more efficient solution would be:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">.</span> diff3</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> diff3 (a1<span class="op">:</span>a2<span class="op">:</span>a3<span class="op">:</span>a4<span class="op">:</span>as) <span class="ot">=</span> a4 <span class="op">-</span> a1 <span class="op">:</span> diff3 (a2<span class="op">:</span>a3<span class="op">:</span>a4<span class="op">:</span>as)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>          diff3 _                <span class="ot">=</span> []</span></code></pre></div>
+<p>The middle terms in the finite difference drop out.</p>
+<h1 id="day-2-dive">Day 2: Dive!</h1>
+<p>We are given our first mini instruction set! We need to steer the submarine using an instruction set <code>forward</code>, <code>down</code> or <code>up</code> with a number attached. We get to do our first parsing of this year (yay!).</p>
+<div class="named-code-block">
+<p>file:app/Day02.hs</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day02</span> <span class="kw">where</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (foldl)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (readInputParsing, <span class="dt">Parser</span>, lexeme, string, integer, sepEndBy1, eol)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">2</span><span class="op">&gt;&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+</div>
+<p>We start by defining a datatype and the associated parser:</p>
+<div class="named-code-block">
+<p>«solution-day-2»</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Instruction</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">GoForward</span> <span class="dt">Int</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">GoUp</span> <span class="dt">Int</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">GoDown</span> <span class="dt">Int</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="ot">instructions ::</span> <span class="dt">Parser</span> [<span class="dt">Instruction</span>]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>instructions <span class="ot">=</span> sepEndBy1 (lexeme direction <span class="op">&lt;*&gt;</span> integer) eol</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> direction <span class="ot">=</span>   (string <span class="st">&quot;forward&quot;</span> <span class="op">$&gt;</span> <span class="dt">GoForward</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&lt;|&gt;</span> (string <span class="st">&quot;up&quot;</span>      <span class="op">$&gt;</span> <span class="dt">GoUp</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&lt;|&gt;</span> (string <span class="st">&quot;down&quot;</span>    <span class="op">$&gt;</span> <span class="dt">GoDown</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">MonadIO</span> m, <span class="dt">MonadReader</span> env m, <span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> m [<span class="dt">Instruction</span>]</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day02.txt&quot;</span> instructions</span></code></pre></div>
+</div>
+<p>In the first part, we are asked to do some Turtle movement. We can reduce the set of instructions in a <code>foldl</code> if we define a function that updates the position for each move:</p>
+<div class="named-code-block">
+<p>«solution-day-2»</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Pos</span> <span class="ot">=</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ot">moveA ::</span> <span class="dt">Pos</span> <span class="ot">-&gt;</span> <span class="dt">Instruction</span> <span class="ot">-&gt;</span> <span class="dt">Pos</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>moveA (x, y) (<span class="dt">GoForward</span> dx) <span class="ot">=</span> (x <span class="op">+</span> dx, y)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>moveA (x, y) (<span class="dt">GoUp</span> dy)      <span class="ot">=</span> (x, y <span class="op">-</span> dy)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>moveA (x, y) (<span class="dt">GoDown</span> dy)    <span class="ot">=</span> (x, y <span class="op">+</span> dy)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Instruction</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>solutionA inst <span class="ot">=</span> x <span class="op">*</span> y</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> (x, y) <span class="ot">=</span> <span class="fu">foldl</span> moveA (<span class="dv">0</span>, <span class="dv">0</span>) inst</span></code></pre></div>
+</div>
+<p>In the second part, the interpretation of the instructions changes slightly, but the only thing we have to change is the <code>moveA</code> function and the corresponding accumulator data type (I’m using <code>NamedFieldPuns</code> and <code>RecordWildCards</code>, which I prefer over lenses in these simple cases):</p>
+<div class="named-code-block">
+<p>«solution-day-2»</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Navigation</span> <span class="ot">=</span> <span class="dt">Navigation</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> navDepth ::</span> <span class="dt">Int</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> navAim   ::</span> <span class="dt">Int</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> navPos   ::</span> <span class="dt">Int</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ot">moveB ::</span> <span class="dt">Navigation</span> <span class="ot">-&gt;</span> <span class="dt">Instruction</span> <span class="ot">-&gt;</span> <span class="dt">Navigation</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>moveB n<span class="op">@</span><span class="dt">Navigation</span>{<span class="op">..</span>} (<span class="dt">GoForward</span> x) <span class="ot">=</span> n{ navPos <span class="ot">=</span> navPos <span class="op">+</span> x</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                                        , navDepth <span class="ot">=</span> navDepth <span class="op">+</span> navAim <span class="op">*</span> x }</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>moveB n<span class="op">@</span><span class="dt">Navigation</span>{<span class="op">..</span>} (<span class="dt">GoUp</span> x)      <span class="ot">=</span> n{ navAim <span class="ot">=</span> navAim <span class="op">-</span> x }</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>moveB n<span class="op">@</span><span class="dt">Navigation</span>{<span class="op">..</span>} (<span class="dt">GoDown</span> x)    <span class="ot">=</span> n{ navAim <span class="ot">=</span> navAim <span class="op">+</span> x }</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Instruction</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>solutionB inst <span class="ot">=</span> navPos <span class="op">*</span> navDepth</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> <span class="dt">Navigation</span>{<span class="op">..</span>} <span class="ot">=</span> <span class="fu">foldl</span> moveB (<span class="dt">Navigation</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span>) inst</span></code></pre></div>
+</div>
+<h1 id="appendix-boiler-plate">Appendix: Boiler plate</h1>
+<div class="named-code-block">
+<p>«read-integer-list»</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> <span class="dt">MonadIO</span> m <span class="ot">=&gt;</span> m [<span class="dt">Int</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    text <span class="ot">&lt;-</span> Text.lines <span class="op">&lt;$&gt;</span> readFileUtf8 <span class="st">&quot;data/day01.txt&quot;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> mapMaybe (readMaybe <span class="op">.</span> Text.unpack) text</span></code></pre></div>
+</div>
+<div class="named-code-block">
+<p>«run-solutions»</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> solutionA <span class="op">&lt;$&gt;</span> readInput</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    logInfo <span class="op">$</span> display result</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> solutionB <span class="op">&lt;$&gt;</span> readInput</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    logInfo <span class="op">$</span> display result</span></code></pre></div>
+</div>
+<h1 id="appendix-parsing">Appendix: Parsing</h1>
+<div class="named-code-block">
+<p>file:app/Parsing.hs</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme, integer, eol</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    , sepEndBy1, sepBy1 )</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1, sepBy1 )</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
+</div>
+        </div>
+</div>
+<div class="footer">
+</div>
+</body>
+</html>

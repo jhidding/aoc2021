@@ -33,7 +33,7 @@ solutions :: Map Int (RIO SimpleApp (), RIO SimpleApp ())
 solutions = Map.fromList
     [  (1, (Day01.runA, Day01.runB))
     ,  (2, (Day02.runA, Day02.runB))
---    ,  (3, (Day03.runA, Day03.runB))
+    ,  (3, (Day03.runA, Day03.runB))
 --    ,  (4, (Day04.runA, Day04.runB))
 --    ,  (5, (Day05.runA, Day05.runB))
 --    ,  (6, (Day06.runA, Day06.runB))

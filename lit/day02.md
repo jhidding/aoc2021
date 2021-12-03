@@ -1,10 +1,4 @@
----
-title: "Day 2: Dive!"
-date: 2021-12-02
-summary: "Parsing and our first state machine."
-weight: 2
----
-
+# Day 2: Dive!
 We are given our first mini instruction set! We need to steer the submarine using an instruction set `forward`, `down` or `up` with a number attached. We get to do our first parsing of this year (yay!).
 
 ``` {.haskell file=app/Day02.hs}

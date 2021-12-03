@@ -1,10 +1,3 @@
----
-title: "Boilerplate"
-date: 2021-11-30
-summary: "Prep"
-weight: 10
----
-
 # Appendix: Boiler plate
 
 ``` {.haskell #read-integer-list}
