@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day03.hs
--- ~\~ begin <<lit/day03.md|app/Day03.hs>>[0]
+# Day 3: Binary Diagnostic
+
+``` {.haskell file=app/Day03.hs}
 module Day03 where
 
 import RIO
@@ -9,7 +10,14 @@ import Parsing (Parser, sepEndBy1, char, eol, readInputParsing)
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
 
--- ~\~ begin <<lit/day03.md|solution-day-3>>[0]
+<<solution-day-3>>
+
+<<run-solutions>>
+```
+
+Because of part 2 of this puzzle, I chose to put the bit sequence in a `Vector`.
+
+``` {.haskell #solution-day-3}
 type Bits = Vector Int
 
 bitSequence :: Parser [Bits]
@@ -21,8 +29,11 @@ bitSequence = sepEndBy1 bits eol
 
 readInput :: (HasLogFunc env) => RIO env [Bits]
 readInput = readInputParsing "data/day03.txt" bitSequence
--- ~\~ end
--- ~\~ begin <<lit/day03.md|solution-day-3>>[1]
+```
+
+We need to compute the most common digit for each bit position. I solve this by rounding of the mean bit value.
+
+``` {.haskell #solution-day-3}
 fromBinary :: Bits -> Int
 fromBinary = go 0 . Vector.toList
     where go n (b:bs) = go (2*n + b) bs
@@ -43,8 +54,11 @@ solutionA input = gammaRate * epsilonRate
     where gammaRate   = fromBinary mc
           epsilonRate = fromBinary $ invertBinary mc
           mc = mostCommon input
--- ~\~ end
--- ~\~ begin <<lit/day03.md|solution-day-3>>[2]
+```
+
+In the second part we need to filter down on a single bit in each iteration. The most or least common bit value needs to be computed every time, as it changes when bit sequences are filtered out.
+
+``` {.haskell #solution-day-3}
 findRating :: ([Bits] -> Bits) -> Int -> [Bits] -> Bits
 findRating _ _   [b]  = b
 findRating f idx bits =
@@ -60,13 +74,5 @@ co2ScrubberRating = fromBinary . findRating leastCommon 0
 
 solutionB :: [Bits] -> Int
 solutionB bits = oxygenGeneratorRating bits * co2ScrubberRating bits
--- ~\~ end
-
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . solutionB
--- ~\~ end
--- ~\~ end
+```
+ 

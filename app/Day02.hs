@@ -54,13 +54,9 @@ solutionB inst = navPos * navDepth
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
-runA = do 
-    result <- solutionA <$> readInput
-    logInfo $ display result
+runA = readInput >>= logInfo . display . solutionA 
 
 runB :: (HasLogFunc env) => RIO env ()
-runB = do 
-    result <- solutionB <$> readInput
-    logInfo $ display result
+runB = readInput >>= logInfo . display . solutionB
 -- ~\~ end
 -- ~\~ end

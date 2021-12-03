@@ -1,23 +1,11 @@
 # Appendix: Boiler plate
 
-``` {.haskell #read-integer-list}
-readInput :: MonadIO m => m [Int]
-readInput = do
-    text <- Text.lines <$> readFileUtf8 "data/day01.txt"
-    return $ mapMaybe (readMaybe . Text.unpack) text
-```
-
-
 ``` {.haskell #run-solutions}
 runA :: (HasLogFunc env) => RIO env ()
-runA = do 
-    result <- solutionA <$> readInput
-    logInfo $ display result
+runA = readInput >>= logInfo . display . solutionA 
 
 runB :: (HasLogFunc env) => RIO env ()
-runB = do 
-    result <- solutionB <$> readInput
-    logInfo $ display result
+runB = readInput >>= logInfo . display . solutionB
 ```
 
 # Appendix: Parsing

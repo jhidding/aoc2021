@@ -7,7 +7,11 @@ module Day01 where
 import RIO
 import qualified RIO.Text as Text
 
-<<read-integer-list>>
+readInput :: MonadIO m => m [Int]
+readInput = do
+    text <- Text.lines <$> readFileUtf8 "data/day01.txt"
+    return $ mapMaybe (readMaybe . Text.unpack) text
+
 <<solution-day-1>>
 <<run-solutions>>
 ```

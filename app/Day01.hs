@@ -5,12 +5,11 @@ module Day01 where
 import RIO
 import qualified RIO.Text as Text
 
--- ~\~ begin <<lit/boilerplate.md|read-integer-list>>[0]
 readInput :: MonadIO m => m [Int]
 readInput = do
     text <- Text.lines <$> readFileUtf8 "data/day01.txt"
     return $ mapMaybe (readMaybe . Text.unpack) text
--- ~\~ end
+
 -- ~\~ begin <<lit/day01.md|solution-day-1>>[0]
 solutionA :: [Int] -> Int
 solutionA = length . filter (> 0) . diff
@@ -25,13 +24,9 @@ solutionB = solutionA . slidingSum
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
-runA = do 
-    result <- solutionA <$> readInput
-    logInfo $ display result
+runA = readInput >>= logInfo . display . solutionA 
 
 runB :: (HasLogFunc env) => RIO env ()
-runB = do 
-    result <- solutionB <$> readInput
-    logInfo $ display result
+runB = readInput >>= logInfo . display . solutionB
 -- ~\~ end
 -- ~\~ end
