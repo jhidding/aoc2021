@@ -97,6 +97,7 @@
                                 <li><a href="#advent-of-code">Advent of Code</a></li>
                                 <li><a href="#entangled">Entangled</a></li>
                                 <li><a href="#instructions">Instructions</a></li>
+                                <li><a href="#generic-remarks">Generic remarks</a></li>
                                 <li><a href="#license">License</a></li>
                                 </ul></li>
                                 <li><a href="#day-1-sonar-sweep">Day 1: Sonar Sweep</a></li>
@@ -124,6 +125,8 @@
 <h2 id="instructions">Instructions</h2>
 <p>To run this code, I recommend installing Haskell using the <a href="https://www.haskell.org/ghcup/">GHCUp installer</a>. Run all solutions:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cabal</span> run x2021 <span class="at">--</span> <span class="at">-a</span></span></code></pre></div>
+<h2 id="generic-remarks">Generic remarks</h2>
+<p>All solutions use the <code>RIO</code> library to replace the standard <code>Prelude</code>. This saves a long list of standard imports and is much better suited to modern Haskell practices. Most of the input parsing is done through <code>Megaparsec</code>, for which I have a submodule that contains some common types and functions, see the <a href="#appendix-boiler-plate">boilerplate section</a>.</p>
 <h2 id="license">License</h2>
 <p>This code is licensed under the Apache v2 license, see <code>LICENSE</code> file in this repository.</p>
 <h1 id="day-1-sonar-sweep">Day 1: Sonar Sweep</h1>
@@ -333,17 +336,18 @@
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
 <span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
 <span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
 </div>
         </div>
 </div>

@@ -26,6 +26,9 @@ To run this code, I recommend installing Haskell using the [GHCUp installer](htt
 cabal run x2021 -- -a
 ```
 
+## Generic remarks
+All solutions use the `RIO` library to replace the standard `Prelude`. This saves a long list of standard imports and is much better suited to modern Haskell practices. Most of the input parsing is done through `Megaparsec`, for which I have a submodule that contains some common types and functions, see the [boilerplate section](#appendix-boiler-plate).
+
 ## License
 This code is licensed under the Apache v2 license, see `LICENSE` file in this repository.
 

@@ -17,7 +17,8 @@ type Parser = Parsec Void Text
 instance Display (ParseErrorBundle Text Void) where
     textDisplay = Text.pack . errorBundlePretty
 
-readInputParsing :: (MonadReader env m, MonadIO m, HasLogFunc env) => FilePath -> Parser a -> m a
+readInputParsing :: (MonadReader env m, MonadIO m, HasLogFunc env)
+                 => FilePath -> Parser a -> m a
 readInputParsing file p = do
     x <- parse p file <$> readFileUtf8 file
     either (\e -> do { logError $ display e; exitFailure })
