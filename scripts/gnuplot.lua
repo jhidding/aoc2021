@@ -52,7 +52,7 @@ function CodeBlock(block)
             os.execute("mkdir -p docs/$(dirname " .. outfile ..")")
             os.execute("gnuplot " .. tmpdir .. "/plot.gp")
         end)
-        return pandoc.Para({pandoc.Image({pandoc.Str(caption)}, "../" .. outfile)})
+        return pandoc.Para({pandoc.Image({pandoc.Str(caption)}, outfile)})
     end
 end
 
