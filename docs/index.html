@@ -310,31 +310,23 @@
 </div>
 <h1 id="day-4-giant-squid">Day 4: Giant Squid</h1>
 <p>We’re playing Bingo with a giant squid. This is why I love advent of Code!</p>
-<p>Doing contrived array arithmetic is not seen as the strong suit of Haskell. Solving this in Python with NumPy would be so much easier. I will use the nice <code>Massiv</code> library, that implements multi-dimensional arrays, fancy indexing, stencil operations etc.</p>
+<p>Doing contrived array arithmetic is not seen as the strong suit of Haskell. Solving this in Python with NumPy would seem so much easier. I will use the nice <code>Massiv</code> library, that implements multi-dimensional arrays, fancy indexing, stencil operations etc.</p>
 <div class="named-code-block">
 <p>file:app/Day04.hs</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day04</span> <span class="kw">where</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span> <span class="kw">hiding</span> (try)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (find)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.Except</span> (throwError)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (<span class="dt">Parser</span>, sepEndBy1, sepBy1, char, hspace, eol, integer, lexeme, readInputParsing)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (partition, headMaybe, lastMaybe)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> ( <span class="dt">Parser</span>, sepEndBy1, sepBy1, char, hspace, eol</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>               , integer, lexeme, readInputParsing</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>               , failOnException )</span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array.Mutable</span> <span class="kw">as</span> <span class="dt">MA</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span> (try, fancyFailure)</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Error</span> (<span class="dt">ErrorFancy</span>(..))</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span><span class="kw">data</span><span class="op">-</span>types<span class="op">-</span>day<span class="op">-</span><span class="dv">4</span><span class="op">&gt;&gt;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day<span class="op">-</span><span class="dv">4</span><span class="op">&gt;&gt;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">4</span><span class="op">&gt;&gt;</span></span>
 <span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span><span class="kw">data</span><span class="op">-</span>types<span class="op">-</span>day<span class="op">-</span><span class="dv">4</span><span class="op">&gt;&gt;</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day<span class="op">-</span><span class="dv">4</span><span class="op">&gt;&gt;</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">4</span><span class="op">&gt;&gt;</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 <p>We need to have integers that we can mark when we play Bingo. I’ll make a generic <code>Mark</code> container, that contains an extra boolean flag.</p>
 <div class="named-code-block">
@@ -344,22 +336,20 @@
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> markValue ::</span> a</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">Mark</span> a) <span class="kw">where</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">show</span> <span class="dt">Mark</span>{<span class="op">..</span>} <span class="ot">=</span> <span class="fu">show</span> markValue <span class="op">&lt;&gt;</span> <span class="kw">if</span> marked <span class="kw">then</span> <span class="st">&quot;*&quot;</span> <span class="kw">else</span> <span class="st">&quot; &quot;</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="ot">mark ::</span> <span class="dt">Mark</span> a <span class="ot">-&gt;</span> <span class="dt">Mark</span> a</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>mark <span class="dt">Mark</span>{ markValue } <span class="ot">=</span> <span class="dt">Mark</span> <span class="dt">True</span> markValue</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="ot">unmarked ::</span> <span class="dt">Mark</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>unmarked <span class="ot">=</span> <span class="fu">not</span> <span class="op">.</span> marked</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Board</span> <span class="ot">=</span> <span class="dt">A.Array</span> <span class="dt">A.B</span> <span class="dt">A.Ix2</span> (<span class="dt">Mark</span> <span class="dt">Int</span>)</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">MutableBoard</span> s <span class="ot">=</span> <span class="dt">MA.MArray</span> s <span class="dt">A.B</span> <span class="dt">A.Ix2</span> (<span class="dt">Mark</span> <span class="dt">Int</span>)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Bingo</span> <span class="ot">=</span> <span class="dt">Bingo</span></span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> draws ::</span> [<span class="dt">Int</span>]</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> boards ::</span> [<span class="dt">Board</span>]</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ot">markEq ::</span> (<span class="dt">Eq</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Mark</span> a <span class="ot">-&gt;</span> <span class="dt">Mark</span> a</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>markEq v <span class="dt">Mark</span>{ <span class="op">..</span> }</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> v <span class="op">==</span> markValue <span class="ot">=</span> <span class="dt">Mark</span> <span class="dt">True</span>   markValue</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span>      <span class="ot">=</span> <span class="dt">Mark</span> marked markValue</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="ot">unmarked ::</span> <span class="dt">Mark</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>unmarked <span class="ot">=</span> <span class="fu">not</span> <span class="op">.</span> marked</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Board</span> <span class="ot">=</span> <span class="dt">A.Array</span> <span class="dt">A.B</span> <span class="dt">A.Ix2</span> (<span class="dt">Mark</span> <span class="dt">Int</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Bingo</span> <span class="ot">=</span> <span class="dt">Bingo</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> draws ::</span> [<span class="dt">Int</span>]</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> boards ::</span> [<span class="dt">Board</span>]</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
 </div>
 <p>Next, we need to parse the input data.</p>
 <div class="named-code-block">
@@ -390,43 +380,31 @@
 <p>Each time a number is called we mark all matching values:</p>
 <div class="named-code-block">
 <p>«solution-day-4»</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">markOnBoard ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Board</span> <span class="ot">-&gt;</span> <span class="dt">Board</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>markOnBoard n <span class="ot">=</span> A.compute <span class="op">.</span> A.map mayMark</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> mayMark <span class="dt">Mark</span>{ <span class="op">..</span> }</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> markValue <span class="op">==</span> n <span class="ot">=</span> <span class="dt">Mark</span> <span class="dt">True</span> markValue</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> <span class="fu">otherwise</span>      <span class="ot">=</span> <span class="dt">Mark</span> marked markValue</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">markBoard ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Board</span> <span class="ot">-&gt;</span> <span class="dt">Board</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>markBoard n <span class="ot">=</span> A.compute <span class="op">.</span> A.map (markEq n)</span></code></pre></div>
 </div>
 <p>For part A we need to figure out, the first board to win and the last number that was called:</p>
 <div class="named-code-block">
 <p>«solution-day-4»</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstToWin ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Board</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Int</span>, <span class="dt">Board</span>)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>firstToWin []        _      <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>firstToWin (d<span class="op">:</span>draws) boards <span class="ot">=</span> <span class="kw">case</span> (find win nextBoards) <span class="kw">of</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Nothing</span> <span class="ot">-&gt;</span> firstToWin draws nextBoards</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Just</span> b  <span class="ot">-&gt;</span> <span class="dt">Just</span> (d, b)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> nextBoards <span class="ot">=</span> <span class="fu">map</span> (markOnBoard d) boards</span>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">winners ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Board</span>] <span class="ot">-&gt;</span> [(<span class="dt">Int</span>, <span class="dt">Board</span>)]</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>winners [] _  <span class="ot">=</span> []</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>winners _  [] <span class="ot">=</span> []</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>winners (d<span class="op">:</span>draws) boards <span class="ot">=</span> <span class="fu">map</span> (d,) won <span class="op">&lt;&gt;</span> winners draws lost</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> (won, lost) <span class="ot">=</span> partition win </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                      <span class="op">$</span> <span class="fu">map</span> (markBoard d) boards</span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="ot">score ::</span> (<span class="dt">Int</span>, <span class="dt">Board</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>score (n, b) <span class="ot">=</span> n <span class="op">*</span> <span class="fu">sum</span> (unmarkedValues <span class="op">$</span> A.toList b)</span>
 <span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> unmarkedValues <span class="ot">=</span> <span class="fu">map</span> markValue <span class="op">.</span> <span class="fu">filter</span> unmarked</span>
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Bingo</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>solutionA <span class="dt">Bingo</span>{<span class="op">..</span>} <span class="ot">=</span> score <span class="op">&lt;$&gt;</span> firstToWin draws boards</span></code></pre></div>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>solutionA <span class="dt">Bingo</span>{<span class="op">..</span>} <span class="ot">=</span> score <span class="op">&lt;$&gt;</span> headMaybe (winners draws boards)</span></code></pre></div>
 </div>
 <p>For part B we need to know the last board to win:</p>
 <div class="named-code-block">
 <p>«solution-day-4»</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">lastToWin ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Board</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Int</span>, <span class="dt">Board</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>lastToWin [] _ <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>lastToWin (d<span class="op">:</span>draws) [b]</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> win nextBoard <span class="ot">=</span> <span class="dt">Just</span> (d, nextBoard)</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> <span class="fu">otherwise</span>     <span class="ot">=</span> lastToWin draws [nextBoard]</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">where</span> nextBoard <span class="ot">=</span> markOnBoard d b</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>lastToWin (d<span class="op">:</span>draws) boards <span class="ot">=</span> lastToWin draws (<span class="fu">filter</span> (<span class="fu">not</span> <span class="op">.</span> win) nextBoards)</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">where</span> nextBoards <span class="ot">=</span> <span class="fu">map</span> (markOnBoard d) boards</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Bingo</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>solutionB <span class="dt">Bingo</span>{<span class="op">..</span>} <span class="ot">=</span> score <span class="op">&lt;$&gt;</span> lastToWin draws boards</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Bingo</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>solutionB <span class="dt">Bingo</span>{<span class="op">..</span>} <span class="ot">=</span> score <span class="op">&lt;$&gt;</span> lastMaybe (winners draws boards)</span></code></pre></div>
 </div>
 <h1 id="appendix-boiler-plate">Appendix: Boiler plate</h1>
 <div class="named-code-block">
@@ -441,34 +419,42 @@
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme, integer, eol</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    , sepEndBy1, sepBy1 )</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException )</span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1, sepBy1 )</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
 <span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
 </div>
         </div>
 </div>
