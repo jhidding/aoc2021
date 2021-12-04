@@ -79,28 +79,31 @@ markBoard :: Int -> Board -> Board
 markBoard n = A.compute . A.map (markEq n)
 ```
 
-For part A we need to figure out, the first board to win and the last number that was called:
+For part A we need to figure out, the first board to win and the last number that was called. I won't pretend this is the first implementation I came up with. After also solving part B, it turns out this is the most elegant and generic way to do it. The function `winners` generates a list of `(Int, Board)` pairs, giving in order each board winning and on what number:
 
 ``` {.haskell #solution-day-4}
-winners :: [Int] -> [Board] -> [(Int, Board)]
-winners [] _  = []
-winners _  [] = []
-winners (d:draws) boards = map (d,) won <> winners draws lost
-    where (won, lost) = partition win 
-                      $ map (markBoard d) boards
+winSeq :: [Int] -> [Board] -> [(Int, Board)]
+winSeq []       _       = []
+winSeq _        []      = []
+winSeq (d:draws) boards = map (d,) winners <> winSeq draws losers
+    where (winners, losers) = partition win $ markBoard d <$> boards
+```
 
+Now, to get the first winner, we can just get the `head` of the list of all winners:
+
+``` {.haskell #solution-day-4}
 score :: (Int, Board) -> Int
 score (n, b) = n * sum (unmarkedValues $ A.toList b)
     where unmarkedValues = map markValue . filter unmarked
 
 solutionA :: Bingo -> Maybe Int
-solutionA Bingo{..} = score <$> headMaybe (winners draws boards)
+solutionA Bingo{..} = score <$> headMaybe (winSeq draws boards)
 ```
 
-For part B we need to know the last board to win:
+For part B we need to know the last board to win, which is now a trivial ajustment:
 
 ``` {.haskell #solution-day-4}
 solutionB :: Bingo -> Maybe Int
-solutionB Bingo{..} = score <$> lastMaybe (winners draws boards)
+solutionB Bingo{..} = score <$> lastMaybe (winSeq draws boards)
 ```
 

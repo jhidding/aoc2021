@@ -57,23 +57,23 @@ markBoard :: Int -> Board -> Board
 markBoard n = A.compute . A.map (markEq n)
 -- ~\~ end
 -- ~\~ begin <<lit/day04.md|solution-day-4>>[2]
-winners :: [Int] -> [Board] -> [(Int, Board)]
-winners [] _  = []
-winners _  [] = []
-winners (d:draws) boards = map (d,) won <> winners draws lost
-    where (won, lost) = partition win 
-                      $ map (markBoard d) boards
-
+winSeq :: [Int] -> [Board] -> [(Int, Board)]
+winSeq []       _       = []
+winSeq _        []      = []
+winSeq (d:draws) boards = map (d,) winners <> winSeq draws losers
+    where (winners, losers) = partition win $ markBoard d <$> boards
+-- ~\~ end
+-- ~\~ begin <<lit/day04.md|solution-day-4>>[3]
 score :: (Int, Board) -> Int
 score (n, b) = n * sum (unmarkedValues $ A.toList b)
     where unmarkedValues = map markValue . filter unmarked
 
 solutionA :: Bingo -> Maybe Int
-solutionA Bingo{..} = score <$> headMaybe (winners draws boards)
+solutionA Bingo{..} = score <$> headMaybe (winSeq draws boards)
 -- ~\~ end
--- ~\~ begin <<lit/day04.md|solution-day-4>>[3]
+-- ~\~ begin <<lit/day04.md|solution-day-4>>[4]
 solutionB :: Bingo -> Maybe Int
-solutionB Bingo{..} = score <$> lastMaybe (winners draws boards)
+solutionB Bingo{..} = score <$> lastMaybe (winSeq draws boards)
 -- ~\~ end
 
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
