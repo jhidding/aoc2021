@@ -2,10 +2,10 @@
 
 ``` {.haskell #run-solutions}
 runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . solutionA 
+runA = readInput >>= logInfo . display . tshow . solutionA 
 
 runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . solutionB
+runB = readInput >>= logInfo . display . tshow . solutionB
 ```
 
 # Appendix: Parsing

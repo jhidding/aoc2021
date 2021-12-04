@@ -1,5 +1,9 @@
--- ~\~ language=Haskell filename=app/Day04.hs
--- ~\~ begin <<lit/day04.md|app/Day04.hs>>[0]
+# Day 4: Giant Squid
+We're playing Bingo with a giant squid. This is why I love advent of Code!
+
+Doing contrived array arithmetic is not seen as the strong suit of Haskell. Solving this in Python with NumPy would be so much easier. I will use the nice `Massiv` library, that implements multi-dimensional arrays, fancy indexing, stencil operations etc.
+
+``` {.haskell file=app/Day04.hs}
 module Day04 where
 
 import RIO hiding (try)
@@ -17,7 +21,16 @@ failOnException :: (Exception e) => Either e a -> Parser a
 failOnException = either convertError return
     where convertError = fancyFailure . Set.singleton . ErrorFail . displayException
 
--- ~\~ begin <<lit/day04.md|data-types-day-4>>[0]
+<<data-types-day-4>>
+<<parser-day-4>>
+<<solution-day-4>>
+
+<<run-solutions>>
+```
+
+We need to have integers that we can mark when we play Bingo. I'll make a generic `Mark` container, that contains an extra boolean flag.
+
+``` {.haskell #data-types-day-4}
 data Mark a = Mark
     { marked :: Bool
     , markValue :: a
@@ -39,8 +52,11 @@ data Bingo = Bingo
     { draws :: [Int]
     , boards :: [Board]
     } deriving (Show)
--- ~\~ end
--- ~\~ begin <<lit/day04.md|parser-day-4>>[0]
+```
+
+Next, we need to parse the input data.
+
+``` {.haskell #parser-day-4}
 drawsP :: Parser [Int]
 drawsP = sepBy1 integer (lexeme $ char ',')
 
@@ -55,21 +71,30 @@ bingoP = Bingo <$> drawsP <* eol <* eol <*> sepEndBy1 boardP eol
 
 readInput :: (HasLogFunc env) => RIO env Bingo
 readInput = readInputParsing "data/day04.txt" bingoP
--- ~\~ end
--- ~\~ begin <<lit/day04.md|solution-day-4>>[0]
+```
+
+We win at Bingo if a row of column on a board is fully marked. The `Massiv` library provides the nice functions `outerSlices` and `innerSlices`, allowing us to traverse all rows and columns:
+
+``` {.haskell #solution-day-4}
 win :: Board -> Bool
 win b = rows || columns
     where rows    = any (all marked) (A.outerSlices b)
           columns = any (all marked) (A.innerSlices b)
--- ~\~ end
--- ~\~ begin <<lit/day04.md|solution-day-4>>[1]
+```
+
+Each time a number is called we mark all matching values:
+
+``` {.haskell #solution-day-4}
 markOnBoard :: Int -> Board -> Board
 markOnBoard n = A.compute . A.map mayMark
     where mayMark Mark{ .. }
             | markValue == n = Mark True markValue
             | otherwise      = Mark marked markValue
--- ~\~ end
--- ~\~ begin <<lit/day04.md|solution-day-4>>[2]
+```
+
+For part A we need to figure out, the first board to win and the last number that was called:
+
+``` {.haskell #solution-day-4}
 firstToWin :: [Int] -> [Board] -> Maybe (Int, Board)
 firstToWin []        _      = Nothing
 firstToWin (d:draws) boards = case (find win nextBoards) of
@@ -83,8 +108,11 @@ score (n, b) = n * sum (unmarkedValues $ A.toList b)
 
 solutionA :: Bingo -> Maybe Int
 solutionA Bingo{..} = score <$> firstToWin draws boards
--- ~\~ end
--- ~\~ begin <<lit/day04.md|solution-day-4>>[3]
+```
+
+For part B we need to know the last board to win:
+
+``` {.haskell #solution-day-4}
 lastToWin :: [Int] -> [Board] -> Maybe (Int, Board)
 lastToWin [] _ = Nothing
 lastToWin (d:draws) [b]
@@ -96,13 +124,5 @@ lastToWin (d:draws) boards = lastToWin draws (filter (not . win) nextBoards)
 
 solutionB :: Bingo -> Maybe Int
 solutionB Bingo{..} = score <$> lastToWin draws boards
--- ~\~ end
+```
 
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
