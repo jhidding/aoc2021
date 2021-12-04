@@ -76,7 +76,7 @@ Each time a number is called we mark all matching values:
 
 ``` {.haskell #solution-day-4}
 markBoard :: Int -> Board -> Board
-markBoard n = A.compute . A.map (markEq n)
+markBoard n b = markEq n <$> b
 ```
 
 For part A we need to figure out, the first board to win and the last number that was called. I won't pretend this is the first implementation I came up with. After also solving part B, it turns out this is the most elegant and generic way to do it. The function `winners` generates a list of `(Int, Board)` pairs, giving in order each board winning and on what number:

@@ -54,7 +54,7 @@ win b = rows || columns
 -- ~\~ end
 -- ~\~ begin <<lit/day04.md|solution-day-4>>[1]
 markBoard :: Int -> Board -> Board
-markBoard n = A.compute . A.map (markEq n)
+markBoard n b = markEq n <$> b
 -- ~\~ end
 -- ~\~ begin <<lit/day04.md|solution-day-4>>[2]
 winSeq :: [Int] -> [Board] -> [(Int, Board)]
