@@ -1,6 +1,6 @@
 .PHONY: site clean watch watch-pandoc watch-browser-sync
 
-pandoc_args += -s -t html5 -f commonmark_x --toc
+pandoc_args += -s -t html5 -f commonmark_x --toc --toc-depth 2
 pandoc_args += --template templates/dark.html
 pandoc_args += --css dark.css
 pandoc_args += --highlight-style templates/dark.theme
