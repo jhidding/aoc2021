@@ -167,10 +167,7 @@ solutionB :: [Line] -> Int
 solutionB = length . filter (> 1) . A.toList . plotLines
 ```
 
-### Plotting data
-To visualize input and output data:
-
-``` {.haskell #extra-day-5}
+``` {.haskell #extra-day-5 .hide}
 showData :: IO ()
 showData = runSimpleApp $ do
     inp <- readInput
