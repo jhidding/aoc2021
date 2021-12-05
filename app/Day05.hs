@@ -3,6 +3,7 @@
 module Day05 where
 
 import RIO hiding (try)
+import RIO.ByteString (putStr)
 import qualified RIO.Text as Text
 import RIO.List.Partial (foldl1)
 import RIO.List (partition, headMaybe, lastMaybe)
@@ -96,13 +97,15 @@ verticalCoords (Vec2 (x, ay), Vec2 (_, by))
     = A.toIx2 . (x,) <$> range ay by
 -- ~\~ end
 -- ~\~ begin <<lit/day05.md|solution-day-5>>[5]
+plotLines :: [Line] -> Diagram
+plotLines l = runST $ do
+    arr <- MA.newMArray (A.Sz2 1000 1000) 0
+    mapM_ (plotCoords arr . lineCoords) l
+    MA.freezeS arr
+
 solutionA :: [Line] -> Int
-solutionA inp = length $ filter (> 1) $ A.toList result
-    where result = runST $ do
-            arr <- MA.newMArray (A.Sz2 1000 1000) 0
-            mapM_ (plotCoords arr . lineCoords)
-                $ filter (not . diagonal) inp
-            MA.freezeS arr
+solutionA = length . filter (> 1) . A.toList 
+          . plotLines . filter (not . diagonal)
 -- ~\~ end
 -- ~\~ begin <<lit/day05.md|solution-day-5>>[6]
 diagonal :: Line -> Bool
@@ -114,13 +117,21 @@ diagonalCoords (Vec2 (ax, ay), Vec2 (bx, by))
     = A.toIx2 <$> zip (range ax bx) (range ay by)
 
 solutionB :: [Line] -> Int
-solutionB inp = length $ filter (> 1) $ A.toList result
-    where result = runST $ do
-            arr <- MA.newMArray (A.Sz2 1000 1000) 0
-            mapM_ (plotCoords arr . lineCoords) inp
-            MA.freezeS arr
+solutionB = length . filter (> 1) . A.toList . plotLines
 -- ~\~ end
-
+-- ~\~ begin <<lit/day05.md|extra-day-5>>[0]
+showData :: IO ()
+showData = runSimpleApp $ do
+    inp <- readInput
+    let result = plotLines inp
+    mapM_ (\(Vec2 (ax, ay), Vec2 (bx, by))
+           -> print $ tshow ax <> " " <> tshow ay <> " " <> tshow bx <> " " <> tshow by <> "\n")
+          inp
+    print "\n\n"
+    print $ Text.intercalate "\n" $ map (Text.intercalate " " . map tshow) (A.toLists2 result)
+    return ()
+    where print = putStr . Text.encodeUtf8
+-- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
 runA = readInput >>= logInfo . display . tshow . solutionA 

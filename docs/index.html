@@ -416,21 +416,23 @@
 <div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day05</span> <span class="kw">where</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span> <span class="kw">hiding</span> (try)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> (foldl1)</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (partition, headMaybe, lastMaybe)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> ( <span class="dt">Parser</span>, sepEndBy1, sepBy1, char, hspace, eol</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>               , integer, lexeme, readInputParsing</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>               , string )</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array.Mutable</span> <span class="kw">as</span> <span class="dt">MA</span></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span><span class="kw">data</span><span class="op">-</span>types<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (putStr)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> (foldl1)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (partition, headMaybe, lastMaybe)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> ( <span class="dt">Parser</span>, sepEndBy1, sepBy1, char, hspace, eol</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>               , integer, lexeme, readInputParsing</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>               , string )</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array.Mutable</span> <span class="kw">as</span> <span class="dt">MA</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span><span class="kw">data</span><span class="op">-</span>types<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>extra<span class="op">-</span>day<span class="op">-</span><span class="dv">5</span><span class="op">&gt;&gt;</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
+<p><img src="fig/day05-input.svg" alt="" /></p>
 <p>I like to have position variables that I can treat like applicatives.</p>
 <div class="named-code-block">
 <p>«data-types-day-5»</p>
@@ -534,13 +536,15 @@
 <p>Now, for the solution:</p>
 <div class="named-code-block">
 <p>«solution-day-5»</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Line</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> <span class="fu">length</span> <span class="op">$</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">1</span>) <span class="op">$</span> A.toList result</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> result <span class="ot">=</span> runST <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>            arr <span class="ot">&lt;-</span> MA.newMArray (<span class="dt">A.Sz2</span> <span class="dv">1000</span> <span class="dv">1000</span>) <span class="dv">0</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mapM_</span> (plotCoords arr <span class="op">.</span> lineCoords)</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>                <span class="op">$</span> <span class="fu">filter</span> (<span class="fu">not</span> <span class="op">.</span> diagonal) inp</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>            MA.freezeS arr</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">plotLines ::</span> [<span class="dt">Line</span>] <span class="ot">-&gt;</span> <span class="dt">Diagram</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>plotLines l <span class="ot">=</span> runST <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    arr <span class="ot">&lt;-</span> MA.newMArray (<span class="dt">A.Sz2</span> <span class="dv">1000</span> <span class="dv">1000</span>) <span class="dv">0</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mapM_</span> (plotCoords arr <span class="op">.</span> lineCoords) l</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    MA.freezeS arr</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Line</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">1</span>) <span class="op">.</span> A.toList </span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span> plotLines <span class="op">.</span> <span class="fu">filter</span> (<span class="fu">not</span> <span class="op">.</span> diagonal)</span></code></pre></div>
 </div>
 <h3 id="part-b">Part B</h3>
 <p>Adding the case of diagonal lines:</p>
@@ -559,31 +563,25 @@
 <span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> A.toIx2 <span class="op">&lt;$&gt;</span> <span class="fu">zip</span> (<span class="fu">range</span> ax bx) (<span class="fu">range</span> ay by)</span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Line</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>solutionB inp <span class="ot">=</span> <span class="fu">length</span> <span class="op">$</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">1</span>) <span class="op">$</span> A.toList result</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> result <span class="ot">=</span> runST <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>            arr <span class="ot">&lt;-</span> MA.newMArray (<span class="dt">A.Sz2</span> <span class="dv">1000</span> <span class="dv">1000</span>) <span class="dv">0</span></span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mapM_</span> (plotCoords arr <span class="op">.</span> lineCoords) inp</span>
-<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>            MA.freezeS arr</span></code></pre></div>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">1</span>) <span class="op">.</span> A.toList <span class="op">.</span> plotLines</span></code></pre></div>
 </div>
 <h3 id="plotting-data">Plotting data</h3>
 <p>To visualize input and output data:</p>
 <div class="named-code-block">
-<p>«show-data»</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ot">showData ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>showData <span class="ot">=</span> <span class="kw">do</span></span>
+<p>«extra-day-5»</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ot">showData ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>showData <span class="ot">=</span> runSimpleApp <span class="op">$</span> <span class="kw">do</span></span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    inp <span class="ot">&lt;-</span> readInput</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span><span class="ot"> result ::</span> <span class="dt">Diagram</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>        result <span class="ot">=</span> runST <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>            arr <span class="ot">&lt;-</span> MA.newMArray (<span class="dt">A.Sz2</span> <span class="dv">1000</span> <span class="dv">1000</span>) <span class="dv">0</span></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mapM_</span> (plotCoords arr <span class="op">.</span> lineCoords) inp</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>            MA.freezeS arr</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mapM_</span> (\(<span class="dt">Vec2</span> (ax, ay), <span class="dt">Vec2</span> (bx, by))</span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>           <span class="ot">-&gt;</span> logInfo <span class="op">$</span> display <span class="op">$</span> tshow ax <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow ay <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow bx <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow by)</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>          inp</span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    logInfo <span class="st">&quot;\n&quot;</span></span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    logInfo <span class="op">$</span> display <span class="op">$</span> Text.intercalate <span class="st">&quot;\n&quot;</span> <span class="op">$</span> <span class="fu">map</span> (Text.intercalate <span class="st">&quot; &quot;</span> <span class="op">.</span> <span class="fu">map</span> tshow) (A.toLists2 result)</span>
-<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> ()</span></code></pre></div>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="ot">=</span> plotLines inp</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mapM_</span> (\(<span class="dt">Vec2</span> (ax, ay), <span class="dt">Vec2</span> (bx, by))</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>           <span class="ot">-&gt;</span> <span class="fu">print</span> <span class="op">$</span> tshow ax <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow ay <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow bx <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow by <span class="op">&lt;&gt;</span> <span class="st">&quot;\n&quot;</span>)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>          inp</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> <span class="st">&quot;\n\n&quot;</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> <span class="op">$</span> Text.intercalate <span class="st">&quot;\n&quot;</span> <span class="op">$</span> <span class="fu">map</span> (Text.intercalate <span class="st">&quot; &quot;</span> <span class="op">.</span> <span class="fu">map</span> tshow) (A.toLists2 result)</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> ()</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> <span class="fu">print</span> <span class="ot">=</span> <span class="fu">putStr</span> <span class="op">.</span> Text.encodeUtf8</span></code></pre></div>
 </div>
+<p><img src="fig/day05-output.svg" alt="" /></p>
 <h1 id="appendix-boiler-plate">Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>

@@ -1,7 +1,7 @@
 local system = require 'pandoc.system'
 
 local gnuplot_template = [[
-    set term svg background '#000000' size 500, 300
+    set term svg background '#000000' size 800, 500
     set output "docs/%s"
 
     # line styles for ColorBrewer Pastel1
@@ -21,15 +21,11 @@ local gnuplot_template = [[
     set style line 8 lc rgb '#FDDAEC' # pale pink
     
     # palette
-    set palette maxcolors 8
-    set palette defined ( 0 '#FBB4AE',\
-        	    	      1 '#B3CDE3',\
-    		      2 '#CCEBC5',\
-    		      3 '#DECBE4',\
-    		      4 '#FED9A6',\
-    		      5 '#FFFFCC',\
-    		      6 '#E5D8BD',\
-    		      7 '#FDDAEC' )
+    rcol(x) = 0.237 - 2.13*x + 26.92*x**2 - 65.5*x**3 + 63.5*x**4 - 22.36*x**5
+    gcol(x) = ((0.572 + 1.524*x - 1.811*x**2)/(1 - 0.291*x + 0.1574*x**2))**2
+    bcol(x) = 1/(1.579 - 4.03*x + 12.92*x**2 - 31.4*x**3 + 48.6*x**4 - 23.36*x**5)
+    set palette model RGB functions rcol(gray), gcol(gray), bcol(gray)
+
     set style line 101 lc rgb '#f0a040' lt 1 lw 1
     set border 3 front ls 101
     set key textcolor rgb '#f0a040'
