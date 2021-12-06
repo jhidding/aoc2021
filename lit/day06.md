@@ -30,7 +30,7 @@ readInput = readInputParsing "data/day06.txt" csvInts
 
 The point of the exercise is that we can have a naive solution:
 
-```haskel
+```haskell
 rules :: Int -> [Int]
 rules clock
     | clock == 0 = [8, 6]
