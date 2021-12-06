@@ -9,6 +9,7 @@ import Parsing ( Parser, readInputParsing, sepEndBy1
                , lexeme, char, integer)
 import RIO.Map (Map, (!?))
 import qualified RIO.Map as Map
+import Data.Constraint (Constraint)
 
 -- ~\~ begin <<lit/day06.md|parser-day-6>>[0]
 csvInts :: Parser [Int]
@@ -18,38 +19,88 @@ readInput :: (HasLogFunc env) => RIO env [Int]
 readInput = readInputParsing "data/day06.txt" csvInts
 -- ~\~ end
 -- ~\~ begin <<lit/day06.md|solution-day-6>>[0]
-type Tally = Map Int Int
-
-fishCount :: Tally -> Int -> Int
-fishCount t s = Map.findWithDefault 0 s t
-
-addFish :: Int -> Int -> Tally -> Tally
-addFish k v = Map.alter (Just . maybe v (+ v)) k
-
-init :: [Int] -> Tally
-init = foldl (\t k -> addFish k 1 t) Map.empty
--- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[1]
-step :: Tally -> Tally
-step t = create $ cycle $ age t
-    where age    = Map.delete (-1) . Map.mapKeys (\k -> k - 1)
-          cycle  = addFish 6 births
-          create = addFish 8 births
-          births = fishCount t 0
-
 iterate :: Int -> (a -> a) -> a -> [a]
 iterate n f x
     | n == 0    = [x]
     | otherwise = x : iterate (n - 1) f (f x)
 
-totalCount :: Tally -> Int
-totalCount = sum . Map.elems
-
 solutionA :: [Int] -> Int
-solutionA = totalCount . last . iterate 80 step . init
+solutionA = length . last . iterate 80 step
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[1]
+class CFunctor f where
+    type ElemCt f a :: Constraint
+    cmap :: (ElemCt f a, ElemCt f b) => (a -> b) -> f a -> f b
+
+class CFunctor f => CApplicative f where
+    cpure :: (ElemCt f a) => a -> f a
+    cliftA2 :: (ElemCt f a, ElemCt f b, ElemCt f c)
+            => (a -> b -> c) -> f a -> f b -> f c
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[2]
+class CApplicative f => CMonad f where
+    cbind :: (ElemCt f a, ElemCt f b) => (a -> f b) -> f a -> f b
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[3]
+rules :: (CApplicative f, ElemCt f Int, Semigroup (f Int)) => Int -> f Int
+rules fish
+    | fish == 0 = cpure 8 <> cpure 6
+    | otherwise = cpure (fish - 1)
+
+step :: (CMonad f, ElemCt f Int, Semigroup (f Int)) => f Int -> f Int
+step = cbind rules
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[4]
+class EmptyCt a
+instance EmptyCt a
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[5]
+instance CFunctor [] where
+    type ElemCt [] a = EmptyCt a
+    cmap = fmap
+
+instance CApplicative [] where
+    cpure = pure
+    cliftA2 = liftA2
+
+instance CMonad [] where
+    cbind = (=<<)
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[6]
+newtype Tally a = Tally { tallyMap :: Map a Int }
+    deriving (Show)
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[7]
+instance (Ord a) => Semigroup (Tally a) where
+    Tally a <> Tally b = Tally $ Map.unionWith (+) a b
+
+instance (Ord a) => Monoid (Tally a) where
+    mempty = Tally mempty
+
+instance CFunctor Tally where
+    type ElemCt Tally a = Ord a
+    cmap f (Tally a) = Tally (Map.mapKeys f a)
+
+multiply :: Tally a -> Int -> Tally a
+multiply (Tally a) n = Tally (Map.map (* n) a)
+
+instance CApplicative Tally where
+    cpure a = Tally $ Map.singleton a 1
+    cliftA2 f (Tally a) b = Map.foldMapWithKey
+            (\k v -> multiply (cmap (f k) b) v) a
+
+instance CMonad Tally where
+    cbind f (Tally a) = Map.foldMapWithKey (multiply . f) a
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[8]
+tallyLength :: Tally a -> Int
+tallyLength (Tally a) = sum $ Map.elems a
+
+tallyFromList :: Ord a => [a] -> Tally a
+tallyFromList = foldMap cpure
 
 solutionB :: [Int] -> Int
-solutionB = totalCount . last . iterate 256 step . init
+solutionB = tallyLength . last . iterate 256 step . tallyFromList
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()

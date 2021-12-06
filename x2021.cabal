@@ -62,8 +62,9 @@ executable x2021
                    , massiv ^>=1
                    , vector ^>=0.12
                    , mtl ^>=2.2
+                   , constraints
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns
                          FlexibleContexts FlexibleInstances TypeFamilies GeneralizedNewtypeDeriving
-                         UndecidableSuperClasses TupleSections
+                         UndecidableSuperClasses TupleSections ConstraintKinds KindSignatures
