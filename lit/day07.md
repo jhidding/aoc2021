@@ -25,9 +25,9 @@ readInput = readInputParsing "data/day07.txt" csvInts
 
 We minimize the function,
 
-$$f_a(x) = \sum_{i=1}^n |c_i - x|.$$
+$$f_a(x) = \sum_{i=1}^N |c_i - x|.$$
 
-We know that the solution should be translation invariant. For $n=2$ the cost function is equal at any point in between, only for $n=3$ do we start to get a minimum, at the center most point. That would suggest a median. If we remove the outer two most points, the answer stays the same, repeat and we arrive at the center most point. Proven! Since we're only interested in the value attained at the minimum, it doesn't matter if we take the upper or lower median for even length sequences.
+We know that the solution should be translation invariant. For $N=2$ the cost function is equal at any point in between, only for $N=3$ do we start to get a minimum, at the center most point. That would suggest a median. If we remove the outer two most points, the answer stays the same, repeat and we arrive at the center most point. Proven! Since we're only interested in the value attained at the minimum, it doesn't matter if we take the upper or lower median for even length sequences.
 
 ``` {.haskell #solution-day-7}
 costFuncA :: [Int] -> Int -> Int
@@ -41,11 +41,19 @@ solutionA as = (loc, costFuncA as loc)
     where loc = sort as !! (length as `div` 2)
 ```
 
-For part B, we get a distance function that goes like $\sum_{i=1}^d d = d (d + 1) / 2$, where $d = c_i - x$. Since the cost function now goes with distance square, we arrive at a minimum at the mean $x = \langle c_i \rangle$. I don't have a proof for this, but it gives me the right answer. We would need to show that,
+For part B, we get a distance function that goes like $\sum_{i=1}^d d = d (d + 1) / 2$, where $d = |c_i - x|.$ We arrive at a minimum at the mean $x = \langle c_i \rangle$, and I can prove it. The cost function now is,
 
-$$f_b(x) = \sum_{i=1}^n |c_i - x| (|c_i -x| + 1) / 2 \sim (x - \langle c_i \rangle)^2 + {\rm const},$$
+$$f_b(x) = \sum_{i=1}^N |c_i - x| (|c_i -x| + 1) / 2 = \sum_{i=1}^N \frac{1}{2}(c_i - x)^2 + \frac{1}{2}|c_i - x|.$$
 
-or something of that form. To finish later today.
+For the square part, we have that the minimum of $\sum (c_i - x)^2$ is found at,
+
+$$\partial_x \sum (c_i - x)^2 / 2 = \sum x - c_i = Nx - \sum c_i = 0,$$
+
+so $x = \sum c_i / N = \langle c_i \rangle$, which is where we actually found our answer. The residual term of
+
+$$\sum |c_i - x| / 2$$
+
+is not differentiable, but we know how fast it grows. Since we have increments of 1, the quadratic term always grows equal or faster. Again, we're only interested in the value, not the location of the minimum, so there we have it.
 
 ``` {.haskell #solution-day-7}
 costFuncB :: [Int] -> Int -> Int

@@ -766,8 +766,8 @@
 <span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day07.txt&quot;</span> csvInts</span></code></pre></div>
 </div>
 <p>We minimize the function,</p>
-<p><span class="math display">\[f_a(x) = \sum_{i=1}^n |c_i - x|.\]</span></p>
-<p>We know that the solution should be translation invariant. For <span class="math inline">\(n=2\)</span> the cost function is equal at any point in between, only for <span class="math inline">\(n=3\)</span> do we start to get a minimum, at the center most point. That would suggest a median. If we remove the outer two most points, the answer stays the same, repeat and we arrive at the center most point. Proven! Since we’re only interested in the value attained at the minimum, it doesn’t matter if we take the upper or lower median for even length sequences.</p>
+<p><span class="math display">\[f_a(x) = \sum_{i=1}^N |c_i - x|.\]</span></p>
+<p>We know that the solution should be translation invariant. For <span class="math inline">\(N=2\)</span> the cost function is equal at any point in between, only for <span class="math inline">\(N=3\)</span> do we start to get a minimum, at the center most point. That would suggest a median. If we remove the outer two most points, the answer stays the same, repeat and we arrive at the center most point. Proven! Since we’re only interested in the value attained at the minimum, it doesn’t matter if we take the upper or lower median for even length sequences.</p>
 <div class="named-code-block">
 <p>«solution-day-7»</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ot">costFuncA ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
@@ -780,9 +780,13 @@
 <span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>solutionA as <span class="ot">=</span> (loc, costFuncA as loc)</span>
 <span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loc <span class="ot">=</span> <span class="fu">sort</span> as <span class="op">!!</span> (<span class="fu">length</span> as <span class="ot">`div`</span> <span class="dv">2</span>)</span></code></pre></div>
 </div>
-<p>For part B, we get a distance function that goes like <span class="math inline">\(\sum_{i=1}^d d = d (d + 1) / 2\)</span>, where <span class="math inline">\(d = c_i - x\)</span>. Since the cost function now goes with distance square, we arrive at a minimum at the mean <span class="math inline">\(x = \langle c_i \rangle\)</span>. I don’t have a proof for this, but it gives me the right answer. We would need to show that,</p>
-<p><span class="math display">\[f_b(x) = \sum_{i=1}^n |c_i - x| (|c_i -x| + 1) / 2 \sim (x - \langle c_i \rangle)^2 + {\rm const},\]</span></p>
-<p>or something of that form. To finish later today.</p>
+<p>For part B, we get a distance function that goes like <span class="math inline">\(\sum_{i=1}^d d = d (d + 1) / 2\)</span>, where <span class="math inline">\(d = |c_i - x|.\)</span> We arrive at a minimum at the mean <span class="math inline">\(x = \langle c_i \rangle\)</span>, and I can prove it. The cost function now is,</p>
+<p><span class="math display">\[f_b(x) = \sum_{i=1}^N |c_i - x| (|c_i -x| + 1) / 2 = \sum_{i=1}^N \frac{1}{2}(c_i - x)^2 + \frac{1}{2}|c_i - x|.\]</span></p>
+<p>For the square part, we have that the minimum of <span class="math inline">\(\sum (c_i - x)^2\)</span> is found at,</p>
+<p><span class="math display">\[\partial_x \sum (c_i - x)^2 / 2 = \sum x - c_i = Nx - \sum c_i = 0,\]</span></p>
+<p>so <span class="math inline">\(x = \sum c_i / N = \langle c_i \rangle\)</span>, which is where we actually found our answer. The residual term of</p>
+<p><span class="math display">\[\sum |c_i - x| / 2\]</span></p>
+<p>is not differentiable, but we know how fast it grows. Since we have increments of 1, the quadratic term always grows equal or faster. Again, we’re only interested in the value, not the location of the minimum, so there we have it.</p>
 <div class="named-code-block">
 <p>«solution-day-7»</p>
 <div class="sourceCode" id="cb54"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ot">costFuncB ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
