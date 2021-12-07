@@ -3,6 +3,7 @@
 pandoc_args += -s -t html5 -f commonmark_x --toc --toc-depth 2
 pandoc_args += --template templates/dark.html
 pandoc_args += --css dark.css
+pandoc_args += --mathjax
 pandoc_args += --highlight-style templates/dark.theme
 pandoc_args += --lua-filter scripts/hide.lua
 pandoc_args += --lua-filter scripts/gnuplot.lua

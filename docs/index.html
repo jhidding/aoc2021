@@ -75,9 +75,9 @@
     code span.va { } /* Variable */
     code span.vs { color: #cc9393; } /* VerbatimString */
     code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="dark.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -749,7 +749,7 @@
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
 <span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (sort)</span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> ((!!), foldl1)</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> ((!!))</span>
 <span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> ( <span class="dt">Parser</span>, readInputParsing, sepEndBy1</span>
 <span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>               , lexeme, char, integer)</span>
 <span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a></span>
@@ -766,8 +766,8 @@
 <span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day07.txt&quot;</span> csvInts</span></code></pre></div>
 </div>
 <p>We minimize the function,</p>
-<p><span class="math display">$$f_a(x) = \sum_{i=1}^n |c_i - x|.$$</span></p>
-<p>We know that the solution should be translation invariant. For <span class="math inline"><em>n</em> = 2</span> the cost function is equal at any point in between, only for <span class="math inline"><em>n</em> = 3</span> do we start to get a minimum, at the center most point. That would suggest a median. If we remove the outer two most points, the answer stays the same, repeat and we arrive at the center most point. Proven! Since we’re only interested in the value attained at the minimum, it doesn’t matter if we take the upper or lower median for even length sequences.</p>
+<p><span class="math display">\[f_a(x) = \sum_{i=1}^n |c_i - x|.\]</span></p>
+<p>We know that the solution should be translation invariant. For <span class="math inline">\(n=2\)</span> the cost function is equal at any point in between, only for <span class="math inline">\(n=3\)</span> do we start to get a minimum, at the center most point. That would suggest a median. If we remove the outer two most points, the answer stays the same, repeat and we arrive at the center most point. Proven! Since we’re only interested in the value attained at the minimum, it doesn’t matter if we take the upper or lower median for even length sequences.</p>
 <div class="named-code-block">
 <p>«solution-day-7»</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ot">costFuncA ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
@@ -780,8 +780,8 @@
 <span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>solutionA as <span class="ot">=</span> (loc, costFuncA as loc)</span>
 <span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loc <span class="ot">=</span> <span class="fu">sort</span> as <span class="op">!!</span> (<span class="fu">length</span> as <span class="ot">`div`</span> <span class="dv">2</span>)</span></code></pre></div>
 </div>
-<p>For part B, we get a distance function that goes like <span class="math inline">$\sum_{i=1}^d d = d (d + 1) / 2$</span>, where <span class="math inline"><em>d</em> = <em>c</em><sub><em>i</em></sub> − <em>x</em></span>. Since the cost function now goes with distance square, we arrive at a minimum at the mean <span class="math inline"><em>x</em> = ⟨<em>c</em><sub><em>i</em></sub>⟩</span>. I don’t have a proof for this, but it gives me the right answer. We would need to show that,</p>
-<p><span class="math display">$$f_b(x) = \sum_{i=1}^n |c_i - x| (|c_i -x| + 1) / 2 \sim (x - \langle c_i \rangle)^2 + {\rm const},$$</span></p>
+<p>For part B, we get a distance function that goes like <span class="math inline">\(\sum_{i=1}^d d = d (d + 1) / 2\)</span>, where <span class="math inline">\(d = c_i - x\)</span>. Since the cost function now goes with distance square, we arrive at a minimum at the mean <span class="math inline">\(x = \langle c_i \rangle\)</span>. I don’t have a proof for this, but it gives me the right answer. We would need to show that,</p>
+<p><span class="math display">\[f_b(x) = \sum_{i=1}^n |c_i - x| (|c_i -x| + 1) / 2 \sim (x - \langle c_i \rangle)^2 + {\rm const},\]</span></p>
 <p>or something of that form. To finish later today.</p>
 <div class="named-code-block">
 <p>«solution-day-7»</p>
@@ -792,7 +792,7 @@
 <span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="ot">mean ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>mean x <span class="ot">=</span> <span class="fu">sum</span> x <span class="ot">`div`</span> <span class="fu">length</span> x</span>
 <span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
 <span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>solutionB x <span class="ot">=</span> (loc, costFuncB x loc)</span>
 <span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loc <span class="ot">=</span> mean x</span></code></pre></div>
 </div>

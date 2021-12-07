@@ -6,7 +6,7 @@ module Day07 where
 
 import RIO
 import RIO.List (sort)
-import RIO.List.Partial ((!!), foldl1)
+import RIO.List.Partial ((!!))
 import Parsing ( Parser, readInputParsing, sepEndBy1
                , lexeme, char, integer)
 
@@ -55,7 +55,7 @@ costFuncB cs x = sum (map f cs)
 mean :: [Int] -> Int
 mean x = sum x `div` length x
 
-solutionB :: [Int] -> (Int, Int, Int)
+solutionB :: [Int] -> (Int, Int)
 solutionB x = (loc, costFuncB x loc)
     where loc = mean x
 ```
