@@ -32,12 +32,6 @@ $endif$
 $for(header-includes)$
   $header-includes$
 $endfor$
-   <!-- Set the default landing page. Sections are set display: none by default
-        except for the one that is currently the location hash. -->
-   <script type="text/javascript">
-   if (document.location.hash == "" || document.location.hash == "#")
-       document.location.hash = "#$landing-page$";
-  </script>
 </head>
 <body>
 $for(include-before)$
@@ -88,4 +82,12 @@ $endfor$
       window.scrollTo(0, 0); 
    }
 </script>
+   <!-- Set the default landing page. Sections are set display: none by default
+        except for the one that is currently the location hash. -->
+   <script type="text/javascript">
+           if (document.location.hash == "" || document.location.hash == "#") {
+                document.location.hash = "#$landing-page$";
+                window.scrollTo(0, 0); 
+           }
+  </script>
 </html>

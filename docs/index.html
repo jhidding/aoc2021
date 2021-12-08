@@ -81,12 +81,6 @@
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
-   <!-- Set the default landing page. Sections are set display: none by default
-        except for the one that is currently the location hash. -->
-   <script type="text/javascript">
-   if (document.location.hash == "" || document.location.hash == "#")
-       document.location.hash = "#advent-of-code-2021";
-  </script>
 </head>
 <body>
 <header id="title-block-header">
@@ -1054,4 +1048,12 @@
       window.scrollTo(0, 0); 
    }
 </script>
+   <!-- Set the default landing page. Sections are set display: none by default
+        except for the one that is currently the location hash. -->
+   <script type="text/javascript">
+           if (document.location.hash == "" || document.location.hash == "#") {
+                document.location.hash = "#advent-of-code-2021";
+                window.scrollTo(0, 0); 
+           }
+  </script>
 </html>
