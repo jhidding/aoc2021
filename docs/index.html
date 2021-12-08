@@ -631,118 +631,109 @@
 </div>
 <p>The problem is that this solution doesn’t scale very well. To solve this more efficiently, we should keep track of how many fish are present in each state, then we can solve this problem in constant memory.</p>
 <p>For tallying the amount of lanternfish in each state, I like to use a <code>Map Int Int</code>.</p>
-<div class="sourceCode" id="cb40"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Tally</span> <span class="ot">=</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="ot">fishCount ::</span> <span class="dt">Tally</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>fishCount t s <span class="ot">=</span> Map.findWithDefault <span class="dv">0</span> s t</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="ot">addFish ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>addFish k v <span class="ot">=</span> Map.alter (<span class="dt">Just</span> <span class="op">.</span> <span class="fu">maybe</span> v (<span class="op">+</span> v)) k</span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="fu">init</span><span class="ot"> ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Tally</span></span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="fu">init</span> <span class="ot">=</span> <span class="fu">foldl</span> (\t k <span class="ot">-&gt;</span> addFish k <span class="dv">1</span> t) Map.empty</span></code></pre></div>
-<p>We can age the fish, by mapping the keys, and deleting the -1 entry.</p>
-<div class="sourceCode" id="cb41"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> <span class="dt">Tally</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>step t <span class="ot">=</span> create <span class="op">$</span> <span class="fu">cycle</span> <span class="op">$</span> age t</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> age    <span class="ot">=</span> Map.delete (<span class="op">-</span><span class="dv">1</span>) <span class="op">.</span> Map.mapKeys (\k <span class="ot">-&gt;</span> k <span class="op">-</span> <span class="dv">1</span>)</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">cycle</span>  <span class="ot">=</span> addFish <span class="dv">6</span> births</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>          create <span class="ot">=</span> addFish <span class="dv">8</span> births</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>          births <span class="ot">=</span> fishCount t <span class="dv">0</span></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="ot">totalCount ::</span> <span class="dt">Tally</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>totalCount <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> Map.elems</span></code></pre></div>
+<div class="named-code-block">
+<p>«solution-day-6»</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">Tally</span> a <span class="ot">=</span> <span class="dt">Tally</span> {<span class="ot"> tallyMap ::</span> <span class="dt">Map</span> a <span class="dt">Int</span> }</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+</div>
+<p>Now we can implement <code>Semigroup</code> and <code>Monoid</code>:</p>
+<div class="named-code-block">
+<p>«solution-day-6»</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> <span class="dt">Semigroup</span> (<span class="dt">Tally</span> a) <span class="kw">where</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tally</span> a <span class="op">&lt;&gt;</span> <span class="dt">Tally</span> b <span class="ot">=</span> <span class="dt">Tally</span> <span class="op">$</span> Map.unionWith (<span class="op">+</span>) a b</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> <span class="dt">Monoid</span> (<span class="dt">Tally</span> a) <span class="kw">where</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">Tally</span> <span class="fu">mempty</span></span></code></pre></div>
+</div>
+<p>Now we could do something like,</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ot">multiply ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> a</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>multiply items n <span class="ot">=</span> <span class="fu">foldMap</span> (\k <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="op">$</span> Map.singleton k n) items</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="fu">concatMap</span><span class="ot"> ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> <span class="dt">Tally</span> a <span class="ot">-&gt;</span> <span class="dt">Tally</span> a</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">concatMap</span> f (<span class="dt">Tally</span> a) <span class="ot">=</span> Map.foldMapWithKey (multiply <span class="op">.</span> f) a</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> <span class="dt">Tally</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">Int</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>step <span class="ot">=</span> <span class="fu">concatMap</span> rules</span></code></pre></div>
+<p>However, things could be even pretier if we could define something like <code>Applicative</code> on <code>Tally</code>.</p>
 <section id="associated-constraint-types" class="level2">
 <h2>Associated Constraint Types</h2>
-<p>This works great, but it looks awful. What if we could implement the naive version of this problem in such a way that we can easily scale it up later? We could say:</p>
-<div class="sourceCode" id="cb42"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rules ::</span> (<span class="dt">Applicative</span> f, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>rules clock</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> clock <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> <span class="fu">pure</span> <span class="dv">8</span> <span class="op">&lt;&gt;</span> <span class="fu">pure</span> <span class="dv">6</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span>  <span class="ot">=</span> <span class="fu">pure</span> (clock <span class="op">-</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>What if we could implement the naive version of this problem in such a way that we can easily scale it up later? We could say:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rules ::</span> (<span class="dt">Applicative</span> f, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>rules clock</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> clock <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> <span class="fu">pure</span> <span class="dv">8</span> <span class="op">&lt;&gt;</span> <span class="fu">pure</span> <span class="dv">6</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span>  <span class="ot">=</span> <span class="fu">pure</span> (clock <span class="op">-</span> <span class="dv">1</span>)</span></code></pre></div>
 <p>But this comes with another problem: our intended container <code>Tally</code> can never be a <code>Functor</code> or <code>Applicative</code>, since it only works on sortable <code>Ord</code> types. This kind of problem can only be solved if we are allowed associated constraint types with our class implementation. For this to work you need to enable the <code>TypeFamilies</code> and <code>ConstraintKinds</code> language extensions enabled.</p>
 <p>We have to reimplement the <code>Functor &gt; Applicative &gt; Monad</code> stack.</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
-<div class="sourceCode" id="cb43"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">CFunctor</span> f <span class="kw">where</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">ElemCt</span> f<span class="ot"> a ::</span> <span class="dt">Constraint</span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    cmap ::</span> (<span class="dt">ElemCt</span> f a, <span class="dt">ElemCt</span> f b) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">CFunctor</span> f <span class="ot">=&gt;</span> <span class="dt">CApplicative</span> f <span class="kw">where</span></span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    cpure ::</span> (<span class="dt">ElemCt</span> f a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> f a</span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    cliftA2 ::</span> (<span class="dt">ElemCt</span> f a, <span class="dt">ElemCt</span> f b, <span class="dt">ElemCt</span> f c)</span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>            <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b <span class="ot">-&gt;</span> f c</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">CFunctor</span> f <span class="kw">where</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">ElemCt</span> f<span class="ot"> a ::</span> <span class="dt">Constraint</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    cmap ::</span> (<span class="dt">ElemCt</span> f a, <span class="dt">ElemCt</span> f b) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">CFunctor</span> f <span class="ot">=&gt;</span> <span class="dt">CApplicative</span> f <span class="kw">where</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    cpure ::</span> (<span class="dt">ElemCt</span> f a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> f a</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    cliftA2 ::</span> (<span class="dt">ElemCt</span> f a, <span class="dt">ElemCt</span> f b, <span class="dt">ElemCt</span> f c)</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>            <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b <span class="ot">-&gt;</span> f c</span></code></pre></div>
 </div>
 <p>It is already impossible to implement the constraint version of <code>&lt;*&gt;</code> from the type signature. The default implementation of <code>cliftA2 id</code> assumes <code>ElemCt f (b -&gt; c)</code> which we can never guarantee. There is no problem however defining <code>CMonad</code>.</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
-<div class="sourceCode" id="cb44"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">CApplicative</span> f <span class="ot">=&gt;</span> <span class="dt">CMonad</span> f <span class="kw">where</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    cbind ::</span> (<span class="dt">ElemCt</span> f a, <span class="dt">ElemCt</span> f b) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> f b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">CApplicative</span> f <span class="ot">=&gt;</span> <span class="dt">CMonad</span> f <span class="kw">where</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    cbind ::</span> (<span class="dt">ElemCt</span> f a, <span class="dt">ElemCt</span> f b) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> f b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span></code></pre></div>
 </div>
 <p>With these type classes in place, we can rewrite the solution to todays problem once again:</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
-<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rules ::</span> (<span class="dt">CApplicative</span> f, <span class="dt">ElemCt</span> f <span class="dt">Int</span>, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>rules fish</span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> fish <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> cpure <span class="dv">8</span> <span class="op">&lt;&gt;</span> cpure <span class="dv">6</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> cpure (fish <span class="op">-</span> <span class="dv">1</span>)</span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> (<span class="dt">CMonad</span> f, <span class="dt">ElemCt</span> f <span class="dt">Int</span>, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> f <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>step <span class="ot">=</span> cbind rules</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rules ::</span> (<span class="dt">CApplicative</span> f, <span class="dt">ElemCt</span> f <span class="dt">Int</span>, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>rules fish</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> fish <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> cpure <span class="dv">8</span> <span class="op">&lt;&gt;</span> cpure <span class="dv">6</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> cpure (fish <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> (<span class="dt">CMonad</span> f, <span class="dt">ElemCt</span> f <span class="dt">Int</span>, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> f <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>step <span class="ot">=</span> cbind rules</span></code></pre></div>
 </div>
 <section id="implementation-for-list" class="level3">
 <h3>Implementation for List</h3>
 <p>There is the little annoyance that we need to be able to signal an <code>Empty</code> constraint:</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">EmptyCt</span> a</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">EmptyCt</span> a</span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">EmptyCt</span> a</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">EmptyCt</span> a</span></code></pre></div>
 </div>
 <p>We now need to implement <code>CMonad</code> on lists and we should have our first naive implementation back in working order.</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
-<div class="sourceCode" id="cb47"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CFunctor</span> [] <span class="kw">where</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">ElemCt</span> [] a <span class="ot">=</span> <span class="dt">EmptyCt</span> a</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    cmap <span class="ot">=</span> <span class="fu">fmap</span></span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CApplicative</span> [] <span class="kw">where</span></span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    cpure <span class="ot">=</span> <span class="fu">pure</span></span>
-<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    cliftA2 <span class="ot">=</span> liftA2</span>
-<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CMonad</span> [] <span class="kw">where</span></span>
-<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    cbind <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CFunctor</span> [] <span class="kw">where</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">ElemCt</span> [] a <span class="ot">=</span> <span class="dt">EmptyCt</span> a</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    cmap <span class="ot">=</span> <span class="fu">fmap</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CApplicative</span> [] <span class="kw">where</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    cpure <span class="ot">=</span> <span class="fu">pure</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>    cliftA2 <span class="ot">=</span> liftA2</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CMonad</span> [] <span class="kw">where</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>    cbind <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span></code></pre></div>
 </div>
 <p>This even means we could have <code>do</code> notation on constraint monads without loss of generality!</p>
 </section>
-<section id="implementation-for-map-a-int" class="level3">
-<h3>Implementation for <code>Map a Int</code></h3>
-<p>Now, we can implement the smarter version of the algorithm. We have a container that stores its values as the keys to a <code>Map</code>.</p>
+<section id="implementation-for-tally" class="level3">
+<h3>Implementation for <code>Tally</code></h3>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
-<div class="sourceCode" id="cb48"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">Tally</span> a <span class="ot">=</span> <span class="dt">Tally</span> {<span class="ot"> tallyMap ::</span> <span class="dt">Map</span> a <span class="dt">Int</span> }</span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
-</div>
-<p>Now we can implement the type classes that we defined above, in addition to <code>Semigroup</code> and <code>Monoid</code>:</p>
-<div class="named-code-block">
-<p>«solution-day-6»</p>
-<div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> <span class="dt">Semigroup</span> (<span class="dt">Tally</span> a) <span class="kw">where</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tally</span> a <span class="op">&lt;&gt;</span> <span class="dt">Tally</span> b <span class="ot">=</span> <span class="dt">Tally</span> <span class="op">$</span> Map.unionWith (<span class="op">+</span>) a b</span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> <span class="dt">Monoid</span> (<span class="dt">Tally</span> a) <span class="kw">where</span></span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">Tally</span> <span class="fu">mempty</span></span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CFunctor</span> <span class="dt">Tally</span> <span class="kw">where</span></span>
-<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">ElemCt</span> <span class="dt">Tally</span> a <span class="ot">=</span> <span class="dt">Ord</span> a</span>
-<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    cmap f (<span class="dt">Tally</span> a) <span class="ot">=</span> <span class="dt">Tally</span> (Map.mapKeys f a)</span>
-<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a><span class="ot">multiply ::</span> <span class="dt">Tally</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> a</span>
-<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>multiply (<span class="dt">Tally</span> a) n <span class="ot">=</span> <span class="dt">Tally</span> (Map.map (<span class="op">*</span> n) a)</span>
-<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CApplicative</span> <span class="dt">Tally</span> <span class="kw">where</span></span>
-<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>    cpure a <span class="ot">=</span> <span class="dt">Tally</span> <span class="op">$</span> Map.singleton a <span class="dv">1</span></span>
-<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>    cliftA2 f (<span class="dt">Tally</span> a) b <span class="ot">=</span> Map.foldMapWithKey</span>
-<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>            (\k v <span class="ot">-&gt;</span> multiply (cmap (f k) b) v) a</span>
-<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CMonad</span> <span class="dt">Tally</span> <span class="kw">where</span></span>
-<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>    cbind f (<span class="dt">Tally</span> a) <span class="ot">=</span> Map.foldMapWithKey (multiply <span class="op">.</span> f) a</span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CFunctor</span> <span class="dt">Tally</span> <span class="kw">where</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">ElemCt</span> <span class="dt">Tally</span> a <span class="ot">=</span> <span class="dt">Ord</span> a</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    cmap f (<span class="dt">Tally</span> a) <span class="ot">=</span> <span class="dt">Tally</span> (Map.mapKeys f a)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="ot">multiply ::</span> <span class="dt">Tally</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> a</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>multiply (<span class="dt">Tally</span> a) n <span class="ot">=</span> <span class="dt">Tally</span> (Map.map (<span class="op">*</span> n) a)</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CApplicative</span> <span class="dt">Tally</span> <span class="kw">where</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    cpure a <span class="ot">=</span> <span class="dt">Tally</span> <span class="op">$</span> Map.singleton a <span class="dv">1</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>    cliftA2 f (<span class="dt">Tally</span> a) b <span class="ot">=</span> Map.foldMapWithKey</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>            (\k v <span class="ot">-&gt;</span> multiply (cmap (f k) b) v) a</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">CMonad</span> <span class="dt">Tally</span> <span class="kw">where</span></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>    cbind f (<span class="dt">Tally</span> a) <span class="ot">=</span> Map.foldMapWithKey (multiply <span class="op">.</span> f) a</span></code></pre></div>
 </div>
 <p>Notice that the implementation of <code>cliftA2</code> is as if the elements were all stored in a list. This is motivated by the linear property that <code>(f &lt;*&gt; a) &lt;&gt; (f &lt;*&gt; b) == f &lt;*&gt; (a &lt;&gt; b)</code>. We don’t need <code>cliftA2</code> in our problem, but I included it here for completeness.</p>
 <div class="named-code-block">

@@ -56,35 +56,38 @@ The problem is that this solution doesn't scale very well. To solve this more ef
 
 For tallying the amount of lanternfish in each state, I like to use a `Map Int Int`. 
 
-```haskell
-type Tally = Map Int Int
-
-fishCount :: Tally -> Int -> Int
-fishCount t s = Map.findWithDefault 0 s t
-
-addFish :: Int -> Int -> Tally -> Tally
-addFish k v = Map.alter (Just . maybe v (+ v)) k
-
-init :: [Int] -> Tally
-init = foldl (\t k -> addFish k 1 t) Map.empty
+``` {.haskell #solution-day-6}
+newtype Tally a = Tally { tallyMap :: Map a Int }
+    deriving (Show)
 ```
 
-We can age the fish, by mapping the keys, and deleting the -1 entry.
+Now we can implement `Semigroup` and `Monoid`:
+
+``` {.haskell #solution-day-6}
+instance (Ord a) => Semigroup (Tally a) where
+    Tally a <> Tally b = Tally $ Map.unionWith (+) a b
+
+instance (Ord a) => Monoid (Tally a) where
+    mempty = Tally mempty
+```
+
+Now we could do something like,
 
 ```haskell
-step :: Tally -> Tally
-step t = create $ cycle $ age t
-    where age    = Map.delete (-1) . Map.mapKeys (\k -> k - 1)
-          cycle  = addFish 6 births
-          create = addFish 8 births
-          births = fishCount t 0
+multiply :: (Ord a) => [a] -> Int -> Tally a
+multiply items n = foldMap (\k -> Tally $ Map.singleton k n) items
 
-totalCount :: Tally -> Int
-totalCount = sum . Map.elems
+concatMap :: (Ord a) => (a -> [a]) -> Tally a -> Tally a
+concatMap f (Tally a) = Map.foldMapWithKey (multiply . f) a
+
+step :: Tally Int -> Tally Int
+step = concatMap rules
 ```
+
+However, things could be even pretier if we could define something like `Applicative` on `Tally`.
 
 ## Associated Constraint Types
-This works great, but it looks awful. What if we could implement the naive version of this problem in such a way that we can easily scale it up later? We could say:
+What if we could implement the naive version of this problem in such a way that we can easily scale it up later? We could say:
 
 ```haskell
 rules :: (Applicative f, Semigroup (f Int)) => Int -> f Int
@@ -152,23 +155,9 @@ instance CMonad [] where
 
 This even means we could have `do` notation on constraint monads without loss of generality!
 
-### Implementation for `Map a Int`
-Now, we can implement the smarter version of the algorithm. We have a container that stores its values as the keys to a `Map`.
+### Implementation for `Tally`
 
 ``` {.haskell #solution-day-6}
-newtype Tally a = Tally { tallyMap :: Map a Int }
-    deriving (Show)
-```
-
-Now we can implement the type classes that we defined above, in addition to `Semigroup` and `Monoid`:
-
-``` {.haskell #solution-day-6}
-instance (Ord a) => Semigroup (Tally a) where
-    Tally a <> Tally b = Tally $ Map.unionWith (+) a b
-
-instance (Ord a) => Monoid (Tally a) where
-    mempty = Tally mempty
-
 instance CFunctor Tally where
     type ElemCt Tally a = Ord a
     cmap f (Tally a) = Tally (Map.mapKeys f a)

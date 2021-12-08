@@ -28,6 +28,17 @@ solutionA :: [Int] -> Int
 solutionA = length . last . iterate 80 step
 -- ~\~ end
 -- ~\~ begin <<lit/day06.md|solution-day-6>>[1]
+newtype Tally a = Tally { tallyMap :: Map a Int }
+    deriving (Show)
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[2]
+instance (Ord a) => Semigroup (Tally a) where
+    Tally a <> Tally b = Tally $ Map.unionWith (+) a b
+
+instance (Ord a) => Monoid (Tally a) where
+    mempty = Tally mempty
+-- ~\~ end
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[3]
 class CFunctor f where
     type ElemCt f a :: Constraint
     cmap :: (ElemCt f a, ElemCt f b) => (a -> b) -> f a -> f b
@@ -37,11 +48,11 @@ class CFunctor f => CApplicative f where
     cliftA2 :: (ElemCt f a, ElemCt f b, ElemCt f c)
             => (a -> b -> c) -> f a -> f b -> f c
 -- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[2]
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[4]
 class CApplicative f => CMonad f where
     cbind :: (ElemCt f a, ElemCt f b) => (a -> f b) -> f a -> f b
 -- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[3]
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[5]
 rules :: (CApplicative f, ElemCt f Int, Semigroup (f Int)) => Int -> f Int
 rules fish
     | fish == 0 = cpure 8 <> cpure 6
@@ -50,11 +61,11 @@ rules fish
 step :: (CMonad f, ElemCt f Int, Semigroup (f Int)) => f Int -> f Int
 step = cbind rules
 -- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[4]
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[6]
 class EmptyCt a
 instance EmptyCt a
 -- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[5]
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[7]
 instance CFunctor [] where
     type ElemCt [] a = EmptyCt a
     cmap = fmap
@@ -66,17 +77,7 @@ instance CApplicative [] where
 instance CMonad [] where
     cbind = (=<<)
 -- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[6]
-newtype Tally a = Tally { tallyMap :: Map a Int }
-    deriving (Show)
--- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[7]
-instance (Ord a) => Semigroup (Tally a) where
-    Tally a <> Tally b = Tally $ Map.unionWith (+) a b
-
-instance (Ord a) => Monoid (Tally a) where
-    mempty = Tally mempty
-
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[8]
 instance CFunctor Tally where
     type ElemCt Tally a = Ord a
     cmap f (Tally a) = Tally (Map.mapKeys f a)
@@ -92,7 +93,7 @@ instance CApplicative Tally where
 instance CMonad Tally where
     cbind f (Tally a) = Map.foldMapWithKey (multiply . f) a
 -- ~\~ end
--- ~\~ begin <<lit/day06.md|solution-day-6>>[8]
+-- ~\~ begin <<lit/day06.md|solution-day-6>>[9]
 tallyLength :: Tally a -> Int
 tallyLength (Tally a) = sum $ Map.elems a
 
