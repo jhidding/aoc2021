@@ -2,6 +2,8 @@
 title: "Advent of Code 2021"
 subtitle: "solutions, literally in Haskell"
 author: "Johan Hidding"
+toc-title: "Contents"
+landing-page: "advent-of-code-2021"
 ---
 [![Entangled badge](https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff)](https://entangled.github.io/)
 [![Github badge](https://img.shields.io/badge/github-clone%20me-%44ee55ff)](https://github.com/jhidding/aoc2021/)

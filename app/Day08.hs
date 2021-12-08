@@ -35,6 +35,9 @@ Digit a \\ Digit b = Digit $ a Set.\\ b
 invert :: Digit -> Digit
 invert = (eight \\)
 
+numberOfSegments :: Digit -> Int
+numberOfSegments (Digit a) = Set.size a
+
 data Line = Line
     { signalPattern :: [Digit]
     , outputValues  :: [Digit]
@@ -55,7 +58,7 @@ readInput = readInputParsing "data/day08.txt" (sepEndBy1 lineP eol)
 -- ~\~ end
 -- ~\~ begin <<lit/day08.md|solution-day-8>>[0]
 solutionA :: [Line] -> Int
-solutionA = length . filter ((`elem` [2, 3, 4, 7]) . Set.size . digitSet)
+solutionA = length . filter ((`elem` [2, 3, 4, 7]) . numberOfSegments)
                    . concatMap outputValues
 -- ~\~ end
 -- ~\~ begin <<lit/day08.md|solution-day-8>>[1]
@@ -64,9 +67,12 @@ type Decoding = Map Digit Int
 invertMap :: (Ord k, Ord v) => Map k v -> Map v k
 invertMap = Map.fromList . map swap . Map.toList
 
+generateMap :: (Ord k) => (k -> v) -> [k] -> Map k v
+generateMap f = Map.fromList . map (\k -> (k, f k))
+
 decode :: [Digit] -> Decoding
 decode digits = invertMap $ Map.mapMaybe id decodedMap
-    where decodedMap = Map.fromList $ map (\i -> (i, find (match i) digits)) [0..9]
+    where decodedMap = generateMap (\i -> find (match i) digits) [0..9]
           getDigit = join . (decodedMap !?)
           match i digit
               -- ~\~ begin <<lit/day08.md|digit-decode-cases>>[0]
@@ -97,7 +103,7 @@ decode digits = invertMap $ Map.mapMaybe id decodedMap
                   -- ~\~ end
               -- ~\~ end
               | otherwise            = False
-              where l = Set.size $ digitSet digit
+              where l = numberOfSegments digit
 -- ~\~ end
 -- ~\~ begin <<lit/day08.md|solution-day-8>>[2]
 decodeLine :: Line -> Int

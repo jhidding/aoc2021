@@ -81,6 +81,12 @@
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
+   <!-- Set the default landing page. Sections are set display: none by default
+        except for the one that is currently the location hash. -->
+   <script type="text/javascript">
+   if (document.location.hash == "" || document.location.hash == "#")
+       document.location.hash = "#advent-of-code-2021";
+  </script>
 </head>
 <body>
 <header id="title-block-header">
@@ -89,38 +95,13 @@
 <p class="author">Johan Hidding</p>
 </header>
 <div class="row">
-         <div class="col-3 col-s-3 menu">
-                <nav id="TOC" role="doc-toc">
-                                <ul>
-                                <li><a href="#advent-of-code-2021">Advent of Code 2021</a>
-                                <ul>
-                                <li><a href="#advent-of-code">Advent of Code</a></li>
-                                <li><a href="#entangled">Entangled</a></li>
-                                <li><a href="#instructions">Instructions</a></li>
-                                <li><a href="#generic-remarks">Generic remarks</a></li>
-                                <li><a href="#license">License</a></li>
-                                </ul></li>
-                                <li><a href="#day-1-sonar-sweep">Day 1: Sonar Sweep</a></li>
-                                <li><a href="#day-2-dive">Day 2: Dive!</a></li>
-                                <li><a href="#day-3-binary-diagnostic">Day 3: Binary Diagnostic</a></li>
-                                <li><a href="#day-4-giant-squid">Day 4: Giant Squid</a></li>
-                                <li><a href="#day-5-hydrothermal-venture">Day 5: Hydrothermal Venture</a></li>
-                                <li><a href="#day-6-lanternfish">Day 6: Lanternfish</a>
-                                <ul>
-                                <li><a href="#associated-constraint-types">Associated Constraint Types</a></li>
-                                </ul></li>
-                                <li><a href="#day-7-the-treachery-of-whales">Day 7: The Treachery of Whales</a></li>
-                                <li><a href="#day-8-seven-segment-search">Day 8: Seven Segment Search</a></li>
-                                <li><a href="#appendix-boiler-plate">Appendix: Boiler plate</a></li>
-                                <li><a href="#appendix-parsing">Appendix: Parsing</a></li>
-                                </ul>
-                </nav>
-        </div> 
         <div class="col-6 col-s-9" id="main">
 <p><a href="https://entangled.github.io/"><img src="https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff" alt="Entangled badge" /></a> <a href="https://github.com/jhidding/aoc2021/"><img src="https://img.shields.io/badge/github-clone%20me-%44ee55ff" alt="Github badge" /></a></p>
-<h1 id="advent-of-code-2021">Advent of Code 2021</h1>
+<section id="advent-of-code-2021" class="level1">
+<h1>Advent of Code 2021</h1>
 <p>This year I will publish my solutions for Advent of Code in Haskell, using Entangled to do <strong>Literate Programming</strong>.</p>
-<h2 id="advent-of-code">Advent of Code</h2>
+<section id="advent-of-code" class="level2">
+<h2>Advent of Code</h2>
 <p><a href="https://www.adventofcode.com">Advent of Code</a> is an anual coding challenge keeping nerds off the street for the entire merry month of decemeber. This is officially the best way to learn a new programming language or improve on your existing skills.</p>
 <div class="warning">
 <blockquote>
@@ -128,16 +109,27 @@
 <p>If you’re still trying to solve AOC2021, this site contains spoilers.</p>
 </blockquote>
 </div>
-<h2 id="entangled">Entangled</h2>
+</section>
+<section id="entangled" class="level2">
+<h2>Entangled</h2>
 <p><a href="https://entangled.github.io">Entangled</a> is a tool for Literate Programming. My challenge for this years’ Advent of Code is to create a set of beautifull solutions, that are completely documented in a literate form. The idea is that the code you see here is the complete solution to a problem. Think of Entangled as a content-management system for code blocks in your Markdown documents. The code blocks are assembled into compilable code, while changes are also tracked back to your markdown files. This means you can still debug and work with your favourite IDE.</p>
-<h2 id="instructions">Instructions</h2>
+</section>
+<section id="instructions" class="level2">
+<h2>Instructions</h2>
 <p>To run this code, I recommend installing Haskell using the <a href="https://www.haskell.org/ghcup/">GHCUp installer</a>. Run all solutions:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cabal</span> run x2021 <span class="at">--</span> <span class="at">-a</span></span></code></pre></div>
-<h2 id="generic-remarks">Generic remarks</h2>
+</section>
+<section id="generic-remarks" class="level2">
+<h2>Generic remarks</h2>
 <p>All solutions use the <code>RIO</code> library to replace the standard <code>Prelude</code>. This saves a long list of standard imports and is much better suited to modern Haskell practices. Most of the input parsing is done through <code>Megaparsec</code>, for which I have a submodule that contains some common types and functions, see the <a href="#appendix-boiler-plate">boilerplate section</a>.</p>
-<h2 id="license">License</h2>
+</section>
+<section id="license" class="level2">
+<h2>License</h2>
 <p>This code is licensed under the Apache v2 license, see <code>LICENSE</code> file in this repository.</p>
-<h1 id="day-1-sonar-sweep">Day 1: Sonar Sweep</h1>
+</section>
+</section>
+<section id="day-1-sonar-sweep" class="level1">
+<h1>Day 1: Sonar Sweep</h1>
 <p>It seems we are going on a deep dive this year! We are given the height data of a sonar sweep of the bottom of the sea.</p>
 <div class="named-code-block">
 <p>file:app/Day01.hs</p>
@@ -176,7 +168,9 @@
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> diff3 (a1<span class="op">:</span>a2<span class="op">:</span>a3<span class="op">:</span>a4<span class="op">:</span>as) <span class="ot">=</span> a4 <span class="op">-</span> a1 <span class="op">:</span> diff3 (a2<span class="op">:</span>a3<span class="op">:</span>a4<span class="op">:</span>as)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>          diff3 _                <span class="ot">=</span> []</span></code></pre></div>
 <p>The middle terms in the finite difference drop out.</p>
-<h1 id="day-2-dive">Day 2: Dive!</h1>
+</section>
+<section id="day-2-dive" class="level1">
+<h1>Day 2: Dive!</h1>
 <p>We are given our first mini instruction set! We need to steer the submarine using an instruction set <code>forward</code>, <code>down</code> or <code>up</code> with a number attached. We get to do our first parsing of this year (yay!).</p>
 <div class="named-code-block">
 <p>file:app/Day02.hs</p>
@@ -241,7 +235,9 @@
 <span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>solutionB inst <span class="ot">=</span> navPos <span class="op">*</span> navDepth</span>
 <span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> <span class="dt">Navigation</span>{<span class="op">..</span>} <span class="ot">=</span> <span class="fu">foldl</span> moveB (<span class="dt">Navigation</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span>) inst</span></code></pre></div>
 </div>
-<h1 id="day-3-binary-diagnostic">Day 3: Binary Diagnostic</h1>
+</section>
+<section id="day-3-binary-diagnostic" class="level1">
+<h1>Day 3: Binary Diagnostic</h1>
 <div class="named-code-block">
 <p>file:app/Day03.hs</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day03</span> <span class="kw">where</span></span>
@@ -315,7 +311,9 @@
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Bits</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>solutionB bits <span class="ot">=</span> oxygenGeneratorRating bits <span class="op">*</span> co2ScrubberRating bits</span></code></pre></div>
 </div>
-<h1 id="day-4-giant-squid">Day 4: Giant Squid</h1>
+</section>
+<section id="day-4-giant-squid" class="level1">
+<h1>Day 4: Giant Squid</h1>
 <p>We’re playing Bingo with a giant squid. This is why I love advent of Code!</p>
 <p>Doing contrived array arithmetic is not seen as the strong suit of Haskell. Solving this in Python with NumPy would seem so much easier. I will use the nice <code>Massiv</code> library, that implements multi-dimensional arrays, fancy indexing, stencil operations etc.</p>
 <div class="named-code-block">
@@ -415,7 +413,9 @@
 <div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Bingo</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>solutionB <span class="dt">Bingo</span>{<span class="op">..</span>} <span class="ot">=</span> score <span class="op">&lt;$&gt;</span> lastMaybe (winSeq draws boards)</span></code></pre></div>
 </div>
-<h1 id="day-5-hydrothermal-venture">Day 5: Hydrothermal Venture</h1>
+</section>
+<section id="day-5-hydrothermal-venture" class="level1">
+<h1>Day 5: Hydrothermal Venture</h1>
 <p>We need to plot a map of hydrothermal vents on a grid. We are given lists of coordinates in the form <code>x1,y1 -&gt; x2,y2</code>. Since we are plotting on 2D grids again, I reach for my friend <code>Massiv</code>. Today, we’ll see how to program in Haskell like its Fortran 77.</p>
 <div class="named-code-block">
 <p>file:app/Day05.hs</p>
@@ -491,7 +491,8 @@
 <span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>totalMinMax ls <span class="ot">=</span> <span class="fu">foldl1</span> minMax <span class="op">$</span> lineMinMax <span class="op">&lt;$&gt;</span> ls</span>
 <span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> minMax (a, b) (c, d) <span class="ot">=</span> (<span class="fu">min</span> <span class="op">&lt;$&gt;</span> a <span class="op">&lt;*&gt;</span> c, <span class="fu">max</span> <span class="op">&lt;$&gt;</span> b <span class="op">&lt;*&gt;</span> d)</span></code></pre></div>
 </div>
-<h3 id="part-a">Part A</h3>
+<section id="part-a" class="level3">
+<h3>Part A</h3>
 <p>In part A, we only need to treat the lines that are vertical or horizontal. We can write a routine that plots the line on the diagram, given a list of coordinates:</p>
 <div class="named-code-block">
 <p>«solution-day-5»</p>
@@ -511,7 +512,8 @@
 <span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>day<span class="op">-</span><span class="dv">5</span><span class="op">-</span>line<span class="op">-</span>cases<span class="op">&gt;&gt;</span></span>
 <span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;Illegal line: &quot;</span> <span class="op">&lt;&gt;</span> <span class="fu">show</span> l</span></code></pre></div>
 </div>
-<h4 id="horizontal">Horizontal</h4>
+<section id="horizontal" class="level4">
+<h4>Horizontal</h4>
 <div class="named-code-block">
 <p>«day-5-line-cases»</p>
 <div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="op">|</span> horizontal l <span class="ot">=</span> horizontalCoords l</span></code></pre></div>
@@ -525,7 +527,9 @@
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>horizontalCoords (<span class="dt">Vec2</span> (ax, y), <span class="dt">Vec2</span> (bx, _))</span>
 <span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> A.toIx2 <span class="op">.</span> (,y) <span class="op">&lt;$&gt;</span> <span class="fu">range</span> ax bx</span></code></pre></div>
 </div>
-<h4 id="vertical">Vertical</h4>
+</section>
+<section id="vertical" class="level4">
+<h4>Vertical</h4>
 <div class="named-code-block">
 <p>«day-5-line-cases»</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="op">|</span> vertical l <span class="ot">=</span> verticalCoords l</span></code></pre></div>
@@ -552,7 +556,10 @@
 <span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">1</span>) <span class="op">.</span> A.toList </span>
 <span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span> plotLines <span class="op">.</span> <span class="fu">filter</span> (<span class="fu">not</span> <span class="op">.</span> diagonal)</span></code></pre></div>
 </div>
-<h3 id="part-b">Part B</h3>
+</section>
+</section>
+<section id="part-b" class="level3">
+<h3>Part B</h3>
 <p>Adding the case of diagonal lines:</p>
 <div class="named-code-block">
 <p>«day-5-line-cases»</p>
@@ -572,7 +579,10 @@
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">&gt;</span> <span class="dv">1</span>) <span class="op">.</span> A.toList <span class="op">.</span> plotLines</span></code></pre></div>
 </div>
 <p><img src="fig/day05-output.svg" alt="" /></p>
-<h1 id="day-6-lanternfish">Day 6: Lanternfish</h1>
+</section>
+</section>
+<section id="day-6-lanternfish" class="level1">
+<h1>Day 6: Lanternfish</h1>
 <p>We need to simulate the number of lanternfish, each with a timer, spawning new lanternfish etc. Since we have an exponential growth process, to simulate this naively would be stupid, which is kind of the point of the exercise. We only have nine possible states for each fish, so instead we can tally <strong>how many</strong> lanternfish exist in each state. It turns out however, that programming it the stupid way first, turns this innocent looking exercise into a nice lesson on <strong>Constraint Kinds</strong>.</p>
 <div class="named-code-block">
 <p>file:app/Day06.hs</p>
@@ -641,7 +651,8 @@
 <span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="ot">totalCount ::</span> <span class="dt">Tally</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>totalCount <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> Map.elems</span></code></pre></div>
-<h2 id="associated-constraint-types">Associated Constraint Types</h2>
+<section id="associated-constraint-types" class="level2">
+<h2>Associated Constraint Types</h2>
 <p>This works great, but it looks awful. What if we could implement the naive version of this problem in such a way that we can easily scale it up later? We could say:</p>
 <div class="sourceCode" id="cb42"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rules ::</span> (<span class="dt">Applicative</span> f, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>rules clock</span>
@@ -677,7 +688,8 @@
 <span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> (<span class="dt">CMonad</span> f, <span class="dt">ElemCt</span> f <span class="dt">Int</span>, <span class="dt">Semigroup</span> (f <span class="dt">Int</span>)) <span class="ot">=&gt;</span> f <span class="dt">Int</span> <span class="ot">-&gt;</span> f <span class="dt">Int</span></span>
 <span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>step <span class="ot">=</span> cbind rules</span></code></pre></div>
 </div>
-<h3 id="implementation-for-list">Implementation for List</h3>
+<section id="implementation-for-list" class="level3">
+<h3>Implementation for List</h3>
 <p>There is the little annoyance that we need to be able to signal an <code>Empty</code> constraint:</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
@@ -699,7 +711,9 @@
 <span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    cbind <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span></code></pre></div>
 </div>
 <p>This even means we could have <code>do</code> notation on constraint monads without loss of generality!</p>
-<h3 id="implementation-for-map-a-int">Implementation for <code>Map a Int</code></h3>
+</section>
+<section id="implementation-for-map-a-int" class="level3">
+<h3>Implementation for <code>Map a Int</code></h3>
 <p>Now, we can implement the smarter version of the algorithm. We have a container that stores its values as the keys to a <code>Map</code>.</p>
 <div class="named-code-block">
 <p>«solution-day-6»</p>
@@ -742,7 +756,11 @@
 <span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> tallyLength <span class="op">.</span> <span class="fu">last</span> <span class="op">.</span> <span class="fu">iterate</span> <span class="dv">256</span> step <span class="op">.</span> tallyFromList</span></code></pre></div>
 </div>
-<h1 id="day-7-the-treachery-of-whales">Day 7: The Treachery of Whales</h1>
+</section>
+</section>
+</section>
+<section id="day-7-the-treachery-of-whales" class="level1">
+<h1>Day 7: The Treachery of Whales</h1>
 <p>But I like whales! We need to minimize a cost function. We have a list of integers, so we can reuse the parser from Day 6.</p>
 <div class="named-code-block">
 <p>file:app/Day07.hs</p>
@@ -801,7 +819,10 @@
 <span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>solutionB x <span class="ot">=</span> (loc, costFuncB x loc)</span>
 <span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loc <span class="ot">=</span> mean x</span></code></pre></div>
 </div>
-<h1 id="day-8-seven-segment-search">Day 8: Seven Segment Search</h1>
+</section>
+<section id="day-8-seven-segment-search" class="level1">
+<h1>Day 8: Seven Segment Search</h1>
+<p>Oh boy. This was a really nice puzzle. I think I managed to put the solution into readable code also.</p>
 <div class="named-code-block">
 <p>file:app/Day08.hs</p>
 <div class="sourceCode" id="cb55"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day08</span> <span class="kw">where</span></span>
@@ -846,10 +867,13 @@
 <span id="cb56-19"><a href="#cb56-19" aria-hidden="true" tabindex="-1"></a><span class="ot">invert ::</span> <span class="dt">Digit</span> <span class="ot">-&gt;</span> <span class="dt">Digit</span></span>
 <span id="cb56-20"><a href="#cb56-20" aria-hidden="true" tabindex="-1"></a>invert <span class="ot">=</span> (eight \\)</span>
 <span id="cb56-21"><a href="#cb56-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-22"><a href="#cb56-22" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Line</span> <span class="ot">=</span> <span class="dt">Line</span></span>
-<span id="cb56-23"><a href="#cb56-23" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> signalPattern ::</span> [<span class="dt">Digit</span>]</span>
-<span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> outputValues  ::</span> [<span class="dt">Digit</span>]</span>
-<span id="cb56-25"><a href="#cb56-25" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+<span id="cb56-22"><a href="#cb56-22" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfSegments ::</span> <span class="dt">Digit</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb56-23"><a href="#cb56-23" aria-hidden="true" tabindex="-1"></a>numberOfSegments (<span class="dt">Digit</span> a) <span class="ot">=</span> Set.size a</span>
+<span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-25"><a href="#cb56-25" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Line</span> <span class="ot">=</span> <span class="dt">Line</span></span>
+<span id="cb56-26"><a href="#cb56-26" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> signalPattern ::</span> [<span class="dt">Digit</span>]</span>
+<span id="cb56-27"><a href="#cb56-27" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> outputValues  ::</span> [<span class="dt">Digit</span>]</span>
+<span id="cb56-28"><a href="#cb56-28" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
 </div>
 <p>Made a superfluous parser for the characters ‘a’ through ‘g’.</p>
 <div class="named-code-block">
@@ -870,10 +894,10 @@
 <div class="named-code-block">
 <p>«solution-day-8»</p>
 <div class="sourceCode" id="cb58"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Line</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> ((<span class="ot">`elem`</span> [<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">7</span>]) <span class="op">.</span> Set.size <span class="op">.</span> digitSet)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> ((<span class="ot">`elem`</span> [<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">7</span>]) <span class="op">.</span> numberOfSegments)</span>
 <span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>                   <span class="op">.</span> <span class="fu">concatMap</span> outputValues</span></code></pre></div>
 </div>
-<p>Part B is not simple. To find the correct mapping we have to play around with deducing digits from the digits we already know. I used a <strong>lazy</strong> <code>Map Int Digit</code> to represent the partially decoded map. In the end I call <code>Map.mapMaybe</code> which is strict, because it needs to do pattern matching. In this lazy approach we need to make sure that all entries to the map are there, but the values are not evaluated until needed. We have a <code>match</code> function that checks if a digit matches a certain number.</p>
+<p>Part B is not simple. To find the correct mapping we have to play around with deducing digits from the digits we already know. I used a <strong>lazy</strong> <code>Map Int (Maybe Digit)</code> to represent the partially decoded map. In the end I call <code>Map.mapMaybe</code> which is strict, because it needs to do pattern matching. In this lazy approach we need to make sure that all entries to the map are there, but the values are not evaluated until needed. We have a <code>match</code> function that checks if a digit matches a certain number.</p>
 <div class="named-code-block">
 <p>«solution-day-8»</p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Decoding</span> <span class="ot">=</span> <span class="dt">Map</span> <span class="dt">Digit</span> <span class="dt">Int</span></span>
@@ -881,14 +905,17 @@
 <span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="ot">invertMap ::</span> (<span class="dt">Ord</span> k, <span class="dt">Ord</span> v) <span class="ot">=&gt;</span> <span class="dt">Map</span> k v <span class="ot">-&gt;</span> <span class="dt">Map</span> v k</span>
 <span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>invertMap <span class="ot">=</span> Map.fromList <span class="op">.</span> <span class="fu">map</span> swap <span class="op">.</span> Map.toList</span>
 <span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="ot">decode ::</span> [<span class="dt">Digit</span>] <span class="ot">-&gt;</span> <span class="dt">Decoding</span></span>
-<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>decode digits <span class="ot">=</span> invertMap <span class="op">$</span> Map.mapMaybe <span class="fu">id</span> decodedMap</span>
-<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> decodedMap <span class="ot">=</span> Map.fromList <span class="op">$</span> <span class="fu">map</span> (\i <span class="ot">-&gt;</span> (i, find (match i) digits)) [<span class="dv">0</span><span class="op">..</span><span class="dv">9</span>]</span>
-<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>          getDigit <span class="ot">=</span> join <span class="op">.</span> (decodedMap <span class="op">!?</span>)</span>
-<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>          match i digit</span>
-<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span>digit<span class="op">-</span>decode<span class="op">-</span>cases<span class="op">&gt;&gt;</span></span>
-<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a>              <span class="op">|</span> <span class="fu">otherwise</span>            <span class="ot">=</span> <span class="dt">False</span></span>
-<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a>              <span class="kw">where</span> l <span class="ot">=</span> Set.size <span class="op">$</span> digitSet digit</span></code></pre></div>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="ot">generateMap ::</span> (<span class="dt">Ord</span> k) <span class="ot">=&gt;</span> (k <span class="ot">-&gt;</span> v) <span class="ot">-&gt;</span> [k] <span class="ot">-&gt;</span> <span class="dt">Map</span> k v</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>generateMap f <span class="ot">=</span> Map.fromList <span class="op">.</span> <span class="fu">map</span> (\k <span class="ot">-&gt;</span> (k, f k))</span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a><span class="ot">decode ::</span> [<span class="dt">Digit</span>] <span class="ot">-&gt;</span> <span class="dt">Decoding</span></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>decode digits <span class="ot">=</span> invertMap <span class="op">$</span> Map.mapMaybe <span class="fu">id</span> decodedMap</span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> decodedMap <span class="ot">=</span> generateMap (\i <span class="ot">-&gt;</span> find (match i) digits) [<span class="dv">0</span><span class="op">..</span><span class="dv">9</span>]</span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a>          getDigit <span class="ot">=</span> join <span class="op">.</span> (decodedMap <span class="op">!?</span>)</span>
+<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a>          match i digit</span>
+<span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span>digit<span class="op">-</span>decode<span class="op">-</span>cases<span class="op">&gt;&gt;</span></span>
+<span id="cb59-15"><a href="#cb59-15" aria-hidden="true" tabindex="-1"></a>              <span class="op">|</span> <span class="fu">otherwise</span>            <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb59-16"><a href="#cb59-16" aria-hidden="true" tabindex="-1"></a>              <span class="kw">where</span> l <span class="ot">=</span> numberOfSegments digit</span></code></pre></div>
 </div>
 <p>The easy cases were already pointed to in part A:</p>
 <div class="named-code-block">
@@ -946,7 +973,9 @@
 <span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Line</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> decodeLine</span></code></pre></div>
 </div>
-<h1 id="appendix-boiler-plate">Appendix: Boiler plate</h1>
+</section>
+<section id="appendix-boiler-plate" class="level1">
+<h1>Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>
 <div class="sourceCode" id="cb64"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
@@ -955,7 +984,9 @@
 <span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
 <span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
 </div>
-<h1 id="appendix-parsing">Appendix: Parsing</h1>
+</section>
+<section id="appendix-parsing" class="level1">
+<h1>Appendix: Parsing</h1>
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
 <div class="sourceCode" id="cb65"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
@@ -996,9 +1027,40 @@
 <span id="cb65-36"><a href="#cb65-36" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
 <span id="cb65-37"><a href="#cb65-37" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
 </div>
+</section>
         </div>
+         <div class="col-3 col-s-3 menu" id="menu">
+                <nav id="TOC" role="doc-toc">
+                                <h2 id="toc-title">Contents</h2>
+                                <ul>
+                                <li><a href="#advent-of-code-2021">Advent of Code 2021</a></li>
+                                <li><a href="#day-1-sonar-sweep">Day 1: Sonar Sweep</a></li>
+                                <li><a href="#day-2-dive">Day 2: Dive!</a></li>
+                                <li><a href="#day-3-binary-diagnostic">Day 3: Binary Diagnostic</a></li>
+                                <li><a href="#day-4-giant-squid">Day 4: Giant Squid</a></li>
+                                <li><a href="#day-5-hydrothermal-venture">Day 5: Hydrothermal Venture</a></li>
+                                <li><a href="#day-6-lanternfish">Day 6: Lanternfish</a></li>
+                                <li><a href="#day-7-the-treachery-of-whales">Day 7: The Treachery of Whales</a></li>
+                                <li><a href="#day-8-seven-segment-search">Day 8: Seven Segment Search</a></li>
+                                <li><a href="#appendix-boiler-plate">Appendix: Boiler plate</a></li>
+                                <li><a href="#appendix-parsing">Appendix: Parsing</a></li>
+                                </ul>
+                </nav>
+        </div> 
 </div>
 <div class="footer">
 </div>
 </body>
+<!-- This script scrolls the page to top when a link in the TOC is clicked. -->
+<script>
+   var elems = document.getElementById("TOC").querySelectorAll("a");
+   for (var i = 0; i < elems.length; ++i) {
+      elems[i].addEventListener("click", clickFunc);
+   }
+   function clickFunc(e) {
+      e.preventDefault();
+      window.location.hash = this.hash;
+      window.scrollTo(0, 0); 
+   }
+</script>
 </html>

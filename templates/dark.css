@@ -10,6 +10,14 @@ body {
         font-size: 13pt;
 }
 
+.level1 {
+        display: none;
+}
+
+.level1:target {
+        display: block;
+}
+
 a {
         color: #66ccff;
         text-shadow: 0 0 5px #f0f;
@@ -21,10 +29,9 @@ a:hover {
 }
 
 .warning blockquote {
-        padding: 5pt 20pt 5pt 20pt;
-        margin-right: 100pt;
         background: #324;
         border-radius: 5pt;
+        padding: 10pt;
 }
 
 #main h1 {
@@ -34,13 +41,24 @@ a:hover {
 #main p {
 }
 
-header {
-        background-image: url("./structure.jpg");
-        background-size: auto;
-        background-repeat: no-repeat;
-        margin: 0;
-        padding: 10pt 300pt 10pt 100pt;
-        text-shadow: 0 0 5pt black;
+header h1 {
+        font-size: 20pt;
+        background: #00000080;
+        padding: 10pt 10pt 0 10pt;
+        margin-bottom: 0;
+}
+
+header .subtitle {
+        background: #00000080;
+        padding: 10pt;
+        padding-top: 0;
+        margin-top: 0;
+}
+
+header .author {
+        background: #00000080;
+        padding: 10pt;
+        margin-top: 0;
 }
 
 .footer {
@@ -52,24 +70,12 @@ header {
         text-shadow: 0 0 5pt black;
 }
 
-header h1 {
-        font-size: 40pt;
-        background: #00000080;
-        padding: 20pt 20pt 0 20pt;
-        margin-bottom: 0;
-}
-
-header .subtitle {
-        background: #00000080;
-        padding: 20pt;
-        padding-top: 0;
-        margin-top: 0;
-}
-
-header .author {
-        background: #00000080;
-        padding: 20pt;
-        margin-top: 0;
+header {
+        background-image: url("./structure.jpg");
+        background-size: auto;
+        background-repeat: no-repeat;
+        margin: 0;
+        padding: 10pt;
 }
 
 .named-code-block {
@@ -119,11 +125,11 @@ code {
 .row::after {
   content: "";
   clear: both;
-  display: table;
+/*  display: table; */
 }
 
 [class*="col-"] {
-  float: left;
+/*  float: left; */
   padding: 15px;
 }
 
@@ -175,6 +181,13 @@ code {
           position: sticky;
           top: 0;
   }
+
+  .row {
+          display: flex;
+          flex-flow: row;
+  }
+  #menu { order: 1; }
+  #main { order: 2; }
       
   /* For tablets: */
   .col-s-1 {width: 8.33%;}
@@ -191,7 +204,44 @@ code {
   .col-s-12 {width: 100%;}
 }
 
-@media only screen and (min-width: 768px) {
+@media only screen and (min-width: 960px) {
+header {
+        padding: 10pt 100pt 10pt 50pt;
+        text-shadow: 0 0 5pt black;
+}
+
+header h1 {
+        font-size: 40pt;
+        background: #00000080;
+        padding: 20pt 20pt 0 20pt;
+        margin-bottom: 0;
+}
+
+header .subtitle {
+        background: #00000080;
+        padding: 20pt;
+        padding-top: 0;
+        margin-top: 0;
+}
+
+header .author {
+        background: #00000080;
+        padding: 20pt;
+        margin-top: 0;
+}
+
+.warning blockquote {
+        padding: 5pt 20pt 5pt 20pt;
+        margin-right: 100pt;
+}
+
+  .row {
+          display: flex;
+          flex-flow: row;
+  }
+  #menu { order: 1; }
+  #main { order: 2; }
+      
   .menu {
           position: sticky;
           top: 0;

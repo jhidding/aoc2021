@@ -1,10 +1,11 @@
 .PHONY: site clean watch watch-pandoc watch-browser-sync
 
-pandoc_args += -s -t html5 -f commonmark_x --toc --toc-depth 2
+pandoc_args += -s -t html5 -f commonmark_x --toc --toc-depth 1
 pandoc_args += --template templates/dark.html
 pandoc_args += --css dark.css
 pandoc_args += --mathjax
 pandoc_args += --highlight-style templates/dark.theme
+pandoc_args += --section-divs
 pandoc_args += --lua-filter scripts/hide.lua
 pandoc_args += --lua-filter scripts/gnuplot.lua
 pandoc_args += --lua-filter scripts/annotate.lua
@@ -13,7 +14,7 @@ pandoc_output := docs/index.html
 
 static_files := templates/dark.css templates/structure.jpg
 static_targets := $(static_files:templates/%=docs/%)
-functional_deps := Makefile scripts/gnuplot.lua scripts/annotate.lua templates/dark.html templates/dark.theme
+functional_deps := Makefile $(wildcard scripts/*.lua) templates/dark.html templates/dark.theme
 
 site: $(pandoc_output) $(static_targets)
 

@@ -1,4 +1,5 @@
 # Day 8: Seven Segment Search
+Oh boy. This was a really nice puzzle. I think I managed to put the solution into readable code also.
 
 ``` {.haskell file=app/Day08.hs}
 module Day08 where
@@ -44,6 +45,9 @@ Digit a \\ Digit b = Digit $ a Set.\\ b
 invert :: Digit -> Digit
 invert = (eight \\)
 
+numberOfSegments :: Digit -> Int
+numberOfSegments (Digit a) = Set.size a
+
 data Line = Line
     { signalPattern :: [Digit]
     , outputValues  :: [Digit]
@@ -70,11 +74,11 @@ Part A is very simple.
 
 ``` {.haskell #solution-day-8}
 solutionA :: [Line] -> Int
-solutionA = length . filter ((`elem` [2, 3, 4, 7]) . Set.size . digitSet)
+solutionA = length . filter ((`elem` [2, 3, 4, 7]) . numberOfSegments)
                    . concatMap outputValues
 ```
 
-Part B is not simple. To find the correct mapping we have to play around with deducing digits from the digits we already know. I used a **lazy** `Map Int Digit` to represent the partially decoded map. In the end I call `Map.mapMaybe` which is strict, because it needs to do pattern matching. In this lazy approach we need to make sure that all entries to the map are there, but the values are not evaluated until needed. We have a `match` function that checks if a digit matches a certain number.
+Part B is not simple. To find the correct mapping we have to play around with deducing digits from the digits we already know. I used a **lazy** `Map Int (Maybe Digit)` to represent the partially decoded map. In the end I call `Map.mapMaybe` which is strict, because it needs to do pattern matching. In this lazy approach we need to make sure that all entries to the map are there, but the values are not evaluated until needed. We have a `match` function that checks if a digit matches a certain number.
 
 ``` {.haskell #solution-day-8}
 type Decoding = Map Digit Int
@@ -82,14 +86,17 @@ type Decoding = Map Digit Int
 invertMap :: (Ord k, Ord v) => Map k v -> Map v k
 invertMap = Map.fromList . map swap . Map.toList
 
+generateMap :: (Ord k) => (k -> v) -> [k] -> Map k v
+generateMap f = Map.fromList . map (\k -> (k, f k))
+
 decode :: [Digit] -> Decoding
 decode digits = invertMap $ Map.mapMaybe id decodedMap
-    where decodedMap = Map.fromList $ map (\i -> (i, find (match i) digits)) [0..9]
+    where decodedMap = generateMap (\i -> find (match i) digits) [0..9]
           getDigit = join . (decodedMap !?)
           match i digit
               <<digit-decode-cases>>
               | otherwise            = False
-              where l = Set.size $ digitSet digit
+              where l = numberOfSegments digit
 ```
 
 The easy cases were already pointed to in part A:
