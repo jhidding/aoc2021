@@ -28,7 +28,7 @@ readInput :: (HasLogFunc env) => RIO env [Int]
 readInput = readInputParsing "data/day06.txt" csvInts
 ```
 
-The point of the exercise is that we can have a naive solution:
+The point of the exercise is that we can have a naive solution, which I implement here just for fun:
 
 ```haskell
 rules :: Int -> [Int]

@@ -105,8 +105,9 @@ header {
 
 :not(.named-code-block) > div.sourceCode {
         margin: 0 20pt 0 20pt;
-        padding: 5pt;
+        padding: 5pt 15pt 10pt 15pt;
         border-radius: 5pt 5pt 5pt 5pt;
+        background: #111144;
 }
 
 code {

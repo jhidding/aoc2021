@@ -610,7 +610,7 @@
 <span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env [<span class="dt">Int</span>]</span>
 <span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day06.txt&quot;</span> csvInts</span></code></pre></div>
 </div>
-<p>The point of the exercise is that we can have a naive solution:</p>
+<p>The point of the exercise is that we can have a naive solution, which I implement here just for fun:</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rules ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>rules clock</span>
 <span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> clock <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> [<span class="dv">8</span>, <span class="dv">6</span>]</span>
