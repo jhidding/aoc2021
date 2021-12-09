@@ -1,5 +1,16 @@
--- ~\~ language=Haskell filename=app/Day09.hs
--- ~\~ begin <<lit/day09.md|app/Day09.hs>>[0]
+# Day 9: Smoke Basin
+Lava tubes and more hydrothermal vents! I'll be doing this in `Massiv` again. Here is a rendering of my input data.
+
+``` {.gnuplot output=fig/day09-input.svg}
+The input data.
+---
+set xrange [0:100]
+set yrange [0:100]
+set size square
+plot 'data/day09-output.txt' i 0 matrix w image
+```
+
+``` {.haskell file=app/Day09.hs}
 module Day09 where
 
 import RIO
@@ -21,7 +32,15 @@ import qualified Data.MultiSet as MultiSet
 
 import System.Random (mkStdGen, genWord8)
 
--- ~\~ begin <<lit/day09.md|parsing-day-9>>[0]
+<<parsing-day-9>>
+<<solution-day-9>>
+<<run-solutions>>
+<<show-data-day-9>>
+```
+
+Today's input data is given as digits between 0 and 9.
+
+``` {.haskell #parsing-day-9}
 type Array2' r a = Array r Ix2 a
 type Array2 a = Array2' A.U a
 
@@ -35,12 +54,18 @@ heightMapP = sepEndBy1 (some digit) eol >>= toArray2
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day09.txt" heightMapP
--- ~\~ end
--- ~\~ begin <<lit/day09.md|solution-day-9>>[0]
+```
+
+I'll be using `Massiv`s stencil interface to solve this. Each stencil works on a neighbourhood of four pixels directly north, south, west and east from current location:
+
+``` {.haskell #solution-day-9}
 neighbours :: [Ix2]
 neighbours = [-1 :. 0, 1 :. 0, 0 :. -1, 0 :. 1]
--- ~\~ end
--- ~\~ begin <<lit/day09.md|solution-day-9>>[1]
+```
+
+For part A, we need to find the minima in the data.
+
+``` {.haskell #solution-day-9}
 findMinStencil :: A.Stencil Ix2 Int Int
 findMinStencil = A.Stencil.makeStencil (A.Sz (3 :. 3)) (1 :. 1) go
     where go get
@@ -52,8 +77,18 @@ solutionA :: Array2 Int -> Int
 solutionA a = A.sum b
     where b :: Array2 Int
           b = A.compute $ A.Stencil.mapStencil (A.Fill 10) findMinStencil a
--- ~\~ end
--- ~\~ begin <<lit/day09.md|solution-day-9>>[2]
+```
+
+In part B, we need to compute the watershed of the height map.
+
+1. Mark minima.
+2. Grow to a neighbourhood around each minimum:
+    - stop when two patches meet
+    - otherwise, repeat
+
+We start by marking all minima found in part A with a unique integer identifier. I use a monadic map to give each minimum a number > 0.
+
+``` {.haskell #solution-day-9}
 markBasins :: Array2 Int -> Array2 Int
 markBasins a = evalState (A.mapM markNonZero a) 0
     where promise :: State Int (Array2 Int)
@@ -62,8 +97,11 @@ markBasins a = evalState (A.mapM markNonZero a) 0
           markNonZero x
             | x /= 0    = modify (+ 1) >> get
             | otherwise = return 0
--- ~\~ end
--- ~\~ begin <<lit/day09.md|solution-day-9>>[3]
+```
+
+The second step, we paint a pixel if all descending pixels have the same color. If a pixel is already colored, we leave it alone.
+
+``` {.haskell #solution-day-9}
 same :: (Eq a) => [a] -> Maybe a
 same (a1:a2:as)
     | a1 == a2  = same (a2:as)
@@ -81,8 +119,11 @@ watershedStencil = A.Stencil.makeStencil (A.Sz (3 :. 3)) (1 :. 1) go
                   color      = same $ snd <$> descending
                   paint (Just c) = (fst value, c)
                   paint _        = value
--- ~\~ end
--- ~\~ begin <<lit/day09.md|solution-day-9>>[4]
+```
+
+We keep doing this, until the watershed doesn't change anymore.
+
+``` {.haskell #solution-day-9}
 watershed :: Array2 (Int, Int) -> Array2 (Int, Int)
 watershed = A.compute . A.Stencil.mapStencil (A.Fill (10, 0)) watershedStencil 
 
@@ -97,8 +138,11 @@ computeWatershed a = A.compute $ A.map snd erase9
     where minima = A.compute $ A.Stencil.mapStencil (A.Fill 10) findMinStencil a 
           runWs  = fixedPoint watershed (A.compute $ A.zip a $ markBasins minima)
           erase9 = A.map (\(a, b) -> if a == 9 then (a, 0) else (a, b)) runWs
--- ~\~ end
--- ~\~ begin <<lit/day09.md|solution-day-9>>[5]
+```
+
+To get our answer, we need to measure the size of each patch, and then find the three largest ones. On Day 7 we already saw the `MultiSet` in use, now again so:
+
+``` {.haskell #solution-day-9}
 count :: Array2 Int -> MultiSet Int
 count = A.foldMono MultiSet.singleton
 
@@ -107,15 +151,9 @@ solutionB a = product $ take 3 $ sortBy (flip compare)
             $ map snd $ filter ((/= 0) . fst)
             $ MultiSet.toOccurList $ count
             $ computeWatershed a
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
+```
 
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ begin <<lit/day09.md|show-data-day-9>>[0]
+``` {.haskell #show-data-day-9 .hide}
 printArray2 :: Array2 Int -> RIO env ()
 printArray2 a =
     print $ Text.intercalate "\n" $ map (Text.intercalate " " . map tshow) (A.toLists2 a)
@@ -131,5 +169,16 @@ showData = runSimpleApp $ do
           randomize n
             | n == 0    = 0
             | otherwise = fromIntegral . fst . genWord8 . mkStdGen $ n
--- ~\~ end
--- ~\~ end
+```
+
+Here is my rendering of the resulting watershed:
+
+``` {.gnuplot output=fig/day09-output.svg}
+The watershed segmentation of the input data.
+---
+set xrange [0:100]
+set yrange [0:100]
+set size square
+plot 'data/day09-output.txt' i 1 matrix w image
+```
+
