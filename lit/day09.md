@@ -121,7 +121,7 @@ watershedStencil = A.Stencil.makeStencil (A.Sz (3 :. 3)) (1 :. 1) go
                   paint _        = value
 ```
 
-We keep doing this, until the watershed doesn't change anymore.
+We keep doing this, until the watershed doesn't change anymore. Afterwards, we need to clear pixels where the value is 9, this only happens at the edges.
 
 ``` {.haskell #solution-day-9}
 watershed :: Array2 (Int, Int) -> Array2 (Int, Int)
@@ -140,7 +140,7 @@ computeWatershed a = A.compute $ A.map snd erase9
           erase9 = A.map (\(a, b) -> if a == 9 then (a, 0) else (a, b)) runWs
 ```
 
-To get our answer, we need to measure the size of each patch, and then find the three largest ones. On Day 7 we already saw the `MultiSet` in use, now again so:
+To get our answer, we need to measure the size of each patch, and then find the three largest ones. On Day 6 we already saw the `MultiSet` in use, now again so:
 
 ``` {.haskell #solution-day-9}
 count :: Array2 Int -> MultiSet Int

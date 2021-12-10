@@ -40,7 +40,7 @@ solutions = Map.fromList
     ,  (7, (Day07.runA, Day07.runB))
     ,  (8, (Day08.runA, Day08.runB))
     ,  (9, (Day09.runA, Day09.runB))
---    , (10, (Day10.runA, Day10.runB))
+    , (10, (Day10.runA, Day10.runB))
 --    , (11, (Day11.runA, Day11.runB))
 --    , (12, (Day12.runA, Day12.runB))
 --    , (13, (Day13.runA, Day13.runB))

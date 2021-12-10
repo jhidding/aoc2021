@@ -1,5 +1,7 @@
--- ~\~ language=Haskell filename=app/Day10.hs
--- ~\~ begin <<lit/day10.md|app/Day10.hs>>[0]
+# Day 10: Syntax Scoring
+Yay! Parsing! We can do this really well :)
+
+``` {.haskell file=app/Day10.hs}
 module Day10 where
 
 import RIO hiding (lines)
@@ -90,4 +92,5 @@ runA = readInput >>= logInfo . display . tshow . solutionA
 
 runB :: (HasLogFunc env) => RIO env ()
 runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
+```
+
