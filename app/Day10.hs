@@ -43,9 +43,14 @@ chunkP = do
 parseLine :: Text -> Either (ParseErrorBundle Text Void) Chunk
 parseLine = parse chunkP ""
 
-readInput :: (MonadIO m) => m [Text]
-readInput = lines . decodeUtf8With lenientDecode 
+-- ~\~ begin <<lit/day10.md|read-lines>>[0]
+readLines :: (MonadIO m) => m [Text]
+readLines = Text.lines . Text.decodeUtf8With Text.lenientDecode 
          <$> readFile "data/day10.txt"
+-- ~\~ end
+
+readInput :: (MonadIO m) => m [Text]
+readInput = readLines
 -- ~\~ end
 -- ~\~ begin <<lit/day10.md|solution-day-10>>[0]
 illegalChar :: ParseErrorBundle Text Void -> Maybe Char
@@ -88,6 +93,11 @@ autocomplete orig = go ""
               go (suffix <> Text.singleton c)
 -- ~\~ end
 -- ~\~ begin <<lit/day10.md|solution-day-10>>[4]
+-- ~\~ begin <<lit/day10.md|median>>[0]
+median :: [Int] -> Int
+median x = sort x !! (length x `div` 2)
+-- ~\~ end
+
 scoreB :: Text -> Int
 scoreB = foldl f 0 . Text.unpack 
     where f i c = i * 5 + s c
@@ -96,9 +106,6 @@ scoreB = foldl f 0 . Text.unpack
           s '}' = 3
           s '>' = 4
           s _   = 0
-
-median :: [Int] -> Int
-median x = sort x !! (length x `div` 2)
 
 solutionB :: [Text] -> Int
 solutionB = median . map scoreB . mapMaybe autocomplete
