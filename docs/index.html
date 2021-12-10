@@ -1112,147 +1112,175 @@
 <div class="sourceCode" id="cb72"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day10</span> <span class="kw">where</span></span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span> <span class="kw">hiding</span> (lines)</span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (headMaybe)</span>
-<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (readFile)</span>
-<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Text</span> (lenientDecode, decodeUtf8With, lines)</span>
-<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (<span class="dt">Parser</span>, char, eol)</span>
-<span id="cb72-10"><a href="#cb72-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span> (parse, <span class="dt">ParseErrorBundle</span>(..), <span class="dt">ErrorItem</span>(..), <span class="dt">ParseError</span>(..))</span>
-<span id="cb72-11"><a href="#cb72-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-12"><a href="#cb72-12" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Bracket</span> <span class="ot">=</span> <span class="dt">Round</span> <span class="op">|</span> <span class="dt">Square</span> <span class="op">|</span> <span class="dt">Curly</span> <span class="op">|</span> <span class="dt">Angle</span></span>
-<span id="cb72-13"><a href="#cb72-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>)</span>
-<span id="cb72-14"><a href="#cb72-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-15"><a href="#cb72-15" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Chunk</span> <span class="ot">=</span> <span class="dt">Chunk</span> <span class="dt">Bracket</span> [<span class="dt">Chunk</span>]</span>
-<span id="cb72-16"><a href="#cb72-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
-<span id="cb72-17"><a href="#cb72-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-18"><a href="#cb72-18" aria-hidden="true" tabindex="-1"></a><span class="ot">openingBracket ::</span> <span class="dt">Parser</span> <span class="dt">Bracket</span></span>
-<span id="cb72-19"><a href="#cb72-19" aria-hidden="true" tabindex="-1"></a>openingBracket <span class="ot">=</span>  char <span class="ch">&#39;(&#39;</span> <span class="op">$&gt;</span> <span class="dt">Round</span></span>
-<span id="cb72-20"><a href="#cb72-20" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> char <span class="ch">&#39;{&#39;</span> <span class="op">$&gt;</span> <span class="dt">Curly</span></span>
-<span id="cb72-21"><a href="#cb72-21" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> char <span class="ch">&#39;[&#39;</span> <span class="op">$&gt;</span> <span class="dt">Square</span></span>
-<span id="cb72-22"><a href="#cb72-22" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> char <span class="ch">&#39;&lt;&#39;</span> <span class="op">$&gt;</span> <span class="dt">Angle</span></span>
-<span id="cb72-23"><a href="#cb72-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-24"><a href="#cb72-24" aria-hidden="true" tabindex="-1"></a><span class="ot">closingBracket ::</span> <span class="dt">Bracket</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> ()</span>
-<span id="cb72-25"><a href="#cb72-25" aria-hidden="true" tabindex="-1"></a>closingBracket b <span class="ot">=</span> (<span class="kw">case</span> b <span class="kw">of</span></span>
-<span id="cb72-26"><a href="#cb72-26" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Round</span>  <span class="ot">-&gt;</span> char <span class="ch">&#39;)&#39;</span></span>
-<span id="cb72-27"><a href="#cb72-27" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Square</span> <span class="ot">-&gt;</span> char <span class="ch">&#39;]&#39;</span></span>
-<span id="cb72-28"><a href="#cb72-28" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Curly</span>  <span class="ot">-&gt;</span> char <span class="ch">&#39;}&#39;</span></span>
-<span id="cb72-29"><a href="#cb72-29" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Angle</span>  <span class="ot">-&gt;</span> char <span class="ch">&#39;&gt;&#39;</span>) <span class="op">$&gt;</span> ()</span>
-<span id="cb72-30"><a href="#cb72-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-31"><a href="#cb72-31" aria-hidden="true" tabindex="-1"></a><span class="ot">chunkP ::</span> <span class="dt">Parser</span> <span class="dt">Chunk</span></span>
-<span id="cb72-32"><a href="#cb72-32" aria-hidden="true" tabindex="-1"></a>chunkP <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb72-33"><a href="#cb72-33" aria-hidden="true" tabindex="-1"></a>    opening <span class="ot">&lt;-</span> openingBracket</span>
-<span id="cb72-34"><a href="#cb72-34" aria-hidden="true" tabindex="-1"></a>    content <span class="ot">&lt;-</span> many chunkP</span>
-<span id="cb72-35"><a href="#cb72-35" aria-hidden="true" tabindex="-1"></a>    closingBracket opening</span>
-<span id="cb72-36"><a href="#cb72-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">Chunk</span> opening content</span>
-<span id="cb72-37"><a href="#cb72-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-38"><a href="#cb72-38" aria-hidden="true" tabindex="-1"></a><span class="ot">parseLine ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="dt">Chunk</span></span>
-<span id="cb72-39"><a href="#cb72-39" aria-hidden="true" tabindex="-1"></a>parseLine <span class="ot">=</span> parse chunkP <span class="st">&quot;&quot;</span></span>
-<span id="cb72-40"><a href="#cb72-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-41"><a href="#cb72-41" aria-hidden="true" tabindex="-1"></a><span class="ot">illegalChar ::</span> <span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
-<span id="cb72-42"><a href="#cb72-42" aria-hidden="true" tabindex="-1"></a>illegalChar e <span class="ot">=</span> <span class="kw">case</span> bundleErrors e <span class="kw">of</span></span>
-<span id="cb72-43"><a href="#cb72-43" aria-hidden="true" tabindex="-1"></a>                  (<span class="dt">TrivialError</span> _ (<span class="dt">Just</span> (<span class="dt">Tokens</span> (c <span class="op">:|</span> _))) _) <span class="op">:|</span> _ <span class="ot">-&gt;</span> <span class="dt">Just</span> c</span>
-<span id="cb72-44"><a href="#cb72-44" aria-hidden="true" tabindex="-1"></a>                  _                                                <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span>
-<span id="cb72-45"><a href="#cb72-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-46"><a href="#cb72-46" aria-hidden="true" tabindex="-1"></a><span class="ot">scoreA ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb72-47"><a href="#cb72-47" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;)&#39;</span> <span class="ot">=</span> <span class="dv">3</span></span>
-<span id="cb72-48"><a href="#cb72-48" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;]&#39;</span> <span class="ot">=</span> <span class="dv">57</span></span>
-<span id="cb72-49"><a href="#cb72-49" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;}&#39;</span> <span class="ot">=</span> <span class="dv">1197</span></span>
-<span id="cb72-50"><a href="#cb72-50" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;&gt;&#39;</span> <span class="ot">=</span> <span class="dv">25137</span></span>
-<span id="cb72-51"><a href="#cb72-51" aria-hidden="true" tabindex="-1"></a>scoreA _   <span class="ot">=</span> <span class="dv">0</span></span>
-<span id="cb72-52"><a href="#cb72-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-53"><a href="#cb72-53" aria-hidden="true" tabindex="-1"></a><span class="ot">expectedChar ::</span> <span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
-<span id="cb72-54"><a href="#cb72-54" aria-hidden="true" tabindex="-1"></a>expectedChar e <span class="ot">=</span> <span class="kw">case</span> bundleErrors e <span class="kw">of</span></span>
-<span id="cb72-55"><a href="#cb72-55" aria-hidden="true" tabindex="-1"></a>                   (<span class="dt">TrivialError</span> _ (<span class="dt">Just</span> <span class="dt">EndOfInput</span>) <span class="fu">exp</span>) <span class="op">:|</span> _ <span class="ot">-&gt;</span> getExpected <span class="fu">exp</span></span>
-<span id="cb72-56"><a href="#cb72-56" aria-hidden="true" tabindex="-1"></a>                   _                                           <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span>
-<span id="cb72-57"><a href="#cb72-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span><span class="ot"> getExpected ::</span> <span class="dt">Set</span> (<span class="dt">ErrorItem</span> <span class="dt">Char</span>) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
-<span id="cb72-58"><a href="#cb72-58" aria-hidden="true" tabindex="-1"></a>          getExpected s <span class="ot">=</span> headMaybe (Set.toList s) <span class="op">&gt;&gt;=</span> getToken</span>
-<span id="cb72-59"><a href="#cb72-59" aria-hidden="true" tabindex="-1"></a>          getToken (<span class="dt">Tokens</span> (c <span class="op">:|</span> _)) <span class="ot">=</span> <span class="dt">Just</span> c</span>
-<span id="cb72-60"><a href="#cb72-60" aria-hidden="true" tabindex="-1"></a>          getToken _                 <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb72-61"><a href="#cb72-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-62"><a href="#cb72-62" aria-hidden="true" tabindex="-1"></a><span class="ot">scoreB ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb72-63"><a href="#cb72-63" aria-hidden="true" tabindex="-1"></a>scoreB s <span class="ch">&#39;)&#39;</span> <span class="ot">=</span> s <span class="op">*</span> <span class="dv">5</span> <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb72-64"><a href="#cb72-64" aria-hidden="true" tabindex="-1"></a>scoreB s <span class="ch">&#39;]&#39;</span> <span class="ot">=</span> s <span class="op">*</span> <span class="dv">5</span> <span class="op">+</span> <span class="dv">2</span></span>
-<span id="cb72-65"><a href="#cb72-65" aria-hidden="true" tabindex="-1"></a>scoreB s <span class="ch">&#39;}&#39;</span> <span class="ot">=</span> s <span class="op">*</span> <span class="dv">5</span> <span class="op">+</span> <span class="dv">3</span></span>
-<span id="cb72-66"><a href="#cb72-66" aria-hidden="true" tabindex="-1"></a>scoreB s <span class="ch">&#39;&gt;&#39;</span> <span class="ot">=</span> s <span class="op">*</span> <span class="dv">5</span> <span class="op">+</span> <span class="dv">4</span></span>
-<span id="cb72-67"><a href="#cb72-67" aria-hidden="true" tabindex="-1"></a>scoreB _ _   <span class="ot">=</span> <span class="dv">0</span></span>
-<span id="cb72-68"><a href="#cb72-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-69"><a href="#cb72-69" aria-hidden="true" tabindex="-1"></a><span class="ot">autocomplete ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Text</span></span>
-<span id="cb72-70"><a href="#cb72-70" aria-hidden="true" tabindex="-1"></a>autocomplete orig <span class="ot">=</span> go <span class="st">&quot;&quot;</span></span>
-<span id="cb72-71"><a href="#cb72-71" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go suffix <span class="ot">=</span> <span class="fu">either</span> (complete suffix) (<span class="fu">const</span> <span class="op">$</span> <span class="dt">Just</span> suffix) (parseLine <span class="op">$</span> orig <span class="op">&lt;&gt;</span> suffix)</span>
-<span id="cb72-72"><a href="#cb72-72" aria-hidden="true" tabindex="-1"></a>          complete suffix err <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb72-73"><a href="#cb72-73" aria-hidden="true" tabindex="-1"></a>              c <span class="ot">&lt;-</span> expectedChar err</span>
-<span id="cb72-74"><a href="#cb72-74" aria-hidden="true" tabindex="-1"></a>              go (suffix <span class="op">&lt;&gt;</span> Text.singleton c)</span>
-<span id="cb72-75"><a href="#cb72-75" aria-hidden="true" tabindex="-1"></a><span class="co">--             (go . (suffix &lt;&gt;)) . Text.singleton =&lt;&lt; expectedChar err</span></span>
-<span id="cb72-76"><a href="#cb72-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-77"><a href="#cb72-77" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> m [<span class="dt">Text</span>]</span>
-<span id="cb72-78"><a href="#cb72-78" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> <span class="fu">lines</span> <span class="op">.</span> decodeUtf8With lenientDecode <span class="op">&lt;$&gt;</span> <span class="fu">readFile</span> <span class="st">&quot;data/day10.txt&quot;</span></span>
-<span id="cb72-79"><a href="#cb72-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-80"><a href="#cb72-80" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Text</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb72-81"><a href="#cb72-81" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> scoreA <span class="op">.</span> mapMaybe illegalChar <span class="op">.</span> lefts <span class="op">.</span> <span class="fu">map</span> parseLine</span>
-<span id="cb72-82"><a href="#cb72-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-83"><a href="#cb72-83" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Text</span>] <span class="ot">-&gt;</span> [<span class="dt">Text</span>]</span>
-<span id="cb72-84"><a href="#cb72-84" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> mapMaybe autocomplete</span>
-<span id="cb72-85"><a href="#cb72-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-86"><a href="#cb72-86" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb72-87"><a href="#cb72-87" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
-<span id="cb72-88"><a href="#cb72-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-89"><a href="#cb72-89" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb72-90"><a href="#cb72-90" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> ((!!))</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (sort, headMaybe, foldl)</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (readFile)</span>
+<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Text</span> (lenientDecode, decodeUtf8With, lines)</span>
+<span id="cb72-10"><a href="#cb72-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (<span class="dt">Parser</span>, char, eol)</span>
+<span id="cb72-11"><a href="#cb72-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span> ( parse, <span class="dt">ParseErrorBundle</span>(..), <span class="dt">ErrorItem</span>(..)</span>
+<span id="cb72-12"><a href="#cb72-12" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">ParseError</span>(<span class="op">..</span>))</span>
+<span id="cb72-13"><a href="#cb72-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-14"><a href="#cb72-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parsing<span class="op">-</span>day<span class="op">-</span><span class="dv">10</span><span class="op">&gt;&gt;</span></span>
+<span id="cb72-15"><a href="#cb72-15" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">10</span><span class="op">&gt;&gt;</span></span>
+<span id="cb72-16"><a href="#cb72-16" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+</div>
+<p>Parsing these sequences is what we have <code>Megaparsec</code> for.</p>
+<div class="named-code-block">
+<p>«parsing-day-10»</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Bracket</span> <span class="ot">=</span> <span class="dt">Round</span> <span class="op">|</span> <span class="dt">Square</span> <span class="op">|</span> <span class="dt">Curly</span> <span class="op">|</span> <span class="dt">Angle</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>)</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Chunk</span> <span class="ot">=</span> <span class="dt">Chunk</span> <span class="dt">Bracket</span> [<span class="dt">Chunk</span>]</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a><span class="ot">openingBracket ::</span> <span class="dt">Parser</span> <span class="dt">Bracket</span></span>
+<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>openingBracket <span class="ot">=</span>  char <span class="ch">&#39;(&#39;</span> <span class="op">$&gt;</span> <span class="dt">Round</span></span>
+<span id="cb73-9"><a href="#cb73-9" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> char <span class="ch">&#39;{&#39;</span> <span class="op">$&gt;</span> <span class="dt">Curly</span></span>
+<span id="cb73-10"><a href="#cb73-10" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> char <span class="ch">&#39;[&#39;</span> <span class="op">$&gt;</span> <span class="dt">Square</span></span>
+<span id="cb73-11"><a href="#cb73-11" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> char <span class="ch">&#39;&lt;&#39;</span> <span class="op">$&gt;</span> <span class="dt">Angle</span></span>
+<span id="cb73-12"><a href="#cb73-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-13"><a href="#cb73-13" aria-hidden="true" tabindex="-1"></a><span class="ot">closingBracket ::</span> <span class="dt">Bracket</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> ()</span>
+<span id="cb73-14"><a href="#cb73-14" aria-hidden="true" tabindex="-1"></a>closingBracket b <span class="ot">=</span> (<span class="kw">case</span> b <span class="kw">of</span></span>
+<span id="cb73-15"><a href="#cb73-15" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Round</span>  <span class="ot">-&gt;</span> char <span class="ch">&#39;)&#39;</span></span>
+<span id="cb73-16"><a href="#cb73-16" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Square</span> <span class="ot">-&gt;</span> char <span class="ch">&#39;]&#39;</span></span>
+<span id="cb73-17"><a href="#cb73-17" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Curly</span>  <span class="ot">-&gt;</span> char <span class="ch">&#39;}&#39;</span></span>
+<span id="cb73-18"><a href="#cb73-18" aria-hidden="true" tabindex="-1"></a>                     <span class="dt">Angle</span>  <span class="ot">-&gt;</span> char <span class="ch">&#39;&gt;&#39;</span>) <span class="op">$&gt;</span> ()</span>
+<span id="cb73-19"><a href="#cb73-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-20"><a href="#cb73-20" aria-hidden="true" tabindex="-1"></a><span class="ot">chunkP ::</span> <span class="dt">Parser</span> <span class="dt">Chunk</span></span>
+<span id="cb73-21"><a href="#cb73-21" aria-hidden="true" tabindex="-1"></a>chunkP <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb73-22"><a href="#cb73-22" aria-hidden="true" tabindex="-1"></a>    opening <span class="ot">&lt;-</span> openingBracket</span>
+<span id="cb73-23"><a href="#cb73-23" aria-hidden="true" tabindex="-1"></a>    content <span class="ot">&lt;-</span> many chunkP</span>
+<span id="cb73-24"><a href="#cb73-24" aria-hidden="true" tabindex="-1"></a>    closingBracket opening</span>
+<span id="cb73-25"><a href="#cb73-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">Chunk</span> opening content</span>
+<span id="cb73-26"><a href="#cb73-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-27"><a href="#cb73-27" aria-hidden="true" tabindex="-1"></a><span class="ot">parseLine ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="dt">Chunk</span></span>
+<span id="cb73-28"><a href="#cb73-28" aria-hidden="true" tabindex="-1"></a>parseLine <span class="ot">=</span> parse chunkP <span class="st">&quot;&quot;</span></span>
+<span id="cb73-29"><a href="#cb73-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-30"><a href="#cb73-30" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> m [<span class="dt">Text</span>]</span>
+<span id="cb73-31"><a href="#cb73-31" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> <span class="fu">lines</span> <span class="op">.</span> decodeUtf8With lenientDecode </span>
+<span id="cb73-32"><a href="#cb73-32" aria-hidden="true" tabindex="-1"></a>         <span class="op">&lt;$&gt;</span> <span class="fu">readFile</span> <span class="st">&quot;data/day10.txt&quot;</span></span></code></pre></div>
+</div>
+<p>For part A we need to look at the parser error that we get and extract the unexpected character. We can pattern match to get at the character and assume if it doesn’t match, we have unexpected end-of-input.</p>
+<div class="named-code-block">
+<p>«solution-day-10»</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="ot">illegalChar ::</span> <span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>illegalChar e <span class="ot">=</span> <span class="kw">case</span> bundleErrors e <span class="kw">of</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">TrivialError</span> _ (<span class="dt">Just</span> (<span class="dt">Tokens</span> (c <span class="op">:|</span> _))) _) <span class="op">:|</span> _ <span class="ot">-&gt;</span> <span class="dt">Just</span> c</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    _                                                <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span></code></pre></div>
+</div>
+<p>Completing the score,</p>
+<div class="named-code-block">
+<p>«solution-day-10»</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="ot">scoreA ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;)&#39;</span> <span class="ot">=</span> <span class="dv">3</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;]&#39;</span> <span class="ot">=</span> <span class="dv">57</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;}&#39;</span> <span class="ot">=</span> <span class="dv">1197</span></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>scoreA <span class="ch">&#39;&gt;&#39;</span> <span class="ot">=</span> <span class="dv">25137</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>scoreA _   <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Text</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> scoreA <span class="op">.</span> mapMaybe illegalChar</span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span> lefts <span class="op">.</span> <span class="fu">map</span> parseLine</span></code></pre></div>
+</div>
+<p>In part B we look at the characters we expected when encountering end-of-input. We need to take care here: opening brackets are always expected, so we filter on closing brackets.</p>
+<div class="named-code-block">
+<p>«solution-day-10»</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="ot">expectedChar ::</span> <span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>expectedChar e <span class="ot">=</span> <span class="kw">case</span> bundleErrors e <span class="kw">of</span></span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">TrivialError</span> _ (<span class="dt">Just</span> <span class="dt">EndOfInput</span>) <span class="fu">exp</span>) <span class="op">:|</span> _ <span class="ot">-&gt;</span> getExpected <span class="fu">exp</span></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>    _                                           <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span><span class="ot"> getExpected ::</span> <span class="dt">Set</span> (<span class="dt">ErrorItem</span> <span class="dt">Char</span>) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>          getExpected s <span class="ot">=</span> headMaybe <span class="op">$</span> <span class="fu">concatMap</span> getToken</span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="op">$</span> Set.toList s</span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>          getToken (<span class="dt">Tokens</span> (t <span class="op">:|</span> ts)) <span class="ot">=</span> <span class="fu">filter</span> closingChar (t <span class="op">:</span> ts)</span>
+<span id="cb76-9"><a href="#cb76-9" aria-hidden="true" tabindex="-1"></a>          getToken _                  <span class="ot">=</span> []</span>
+<span id="cb76-10"><a href="#cb76-10" aria-hidden="true" tabindex="-1"></a>          closingChar <span class="ot">=</span> (<span class="ot">`elem`</span> [<span class="ch">&#39;)&#39;</span>, <span class="ch">&#39;]&#39;</span>, <span class="ch">&#39;}&#39;</span>, <span class="ch">&#39;&gt;&#39;</span>])</span></code></pre></div>
+</div>
+<p>To autocomplete, I keep re-parsing the string, adding characters at the end, until the parsing succeeds. In principle, this could be done nicer from the parser, by creating a sort of stack trace. However, that would polute the code for actually parsing the correct structure.</p>
+<div class="named-code-block">
+<p>«solution-day-10»</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="ot">autocomplete ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Text</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>autocomplete orig <span class="ot">=</span> go <span class="st">&quot;&quot;</span></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go suffix <span class="ot">=</span> <span class="fu">either</span> (complete suffix)</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>                             (<span class="fu">const</span> <span class="op">$</span> <span class="dt">Just</span> suffix)</span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>                             (parseLine <span class="op">$</span> orig <span class="op">&lt;&gt;</span> suffix)</span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>          complete suffix err <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>              c <span class="ot">&lt;-</span> expectedChar err</span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>              go (suffix <span class="op">&lt;&gt;</span> Text.singleton c)</span></code></pre></div>
+</div>
+<p>For computing the score, we encounter our old friend the <code>median</code> function again.</p>
+<div class="named-code-block">
+<p>«solution-day-10»</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="ot">scoreB ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>scoreB <span class="ot">=</span> <span class="fu">foldl</span> f <span class="dv">0</span> <span class="op">.</span> Text.unpack </span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> f i c <span class="ot">=</span> i <span class="op">*</span> <span class="dv">5</span> <span class="op">+</span> s c</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>          s <span class="ch">&#39;)&#39;</span> <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>          s <span class="ch">&#39;]&#39;</span> <span class="ot">=</span> <span class="dv">2</span></span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>          s <span class="ch">&#39;}&#39;</span> <span class="ot">=</span> <span class="dv">3</span></span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>          s <span class="ch">&#39;&gt;&#39;</span> <span class="ot">=</span> <span class="dv">4</span></span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>          s _   <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb78-9"><a href="#cb78-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-10"><a href="#cb78-10" aria-hidden="true" tabindex="-1"></a><span class="ot">median ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a>median x <span class="ot">=</span> <span class="fu">sort</span> x <span class="op">!!</span> (<span class="fu">length</span> x <span class="ot">`div`</span> <span class="dv">2</span>)</span>
+<span id="cb78-12"><a href="#cb78-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-13"><a href="#cb78-13" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Text</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb78-14"><a href="#cb78-14" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> median <span class="op">.</span> <span class="fu">map</span> scoreB <span class="op">.</span> mapMaybe autocomplete</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-boiler-plate" class="level1">
 <h1>Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>
-<div class="sourceCode" id="cb73"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
-<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
+<div class="sourceCode" id="cb79"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-parsing" class="level1">
 <h1>Appendix: Parsing</h1>
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
-<div class="sourceCode" id="cb74"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException )</span>
-<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
-<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb74-11"><a href="#cb74-11" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
-<span id="cb74-12"><a href="#cb74-12" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
-<span id="cb74-13"><a href="#cb74-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
-<span id="cb74-14"><a href="#cb74-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb74-15"><a href="#cb74-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-16"><a href="#cb74-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
-<span id="cb74-17"><a href="#cb74-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-18"><a href="#cb74-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb74-19"><a href="#cb74-19" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
-<span id="cb74-20"><a href="#cb74-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-21"><a href="#cb74-21" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb74-22"><a href="#cb74-22" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
-<span id="cb74-23"><a href="#cb74-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
-<span id="cb74-24"><a href="#cb74-24" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
-<span id="cb74-25"><a href="#cb74-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-26"><a href="#cb74-26" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
-<span id="cb74-27"><a href="#cb74-27" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb74-28"><a href="#cb74-28" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb74-29"><a href="#cb74-29" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb74-30"><a href="#cb74-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb74-31"><a href="#cb74-31" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb74-32"><a href="#cb74-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-33"><a href="#cb74-33" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb74-34"><a href="#cb74-34" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb74-35"><a href="#cb74-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-36"><a href="#cb74-36" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb74-37"><a href="#cb74-37" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
+<div class="sourceCode" id="cb80"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException )</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb80-9"><a href="#cb80-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-10"><a href="#cb80-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb80-11"><a href="#cb80-11" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
+<span id="cb80-12"><a href="#cb80-12" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
+<span id="cb80-13"><a href="#cb80-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb80-14"><a href="#cb80-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb80-15"><a href="#cb80-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-16"><a href="#cb80-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
+<span id="cb80-17"><a href="#cb80-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-18"><a href="#cb80-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb80-19"><a href="#cb80-19" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb80-20"><a href="#cb80-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-21"><a href="#cb80-21" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb80-22"><a href="#cb80-22" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
+<span id="cb80-23"><a href="#cb80-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
+<span id="cb80-24"><a href="#cb80-24" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
+<span id="cb80-25"><a href="#cb80-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-26"><a href="#cb80-26" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb80-27"><a href="#cb80-27" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb80-28"><a href="#cb80-28" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb80-29"><a href="#cb80-29" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb80-30"><a href="#cb80-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb80-31"><a href="#cb80-31" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb80-32"><a href="#cb80-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-33"><a href="#cb80-33" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb80-34"><a href="#cb80-34" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb80-35"><a href="#cb80-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-36"><a href="#cb80-36" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb80-37"><a href="#cb80-37" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
 </div>
 </section>
         </div>

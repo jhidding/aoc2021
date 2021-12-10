@@ -5,14 +5,24 @@ Yay! Parsing! We can do this really well :)
 module Day10 where
 
 import RIO hiding (lines)
-import RIO.List (headMaybe)
+import RIO.List.Partial ((!!))
+import RIO.List (sort, headMaybe, foldl)
 import qualified RIO.Set as Set
 import qualified RIO.Text as Text
 import RIO.ByteString (readFile)
 import RIO.Text (lenientDecode, decodeUtf8With, lines)
 import Parsing (Parser, char, eol)
-import Text.Megaparsec (parse, ParseErrorBundle(..), ErrorItem(..), ParseError(..))
+import Text.Megaparsec ( parse, ParseErrorBundle(..), ErrorItem(..)
+                       , ParseError(..))
 
+<<parsing-day-10>>
+<<solution-day-10>>
+<<run-solutions>>
+```
+
+Parsing these sequences is what we have `Megaparsec` for.
+
+``` {.haskell #parsing-day-10}
 data Bracket = Round | Square | Curly | Angle
     deriving (Show, Eq, Ord, Enum)
 
@@ -42,11 +52,23 @@ chunkP = do
 parseLine :: Text -> Either (ParseErrorBundle Text Void) Chunk
 parseLine = parse chunkP ""
 
+readInput :: (MonadIO m) => m [Text]
+readInput = lines . decodeUtf8With lenientDecode 
+         <$> readFile "data/day10.txt"
+```
+
+For part A we need to look at the parser error that we get and extract the unexpected character. We can pattern match to get at the character and assume if it doesn't match, we have unexpected end-of-input.
+
+``` {.haskell #solution-day-10}
 illegalChar :: ParseErrorBundle Text Void -> Maybe Char
 illegalChar e = case bundleErrors e of
-                  (TrivialError _ (Just (Tokens (c :| _))) _) :| _ -> Just c
-                  _                                                -> Nothing
+    (TrivialError _ (Just (Tokens (c :| _))) _) :| _ -> Just c
+    _                                                -> Nothing
+```
 
+Completing the score,
+
+``` {.haskell #solution-day-10}
 scoreA :: Char -> Int
 scoreA ')' = 3
 scoreA ']' = 57
@@ -54,43 +76,55 @@ scoreA '}' = 1197
 scoreA '>' = 25137
 scoreA _   = 0
 
+solutionA :: [Text] -> Int
+solutionA = sum . map scoreA . mapMaybe illegalChar
+          . lefts . map parseLine
+```
+
+In part B we look at the characters we expected when encountering end-of-input. We need to take care here: opening brackets are always expected, so we filter on closing brackets.
+
+``` {.haskell #solution-day-10}
 expectedChar :: ParseErrorBundle Text Void -> Maybe Char
 expectedChar e = case bundleErrors e of
-                   (TrivialError _ (Just EndOfInput) exp) :| _ -> getExpected exp
-                   _                                           -> Nothing
+    (TrivialError _ (Just EndOfInput) exp) :| _ -> getExpected exp
+    _                                           -> Nothing
     where getExpected :: Set (ErrorItem Char) -> Maybe Char
-          getExpected s = headMaybe (Set.toList s) >>= getToken
-          getToken (Tokens (c :| _)) = Just c
-          getToken _                 = Nothing
+          getExpected s = headMaybe $ concatMap getToken
+                                    $ Set.toList s
+          getToken (Tokens (t :| ts)) = filter closingChar (t : ts)
+          getToken _                  = []
+          closingChar = (`elem` [')', ']', '}', '>'])
+```
 
-scoreB :: Int -> Char -> Int
-scoreB s ')' = s * 5 + 1
-scoreB s ']' = s * 5 + 2
-scoreB s '}' = s * 5 + 3
-scoreB s '>' = s * 5 + 4
-scoreB _ _   = 0
+To autocomplete, I keep re-parsing the string, adding characters at the end, until the parsing succeeds. In principle, this could be done nicer from the parser, by creating a sort of stack trace. However, that would polute the code for actually parsing the correct structure.
 
+``` {.haskell #solution-day-10}
 autocomplete :: Text -> Maybe Text
 autocomplete orig = go ""
-    where go suffix = either (complete suffix) (const $ Just suffix) (parseLine $ orig <> suffix)
+    where go suffix = either (complete suffix)
+                             (const $ Just suffix)
+                             (parseLine $ orig <> suffix)
           complete suffix err = do
               c <- expectedChar err
               go (suffix <> Text.singleton c)
---             (go . (suffix <>)) . Text.singleton =<< expectedChar err
+```
 
-readInput :: (MonadIO m) => m [Text]
-readInput = lines . decodeUtf8With lenientDecode <$> readFile "data/day10.txt"
+For computing the score, we encounter our old friend the `median` function again.
 
-solutionA :: [Text] -> Int
-solutionA = sum . map scoreA . mapMaybe illegalChar . lefts . map parseLine
+``` {.haskell #solution-day-10}
+scoreB :: Text -> Int
+scoreB = foldl f 0 . Text.unpack 
+    where f i c = i * 5 + s c
+          s ')' = 1
+          s ']' = 2
+          s '}' = 3
+          s '>' = 4
+          s _   = 0
 
-solutionB :: [Text] -> [Text]
-solutionB = mapMaybe autocomplete
+median :: [Int] -> Int
+median x = sort x !! (length x `div` 2)
 
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
+solutionB :: [Text] -> Int
+solutionB = median . map scoreB . mapMaybe autocomplete
 ```
 
