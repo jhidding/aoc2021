@@ -114,6 +114,7 @@ solutionB = evalState $ countRepeatUntilM ((== 100) <$> step)
 ```
 
 ### Plots
+
 ``` {.haskell #show-data-day11 .hide}
 printArray2 :: (MonadIO m) => Array2 Int -> m ()
 printArray2 a =
@@ -129,10 +130,10 @@ showData = runSimpleApp $ do
     where printStep = step >> get >>= printArray2 >> print "\n\n"
 ```
 
-``` {.gnuplot output=fig/day11.svg}
-Iteration 1 through 256 of the Dumbo Octopusses.
----
-set term svg size 500, 500
+Iteration 1 through 258 (my answer) of the Dumbo Octopusses. For a long time, there is a majority period of 7 cycles. The basin has a value of 6 then, but is triggered by some event at the boundary of the basin, creating a cascade. When all octopusses synchronize the period lengthens to 10.
+
+``` {.gnuplot #plot-day11 output=fig/day11.svg}
+set term svg size 560, 760
 
 set tmargin 0.1
 set bmargin 0.1
@@ -144,10 +145,15 @@ unset ytics
 unset key
 unset colorbox
 
+set xrange [0:10]
+set yrange [0:10]
+set cbrange [0:10]
+
 set size square
-set multiplot layout 16,16
-do for [t=0:255] {
+set multiplot layout 19,14
+do for [t=0:257] {
         plot 'data/day11-output.txt' index t matrix w image pixels t''
 }
 unset multiplot
 ```
+
