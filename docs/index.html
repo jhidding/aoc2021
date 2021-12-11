@@ -1304,20 +1304,25 @@
 </section>
 <section id="day-11-dumbo-octopus" class="level1">
 <h1>Day 11: Dumbo Octopus</h1>
+<p>This is clearly inspired on <a href="https://ncase.me/fireflies/">this demo of spontaneously synchronising fireflies</a>.</p>
 <div class="named-code-block">
 <p>file:app/Day11.hs</p>
 <div class="sourceCode" id="cb83"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day11</span> <span class="kw">where</span></span>
 <span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.State</span> (evalState, <span class="dt">MonadState</span>, modify, gets)</span>
-<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
-<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (<span class="dt">Parser</span>, sepEndBy1, failOnException, eol, digit, readInputParsing)</span>
-<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-9"><a href="#cb83-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day<span class="op">-</span><span class="dv">11</span><span class="op">&gt;&gt;</span></span>
-<span id="cb83-10"><a href="#cb83-10" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">11</span><span class="op">&gt;&gt;</span></span>
-<span id="cb83-11"><a href="#cb83-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (putStr)</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.State</span> (evalStateT, evalState, execState, <span class="dt">MonadState</span>, modify, get, gets)</span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
+<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb83-9"><a href="#cb83-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (<span class="dt">Parser</span>, sepEndBy1, failOnException, eol, digit, readInputParsing)</span>
+<span id="cb83-10"><a href="#cb83-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb83-11"><a href="#cb83-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day<span class="op">-</span><span class="dv">11</span><span class="op">&gt;&gt;</span></span>
+<span id="cb83-12"><a href="#cb83-12" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day<span class="op">-</span><span class="dv">11</span><span class="op">&gt;&gt;</span></span>
+<span id="cb83-13"><a href="#cb83-13" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span><span class="fu">show</span><span class="op">-</span><span class="kw">data</span><span class="op">-</span>day<span class="op">-</span><span class="dv">11</span><span class="op">&gt;&gt;</span></span>
+<span id="cb83-14"><a href="#cb83-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
+<p>We can reuse the input parser from day 9.</p>
 <div class="named-code-block">
 <p>«parser-day-11»</p>
 <div class="sourceCode" id="cb84"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span>
@@ -1325,16 +1330,25 @@
 <span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env (<span class="dt">Array2</span> <span class="dt">Int</span>)</span>
 <span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day11.txt&quot;</span> digitArray</span></code></pre></div>
 </div>
+<p>Each iteration can be divided in three steps:</p>
+<ul>
+<li><code>clock</code>: advance the cycle of every octopus by one</li>
+<li><code>flash</code>: resolve the flashing, marking flashed octopusses</li>
+<li><code>reset</code>: reset the counter for flashed octopusses</li>
+</ul>
+<p>I put these steps into a state monad.</p>
 <div class="named-code-block">
 <p>«solution-day-11»</p>
 <div class="sourceCode" id="cb85"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> (<span class="dt">MonadState</span> (<span class="dt">Array2</span> <span class="dt">Int</span>) m) <span class="ot">=&gt;</span> m <span class="dt">Int</span></span>
 <span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>step <span class="ot">=</span> clock <span class="op">&gt;&gt;</span> flash <span class="op">&gt;&gt;</span> reset</span></code></pre></div>
 </div>
+<p>The <code>clock</code> advances every counter by one tick.</p>
 <div class="named-code-block">
 <p>«solution-day-11»</p>
 <div class="sourceCode" id="cb86"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="ot">clock ::</span> (<span class="dt">MonadState</span> (<span class="dt">Array2</span> <span class="dt">Int</span>) m) <span class="ot">=&gt;</span> m ()</span>
 <span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>clock <span class="ot">=</span> modify (A.compute <span class="op">.</span> A.map (<span class="op">+</span> <span class="dv">1</span>))</span></code></pre></div>
 </div>
+<p>To resolve the flashes, I use my friend the <em>stencil</em> again. I mark flashed octopusses by setting their counter to 1000. That way, they don’t get counted twice.</p>
 <div class="named-code-block">
 <p>«solution-day-11»</p>
 <div class="sourceCode" id="cb87"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="ot">home ::</span> <span class="dt">A.Ix2</span></span>
@@ -1348,16 +1362,16 @@
 <span id="cb87-9"><a href="#cb87-9" aria-hidden="true" tabindex="-1"></a><span class="ot">count ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb87-10"><a href="#cb87-10" aria-hidden="true" tabindex="-1"></a>count f <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> (\x <span class="ot">-&gt;</span> <span class="kw">if</span> f x <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span>)</span>
 <span id="cb87-11"><a href="#cb87-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb87-12"><a href="#cb87-12" aria-hidden="true" tabindex="-1"></a><span class="ot">flashed ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb87-13"><a href="#cb87-13" aria-hidden="true" tabindex="-1"></a>flashed c <span class="ot">=</span> c <span class="op">&gt;</span> <span class="dv">9</span> <span class="op">&amp;&amp;</span> c <span class="op">&lt;=</span> <span class="dv">1000</span></span>
+<span id="cb87-12"><a href="#cb87-12" aria-hidden="true" tabindex="-1"></a><span class="ot">countArray ::</span> (<span class="dt">A.Unbox</span> a) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb87-13"><a href="#cb87-13" aria-hidden="true" tabindex="-1"></a>countArray f <span class="ot">=</span> A.sum <span class="op">.</span> A.map (\x <span class="ot">-&gt;</span> <span class="kw">if</span> f x <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span>)</span>
 <span id="cb87-14"><a href="#cb87-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb87-15"><a href="#cb87-15" aria-hidden="true" tabindex="-1"></a><span class="ot">flashStencil ::</span> <span class="dt">A.Stencil</span> <span class="dt">Ix2</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
-<span id="cb87-16"><a href="#cb87-16" aria-hidden="true" tabindex="-1"></a>flashStencil <span class="ot">=</span> A.makeStencil (<span class="dt">A.Sz</span> (<span class="dv">3</span> <span class="op">:.</span> <span class="dv">3</span>)) (<span class="dv">1</span> <span class="op">:.</span> <span class="dv">1</span>) go</span>
-<span id="cb87-17"><a href="#cb87-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go get <span class="ot">=</span> <span class="kw">if</span> flashed (get home) <span class="kw">then</span> <span class="dv">1000</span></span>
-<span id="cb87-18"><a href="#cb87-18" aria-hidden="true" tabindex="-1"></a>                   <span class="kw">else</span> get home <span class="op">+</span> count (flashed <span class="op">.</span> get) neighbours</span>
-<span id="cb87-19"><a href="#cb87-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb87-20"><a href="#cb87-20" aria-hidden="true" tabindex="-1"></a><span class="ot">countArray ::</span> (<span class="dt">A.Unbox</span> a) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb87-21"><a href="#cb87-21" aria-hidden="true" tabindex="-1"></a>countArray f <span class="ot">=</span> A.sum <span class="op">.</span> A.map (\x <span class="ot">-&gt;</span> <span class="kw">if</span> f x <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span>)</span>
+<span id="cb87-15"><a href="#cb87-15" aria-hidden="true" tabindex="-1"></a><span class="ot">flashed ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb87-16"><a href="#cb87-16" aria-hidden="true" tabindex="-1"></a>flashed c <span class="ot">=</span> c <span class="op">&gt;</span> <span class="dv">9</span> <span class="op">&amp;&amp;</span> c <span class="op">&lt;</span> <span class="dv">1000</span></span>
+<span id="cb87-17"><a href="#cb87-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-18"><a href="#cb87-18" aria-hidden="true" tabindex="-1"></a><span class="ot">flashStencil ::</span> <span class="dt">A.Stencil</span> <span class="dt">Ix2</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
+<span id="cb87-19"><a href="#cb87-19" aria-hidden="true" tabindex="-1"></a>flashStencil <span class="ot">=</span> A.makeStencil (<span class="dt">A.Sz</span> (<span class="dv">3</span> <span class="op">:.</span> <span class="dv">3</span>)) (<span class="dv">1</span> <span class="op">:.</span> <span class="dv">1</span>) go</span>
+<span id="cb87-20"><a href="#cb87-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go get <span class="ot">=</span> <span class="kw">if</span> flashed (get home) <span class="kw">then</span> <span class="dv">1000</span></span>
+<span id="cb87-21"><a href="#cb87-21" aria-hidden="true" tabindex="-1"></a>                   <span class="kw">else</span> get home <span class="op">+</span> count (flashed <span class="op">.</span> get) neighbours</span>
 <span id="cb87-22"><a href="#cb87-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb87-23"><a href="#cb87-23" aria-hidden="true" tabindex="-1"></a><span class="ot">flash ::</span> <span class="dt">MonadState</span> (<span class="dt">Array2</span> <span class="dt">Int</span>) m <span class="ot">=&gt;</span> m ()</span>
 <span id="cb87-24"><a href="#cb87-24" aria-hidden="true" tabindex="-1"></a>flash <span class="ot">=</span> <span class="kw">do</span></span>
@@ -1365,87 +1379,101 @@
 <span id="cb87-26"><a href="#cb87-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> n <span class="op">==</span> <span class="dv">0</span> <span class="kw">then</span> <span class="fu">return</span> ()</span>
 <span id="cb87-27"><a href="#cb87-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> modify go <span class="op">&gt;&gt;</span> flash</span>
 <span id="cb87-28"><a href="#cb87-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span><span class="ot"> go ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Array2</span> <span class="dt">Int</span></span>
-<span id="cb87-29"><a href="#cb87-29" aria-hidden="true" tabindex="-1"></a>          go <span class="ot">=</span> A.compute <span class="op">.</span> A.mapStencil (<span class="dt">A.Fill</span> <span class="dv">0</span>) flashStencil</span>
-<span id="cb87-30"><a href="#cb87-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb87-31"><a href="#cb87-31" aria-hidden="true" tabindex="-1"></a><span class="ot">reset ::</span> <span class="dt">MonadState</span> (<span class="dt">Array2</span> <span class="dt">Int</span>) m <span class="ot">=&gt;</span> m <span class="dt">Int</span></span>
-<span id="cb87-32"><a href="#cb87-32" aria-hidden="true" tabindex="-1"></a>reset <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb87-33"><a href="#cb87-33" aria-hidden="true" tabindex="-1"></a>    n <span class="ot">&lt;-</span> gets <span class="op">$</span> countArray (<span class="op">&gt;=</span> <span class="dv">1000</span>)</span>
-<span id="cb87-34"><a href="#cb87-34" aria-hidden="true" tabindex="-1"></a>    modify <span class="op">$</span> A.compute <span class="op">.</span> A.map (\x <span class="ot">-&gt;</span> <span class="kw">if</span> x <span class="op">&gt;=</span> <span class="dv">1000</span> <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> x)</span>
-<span id="cb87-35"><a href="#cb87-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> n</span>
-<span id="cb87-36"><a href="#cb87-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb87-37"><a href="#cb87-37" aria-hidden="true" tabindex="-1"></a><span class="ot">repeatM ::</span> (<span class="dt">Applicative</span> m) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m a <span class="ot">-&gt;</span> m [a]</span>
-<span id="cb87-38"><a href="#cb87-38" aria-hidden="true" tabindex="-1"></a>repeatM n a <span class="ot">=</span> loop n</span>
-<span id="cb87-39"><a href="#cb87-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loop n</span>
-<span id="cb87-40"><a href="#cb87-40" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> n <span class="op">&lt;=</span> <span class="dv">0</span>    <span class="ot">=</span> <span class="fu">pure</span> []</span>
-<span id="cb87-41"><a href="#cb87-41" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> liftA2 (<span class="op">:</span>) a (loop (n <span class="op">-</span> <span class="dv">1</span>))</span></code></pre></div>
+<span id="cb87-29"><a href="#cb87-29" aria-hidden="true" tabindex="-1"></a>          go <span class="ot">=</span> A.compute <span class="op">.</span> A.mapStencil (<span class="dt">A.Fill</span> <span class="dv">0</span>) flashStencil</span></code></pre></div>
 </div>
+<p>At the <code>reset</code>, I count how many values are larger than 1000, and set them back to 0.</p>
 <div class="named-code-block">
 <p>«solution-day-11»</p>
-<div class="sourceCode" id="cb88"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> evalState (repeatM <span class="dv">100</span> step)</span>
-<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">const</span> <span class="dv">0</span></span></code></pre></div>
+<div class="sourceCode" id="cb88"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="ot">reset ::</span> <span class="dt">MonadState</span> (<span class="dt">Array2</span> <span class="dt">Int</span>) m <span class="ot">=&gt;</span> m <span class="dt">Int</span></span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>reset <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>    n <span class="ot">&lt;-</span> gets <span class="op">$</span> countArray (<span class="op">&gt;=</span> <span class="dv">1000</span>)</span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>    modify <span class="op">$</span> A.compute <span class="op">.</span> A.map (\x <span class="ot">-&gt;</span> <span class="kw">if</span> x <span class="op">&gt;=</span> <span class="dv">1000</span> <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> x)</span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> n</span></code></pre></div>
 </div>
+<p>I put everything in a state monad. The parts A and B have different stopping criteria.</p>
+<div class="named-code-block">
+<p>«solution-day-11»</p>
+<div class="sourceCode" id="cb89"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="ot">repeatM ::</span> (<span class="dt">Applicative</span> m) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m a <span class="ot">-&gt;</span> m [a]</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>repeatM n a <span class="ot">=</span> loop n</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loop n</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> n <span class="op">&lt;=</span> <span class="dv">0</span>    <span class="ot">=</span> <span class="fu">pure</span> []</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> liftA2 (<span class="op">:</span>) a (loop (n <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> evalState (repeatM <span class="dv">100</span> step)</span>
+<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-10"><a href="#cb89-10" aria-hidden="true" tabindex="-1"></a><span class="ot">countRepeatUntilM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> m <span class="dt">Bool</span> <span class="ot">-&gt;</span> m <span class="dt">Int</span></span>
+<span id="cb89-11"><a href="#cb89-11" aria-hidden="true" tabindex="-1"></a>countRepeatUntilM action <span class="ot">=</span> go <span class="dv">1</span></span>
+<span id="cb89-12"><a href="#cb89-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go n <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb89-13"><a href="#cb89-13" aria-hidden="true" tabindex="-1"></a>            stop <span class="ot">&lt;-</span> action</span>
+<span id="cb89-14"><a href="#cb89-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> stop <span class="kw">then</span> <span class="fu">return</span> n <span class="kw">else</span> go (n <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb89-15"><a href="#cb89-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-16"><a href="#cb89-16" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb89-17"><a href="#cb89-17" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> evalState <span class="op">$</span> countRepeatUntilM ((<span class="op">==</span> <span class="dv">100</span>) <span class="op">&lt;$&gt;</span> step)</span></code></pre></div>
+</div>
+<section id="plots" class="level3">
+<h3>Plots</h3>
+<p><img src="fig/day11.svg" title="Iteration 1 through 256 of the Dumbo Octopusses." class="figure" alt="Iteration 1 through 256 of the Dumbo Octopusses." /></p>
+</section>
 </section>
 <section id="appendix-boiler-plate" class="level1">
 <h1>Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>
-<div class="sourceCode" id="cb89"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
+<div class="sourceCode" id="cb90"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-parsing" class="level1">
 <h1>Appendix: Parsing</h1>
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
-<div class="sourceCode" id="cb90"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
-<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
-<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit )</span>
-<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
-<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord)</span>
-<span id="cb90-8"><a href="#cb90-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb90-9"><a href="#cb90-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb90-10"><a href="#cb90-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-11"><a href="#cb90-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb90-12"><a href="#cb90-12" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
-<span id="cb90-13"><a href="#cb90-13" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
-<span id="cb90-14"><a href="#cb90-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
-<span id="cb90-15"><a href="#cb90-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
-<span id="cb90-16"><a href="#cb90-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb90-17"><a href="#cb90-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-18"><a href="#cb90-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
-<span id="cb90-19"><a href="#cb90-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-20"><a href="#cb90-20" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb90-21"><a href="#cb90-21" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
-<span id="cb90-22"><a href="#cb90-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-23"><a href="#cb90-23" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb90-24"><a href="#cb90-24" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
-<span id="cb90-25"><a href="#cb90-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
-<span id="cb90-26"><a href="#cb90-26" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
-<span id="cb90-27"><a href="#cb90-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-28"><a href="#cb90-28" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
-<span id="cb90-29"><a href="#cb90-29" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb90-30"><a href="#cb90-30" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb90-31"><a href="#cb90-31" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb90-32"><a href="#cb90-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb90-33"><a href="#cb90-33" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb90-34"><a href="#cb90-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-35"><a href="#cb90-35" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb90-36"><a href="#cb90-36" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb90-37"><a href="#cb90-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-38"><a href="#cb90-38" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb90-39"><a href="#cb90-39" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span>
-<span id="cb90-40"><a href="#cb90-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-41"><a href="#cb90-41" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb90-42"><a href="#cb90-42" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
-<span id="cb90-43"><a href="#cb90-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb91"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit )</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord)</span>
+<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
+<span id="cb91-13"><a href="#cb91-13" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
+<span id="cb91-14"><a href="#cb91-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb91-15"><a href="#cb91-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
+<span id="cb91-16"><a href="#cb91-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb91-17"><a href="#cb91-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-18"><a href="#cb91-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
+<span id="cb91-19"><a href="#cb91-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-20"><a href="#cb91-20" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb91-21"><a href="#cb91-21" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb91-22"><a href="#cb91-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-23"><a href="#cb91-23" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb91-24"><a href="#cb91-24" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
+<span id="cb91-25"><a href="#cb91-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
+<span id="cb91-26"><a href="#cb91-26" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
+<span id="cb91-27"><a href="#cb91-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-28"><a href="#cb91-28" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb91-29"><a href="#cb91-29" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb91-30"><a href="#cb91-30" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb91-31"><a href="#cb91-31" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb91-32"><a href="#cb91-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb91-33"><a href="#cb91-33" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb91-34"><a href="#cb91-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-35"><a href="#cb91-35" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb91-36"><a href="#cb91-36" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb91-37"><a href="#cb91-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-38"><a href="#cb91-38" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb91-39"><a href="#cb91-39" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span>
+<span id="cb91-40"><a href="#cb91-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-41"><a href="#cb91-41" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb91-42"><a href="#cb91-42" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
+<span id="cb91-43"><a href="#cb91-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span></code></pre></div>
 </div>
 </section>
         </div>
