@@ -9,8 +9,7 @@ import RIO.State (State, evalState, modify, get)
 import RIO.ByteString (putStr)
 import qualified RIO.Text as Text
 
-import Parsing (Parser, sepEndBy1, eol, failOnException, readInputParsing)
-import Text.Megaparsec.Char (digitChar) 
+import Parsing (Parser, sepEndBy1, eol, digit, failOnException, readInputParsing)
 
 import Data.Massiv.Array (Array, Ix2(..))
 import qualified Data.Massiv.Array as A
@@ -22,19 +21,17 @@ import qualified Data.MultiSet as MultiSet
 import System.Random (mkStdGen, genWord8)
 
 -- ~\~ begin <<lit/day09.md|parsing-day-9>>[0]
-type Array2' r a = Array r Ix2 a
+-- ~\~ begin <<lit/day09.md|digit-array-parser>>[0]
+type Array2' r a = A.Array r A.Ix2 a
 type Array2 a = Array2' A.U a
 
-digit :: Parser Int
-digit = toValue <$> digitChar
-    where toValue c = ord c - ord '0'
-
-heightMapP :: Parser (Array2 Int)
-heightMapP = sepEndBy1 (some digit) eol >>= toArray2
+digitArray :: Parser (Array2 Int)
+digitArray = sepEndBy1 (some digit) eol >>= toArray2
     where toArray2 = failOnException . A.fromListsM A.Seq
+-- ~\~ end
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
-readInput = readInputParsing "data/day09.txt" heightMapP
+readInput = readInputParsing "data/day09.txt" digitArray
 -- ~\~ end
 -- ~\~ begin <<lit/day09.md|solution-day-9>>[0]
 neighbours :: [Ix2]

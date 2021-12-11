@@ -13,10 +13,11 @@ runB = readInput >>= logInfo . display . tshow . solutionB
 ``` {.haskell file=app/Parsing.hs}
 module Parsing
     ( Parser, hspace, string, char, readInputParsing, lexeme
-    , integer, eol, sepEndBy1, sepBy1, failOnException )
+    , integer, eol, sepEndBy1, sepBy1, failOnException, digit )
 where
 
 import RIO
+import RIO.Char (ord)
 import qualified RIO.Set as Set
 import qualified RIO.Text as Text
 
@@ -24,6 +25,7 @@ import Text.Megaparsec
     ( ParseErrorBundle, Parsec, parse, errorBundlePretty, sepEndBy1
     , sepBy1, fancyFailure, ErrorFancy(..) )
 import Text.Megaparsec.Char (hspace, string, char, eol)
+import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = Parsec Void Text
@@ -48,4 +50,8 @@ lexeme = L.lexeme hspace
 
 integer :: Parser Int
 integer = lexeme L.decimal
+
+digit :: Parser Int
+digit = toValue <$> C.digitChar
+    where toValue c = ord c - ord '0'
 ```

@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day11.hs
--- ~\~ begin <<lit/day11.md|app/Day11.hs>>[0]
+# Day 11: Dumbo Octopus
+
+``` {.haskell file=app/Day11.hs}
 module Day11 where
 
 import RIO
@@ -8,28 +9,29 @@ import Data.Massiv.Array (Ix2(..))
 import qualified Data.Massiv.Array as A
 import Parsing (Parser, sepEndBy1, failOnException, eol, digit, readInputParsing)
 
--- ~\~ begin <<lit/day11.md|parser-day-11>>[0]
--- ~\~ begin <<lit/day09.md|digit-array-parser>>[0]
-type Array2' r a = A.Array r A.Ix2 a
-type Array2 a = Array2' A.U a
+<<parser-day-11>>
+<<solution-day-11>>
+<<run-solutions>>
+```
 
-digitArray :: Parser (Array2 Int)
-digitArray = sepEndBy1 (some digit) eol >>= toArray2
-    where toArray2 = failOnException . A.fromListsM A.Seq
--- ~\~ end
+``` {.haskell #parser-day-11}
+<<digit-array-parser>>
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day11.txt" digitArray
--- ~\~ end
--- ~\~ begin <<lit/day11.md|solution-day-11>>[0]
+```
+
+``` {.haskell #solution-day-11}
 step :: (MonadState (Array2 Int) m) => m Int
 step = clock >> flash >> reset
--- ~\~ end
--- ~\~ begin <<lit/day11.md|solution-day-11>>[1]
+```
+
+``` {.haskell #solution-day-11}
 clock :: (MonadState (Array2 Int) m) => m ()
 clock = modify (A.compute . A.map (+ 1))
--- ~\~ end
--- ~\~ begin <<lit/day11.md|solution-day-11>>[2]
+```
+
+``` {.haskell #solution-day-11}
 home :: A.Ix2
 home = 0 :. 0
 
@@ -71,19 +73,12 @@ repeatM n a = loop n
     where loop n
             | n <= 0    = pure []
             | otherwise = liftA2 (:) a (loop (n - 1))
--- ~\~ end
--- ~\~ begin <<lit/day11.md|solution-day-11>>[3]
+```
+
+``` {.haskell #solution-day-11}
 solutionA :: Array2 Int -> Int
 solutionA = sum . evalState (repeatM 100 step)
 
 solutionB :: Array2 Int -> Int
 solutionB = const 0
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+```

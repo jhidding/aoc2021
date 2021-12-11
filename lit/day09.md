@@ -20,8 +20,7 @@ import RIO.State (State, evalState, modify, get)
 import RIO.ByteString (putStr)
 import qualified RIO.Text as Text
 
-import Parsing (Parser, sepEndBy1, eol, failOnException, readInputParsing)
-import Text.Megaparsec.Char (digitChar) 
+import Parsing (Parser, sepEndBy1, eol, digit, failOnException, readInputParsing)
 
 import Data.Massiv.Array (Array, Ix2(..))
 import qualified Data.Massiv.Array as A
@@ -40,20 +39,20 @@ import System.Random (mkStdGen, genWord8)
 
 Today's input data is given as digits between 0 and 9.
 
-``` {.haskell #parsing-day-9}
-type Array2' r a = Array r Ix2 a
+``` {.haskell #digit-array-parser}
+type Array2' r a = A.Array r A.Ix2 a
 type Array2 a = Array2' A.U a
 
-digit :: Parser Int
-digit = toValue <$> digitChar
-    where toValue c = ord c - ord '0'
-
-heightMapP :: Parser (Array2 Int)
-heightMapP = sepEndBy1 (some digit) eol >>= toArray2
+digitArray :: Parser (Array2 Int)
+digitArray = sepEndBy1 (some digit) eol >>= toArray2
     where toArray2 = failOnException . A.fromListsM A.Seq
+```
+
+``` {.haskell #parsing-day-9}
+<<digit-array-parser>>
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
-readInput = readInputParsing "data/day09.txt" heightMapP
+readInput = readInputParsing "data/day09.txt" digitArray
 ```
 
 I'll be using `Massiv`s stencil interface to solve this. Each stencil works on a neighbourhood of four pixels directly north, south, west and east from current location:
