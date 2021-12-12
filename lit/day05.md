@@ -22,9 +22,21 @@ import qualified Data.Massiv.Array.Mutable as MA
 <<run-solutions>>
 ```
 
-``` {.gnuplot output=fig/day05-input.svg}
+``` {.make target=fig/day05-input.svg}
+My input data
+---
+data/day05-plot.txt: app/Day05.hs
+    echo -e "import Day05\nshowData\n" | cabal repl -v0 > $@
+
+$(target): export output = $(target)
+$(target): export script = load "build/plot-day5-input.gp"
+$(target): data/day05-plot.txt build/plot-day5-input.gp
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
+``` {.gnuplot .hide file=build/plot-day5-input.gp}
 set size square
-plot '< echo -e "import Day05\nshowData\n" | cabal repl -v0' i 0 \
+plot 'data/day05-plot.txt' i 0 \
      u 1:2:($3-$1):($4-$2) w vectors t''
 ```
 
@@ -181,10 +193,21 @@ showData = runSimpleApp $ do
     where print = putStr . Text.encodeUtf8
 ```
 
-``` {.gnuplot output=fig/day05-output.svg}
+``` {.make target=fig/day05-output.svg}
+My output data
+---
+data/day05-plot.txt: app/Day05.hs
+    echo -e "import Day05\nshowData\n" | cabal repl -v0 > $@
+
+$(target): export output = $(target)
+$(target): export script = load "build/plot-day5-output.gp"
+$(target): data/day05-plot.txt build/plot-day5-output.gp
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
+``` {.gnuplot .hide file=build/plot-day5-output.gp}
 set size square
 set xrange [0:1000]
 set yrange [0:1000]
-plot '< echo -e "import Day05\nshowData\n" | cabal repl -v0' i 1 \
-    matrix w image t''
+plot 'data/day05-plot.txt' i 1 matrix w image t''
 ```

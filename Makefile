@@ -7,7 +7,6 @@ pandoc_args += --mathjax
 pandoc_args += --highlight-style templates/dark.theme
 pandoc_args += --section-divs
 pandoc_args += --lua-filter scripts/hide.lua
-pandoc_args += --lua-filter scripts/gnuplot.lua
 pandoc_args += --lua-filter scripts/make.lua
 pandoc_args += --lua-filter scripts/annotate.lua
 pandoc_input := README.md $(wildcard lit/day*.md) lit/boilerplate.md

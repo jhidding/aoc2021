@@ -3,7 +3,8 @@ local system = require 'pandoc.system'
 local make_preamble = [[
 .RECIPEPREFIX := $(.RECIPEPREFIX) 
 
-target := %s
+target_dir := %s
+target := $(target_dir)/%s
 ]]
 
 function CodeBlock(block)
@@ -15,7 +16,7 @@ function CodeBlock(block)
         end
         outfile = block.attributes["target"]
         system.with_temporary_directory("run-make", function (tmpdir)
-            local src = make_preamble:format("docs") .. rawsrc
+            local src = make_preamble:format("docs", outfile) .. rawsrc
             local f = io.open(tmpdir .. "/Makefile", "w")
             f:write(src)
             f:close()

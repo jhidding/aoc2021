@@ -16,9 +16,16 @@ readInput = do
 <<run-solutions>>
 ```
 
-``` {.gnuplot action=plot output=fig/day01.svg}
+``` {.make target=fig/day01.svg}
 My input data
 ---
+$(target): export output = $(target)
+$(target): export script = load "build/plot-day1.gp"
+$(target): data/day01.txt build/plot-day1.gp
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
+``` {.gnuplot .hide file=build/plot-day1.gp}
 plot "data/day01.txt" w l ls 1
 ```
 

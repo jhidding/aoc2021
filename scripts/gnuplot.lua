@@ -33,7 +33,7 @@ local gnuplot_template = [[
 ]]
 
 function CodeBlock(block)
-    if block.classes[1] == "gnuplot" then
+    if block.classes[1] == "gnuplot" and block.attributes["output"] ~= nil then
         local caption, rawsrc = block.text:match("(.-)\n%-%-%-\n(.*)")
         if not caption then
             rawsrc = block.text

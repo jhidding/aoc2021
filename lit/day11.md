@@ -132,7 +132,14 @@ showData = runSimpleApp $ do
 
 Iteration 1 through 258 (my answer) of the Dumbo Octopusses. For a long time, there is a majority period of 7 cycles. The basin has a value of 6 then, but is triggered by some event at the boundary of the basin, creating a cascade. When all octopusses synchronize the period lengthens to 10.
 
-``` {.gnuplot #plot-day11 output=fig/day11.svg}
+``` {.make target=fig/day11.svg}
+$(target): export output = $(target)
+$(target): export script = load "build/plot-day11.gp"
+$(target): data/day11-output.txt build/plot-day11.gp
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
+``` {.gnuplot .hide file=build/plot-day11.gp}
 set term svg size 560, 760
 
 set tmargin 0.1

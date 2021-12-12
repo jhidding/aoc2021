@@ -2,7 +2,7 @@
 Graphs! The fun times we live in :). We're getting a map of caves. This is my input:
 
 ``` {.make #day-12-plot-map target=fig/day12-map.svg}
-$(target)/fig/day12-map.svg: data/day12.txt build/day12-to-dot.awk
+$(target): data/day12.txt build/day12-to-dot.awk
     awk -f build/day12-to-dot.awk $< | dot -Tsvg > $@
 ```
 
