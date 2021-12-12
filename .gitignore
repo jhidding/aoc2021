@@ -23,4 +23,5 @@ cabal.project.local~
 .ghc.environment.*
 
 output
+build
 
