@@ -88,7 +88,20 @@ countRepeatUntilM action = go 1
 solutionB :: Array2 Int -> Int
 solutionB = evalState $ countRepeatUntilM ((== 100) <$> step)
 -- ~\~ end
+-- ~\~ begin <<lit/day11.md|show-data-day-11>>[0]
+printArray2 :: (MonadIO m) => Array2 Int -> m ()
+printArray2 a =
+    print $ Text.intercalate "\n" $ map (Text.intercalate " " . map tshow) (A.toLists2 a)
 
+print :: (MonadIO m) => Text -> m ()
+print = putStr . Text.encodeUtf8
+
+showData :: IO ()
+showData = runSimpleApp $ do
+    inp <- readInput
+    void $ evalStateT (repeatM 258 printStep) inp
+    where printStep = step >> get >>= printArray2 >> print "\n\n"
+-- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
 runA = readInput >>= logInfo . display . tshow . solutionA 

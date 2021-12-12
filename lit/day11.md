@@ -115,7 +115,7 @@ solutionB = evalState $ countRepeatUntilM ((== 100) <$> step)
 
 ### Plots
 
-``` {.haskell #show-data-day11 .hide}
+``` {.haskell #show-data-day-11 .hide}
 printArray2 :: (MonadIO m) => Array2 Int -> m ()
 printArray2 a =
     print $ Text.intercalate "\n" $ map (Text.intercalate " " . map tshow) (A.toLists2 a)

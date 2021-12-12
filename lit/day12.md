@@ -1,5 +1,7 @@
--- ~\~ language=Haskell filename=app/Day12.hs
--- ~\~ begin <<lit/day12.md|app/Day12.hs>>[0]
+# Day 12: Passage Pathing
+Graphs! The fun times we live in :)
+
+``` {.haskell file=app/Day12.hs}
 {-# LANGUAGE TypeApplications #-}
 module Day12 where
 
@@ -12,7 +14,12 @@ import Parsing (Parser, string, char, eol, sepEndBy1, readInputParsing)
 import RIO.Char (isLower, isUpper)
 import Text.Megaparsec (takeWhile1P, try)
 
--- ~\~ begin <<lit/day12.md|parser-day-12>>[0]
+<<parser-day-12>>
+<<solution-day-12>>
+<<run-solutions>>
+```
+
+``` {.haskell #parser-day-12}
 data Cave = Start | End | Big Text | Small Text
     deriving (Show, Eq, Ord)
 
@@ -30,8 +37,9 @@ linkP = Link <$> caveP <* char '-' <*> caveP
 
 readInput :: (HasLogFunc env) => RIO env [Link]
 readInput = readInputParsing "data/day12.txt" (sepEndBy1 linkP eol)
--- ~\~ end
--- ~\~ begin <<lit/day12.md|solution-day-12>>[0]
+```
+
+``` {.haskell #solution-day-12}
 type CaveMap = Map Cave [Cave]
 
 data AugmentedSet a = AugmentedSet (Set a) (Maybe a)
@@ -76,12 +84,5 @@ findRoutesB caveMap = findRoutesTo caveMap (AugmentedSet @Cave Set.empty Nothing
 
 solutionB :: [Link] -> Int
 solutionB = length . findRoutesB . routing
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
+```
 
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
