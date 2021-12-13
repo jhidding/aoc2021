@@ -1,9 +1,16 @@
 # Day 9: Smoke Basin
 Lava tubes and more hydrothermal vents! I'll be doing this in `Massiv` again. Here is a rendering of my input data.
 
-``` {.gnuplot output=fig/day09-input.svg}
+``` {.make target=fig/day9-input.svg}
 The input data.
 ---
+$(target): export output = $(target)
+$(target): export script = load "build/plot-day9-input.gp"
+$(target): data/day09-output.txt build/plot-day9-input.gp
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
+``` {.gnuplot .hide file=build/plot-day9-input.gp}
 set xrange [0:100]
 set yrange [0:100]
 set size square
@@ -172,9 +179,16 @@ showData = runSimpleApp $ do
 
 Here is my rendering of the resulting watershed:
 
-``` {.gnuplot output=fig/day09-output.svg}
+``` {.make target=fig/day9-output.svg}
 The watershed segmentation of the input data.
 ---
+$(target): export output = $(target)
+$(target): export script = load "build/plot-day9-output.gp"
+$(target): data/day09-output.txt build/plot-day9-output.gp
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
+``` {.gnuplot .hide file=build/plot-day9-output.gp}
 set xrange [0:100]
 set yrange [0:100]
 set size square

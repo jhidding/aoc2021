@@ -1,4 +1,4 @@
-set term svg background '#000000' size 800, 500
+set term svg size 800, 500
 set output "${output}"
 
 # line styles for ColorBrewer Pastel1

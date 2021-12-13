@@ -31,6 +31,7 @@ data/day05-plot.txt: app/Day05.hs
 $(target): export output = $(target)
 $(target): export script = load "build/plot-day5-input.gp"
 $(target): data/day05-plot.txt build/plot-day5-input.gp
+    @echo "plotting day 5 - input data"
     cat templates/gnuplot.preamble | envsubst | gnuplot
 ```
 

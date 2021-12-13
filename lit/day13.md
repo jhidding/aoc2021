@@ -1,5 +1,7 @@
--- ~\~ language=Haskell filename=app/Day13.hs
--- ~\~ begin <<lit/day13.md|app/Day13.hs>>[0]
+# Day 13: Transparent Origami
+We need to fold a piece of transparent paper with dots on it.
+
+``` {.haskell file=app/Day13.hs}
 module Day13 where
 
 import RIO
@@ -10,7 +12,13 @@ import qualified RIO.Set as Set
 import Parsing (readInputParsing, Parser, string, sepEndBy1, eol, integer, char)
 import Data.Massiv.Array (Ix2(..))
 
--- ~\~ begin <<lit/day13.md|parser-day-13>>[0]
+<<parser-day-13>>
+<<solution-day-13>>
+```
+
+As always, we have a parser:
+
+``` {.haskell #parser-day-13}
 data Input = Input
     { inputCoordinates :: [Ix2]
     , foldInstructions :: [FoldInstruction] }
@@ -36,8 +44,11 @@ foldInstructionsP = sepEndBy1 foldInstructionP eol
 
 readInput :: (HasLogFunc env) => RIO env Input
 readInput = readInputParsing "data/day13.txt" inputP
--- ~\~ end
--- ~\~ begin <<lit/day13.md|solution-day-13>>[0]
+```
+
+For each fold we need to transform the coordinates.
+
+``` {.haskell #solution-day-13}
 foldTransform :: FoldInstruction -> Ix2 -> Ix2
 foldTransform (FoldInstruction XAxis loc) (x :. y)
   | x > loc   = 2 * loc - x :. y
@@ -50,15 +61,21 @@ solutionA :: Input -> Int
 solutionA Input{..} = Set.size
                     $ Set.map (foldTransform $ head foldInstructions)
                     $ Set.fromList inputCoordinates
--- ~\~ end
--- ~\~ begin <<lit/day13.md|solution-day-13>>[1]
+```
+
+Now we need to fold the folds.
+
+``` {.haskell #solution-day-13}
 foldAllFolds :: Input -> [Ix2]
 foldAllFolds Input{..} = Set.toList $ foldl' makeFold 
                                              (Set.fromList inputCoordinates)
                                              foldInstructions
     where makeFold s i = Set.map (foldTransform i) s
--- ~\~ end
--- ~\~ begin <<lit/day13.md|solution-day-13>>[2]
+```
+
+Apparently the answer is in visualizing the result, so I'll print out the coordinates and plot them with Gnuplot.
+
+``` {.haskell #solution-day-13}
 print :: (MonadIO m) => Text -> m ()
 print = putStr . Text.encodeUtf8
 
@@ -77,5 +94,20 @@ runB :: (HasLogFunc env) => RIO env ()
 runB = do
     inp <- readInput
     printCoords (foldAllFolds inp)
--- ~\~ end
--- ~\~ end
+```
+
+``` {.gnuplot .hide file=build/plot-day13.gp}
+set term svg size 800, 200
+set yrange [6:-1] reverse
+set xrange [-1:40]
+set size ratio -1
+plot 'data/day13-output.txt' w p pt 7 ps 2 t''
+```
+
+``` {.make target=fig/day13-code.svg}
+$(target): export output=$(target)
+$(target): export script=load "build/plot-day13.gp"
+$(target): build/plot-day13.gp data/day13-output.txt
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+

@@ -21,7 +21,7 @@ function CodeBlock(block)
             f:write(src)
             f:close()
             os.execute("mkdir -p docs/$(dirname " .. outfile ..")")
-            os.execute("make -f " .. tmpdir .. "/Makefile")
+            os.execute("make -f " .. tmpdir .. "/Makefile " .. "docs/" .. outfile)
         end)
         return pandoc.Para({pandoc.Image({pandoc.Str(caption)}, outfile, caption, {class = "figure"})})
     end
