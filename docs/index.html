@@ -1105,7 +1105,7 @@
 </section>
 <section id="day-10-syntax-scoring" class="level1">
 <h1>Day 10: Syntax Scoring</h1>
-<p>Yay! Parsing! We can do this really well :)</p>
+<p>Yay! Parsing! We can do this really well. First I’ll do a really stupid thing, and solve this by looking at <code>ParserErrorBundle</code> objects returned by <code>Megaparsec</code>. This was a nice exercise but a really stupid way to solve this days problem. At the end I have a better solution, basically using a stack.</p>
 <div class="named-code-block">
 <p>file:app/Day10.hs</p>
 <div class="sourceCode" id="cb73"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day10</span> <span class="kw">where</span></span>

@@ -1,5 +1,5 @@
 # Day 10: Syntax Scoring
-Yay! Parsing! We can do this really well :)
+Yay! Parsing! We can do this really well. First I'll do a really stupid thing, and solve this by looking at `ParserErrorBundle` objects returned by `Megaparsec`. This was a nice exercise but a really stupid way to solve this days problem. At the end I have a better solution, basically using a stack.
 
 ``` {.haskell file=app/Day10.hs}
 module Day10 where
