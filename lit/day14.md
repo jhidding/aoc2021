@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day14.hs
--- ~\~ begin <<lit/day14.md|app/Day14.hs>>[0]
+# Day 14: Extended Polymerization
+
+``` {.haskell file=app/Day14.hs}
 module Day14 where
 
 import RIO
@@ -15,7 +16,13 @@ import qualified Data.MultiSet as MultiSet
 
 type LazyMap = LazyMap.Map
 
--- ~\~ begin <<lit/day14.md|parser-day14>>[0]
+<<parser-day14>>
+<<solution-day14>>
+<<run-solutions>>
+```
+
+
+``` {.haskell #parser-day14}
 data Input = Input
     { axiom :: [Char]
     , rules :: Map (Char, Char) Char
@@ -33,8 +40,9 @@ inputP = Input <$> axiomP <* eol <*> (Map.fromList <$> sepEndBy1 ruleP eol)
 
 readInput :: (HasLogFunc env) => RIO env Input
 readInput = readInputParsing "data/day14.txt" inputP
--- ~\~ end
--- ~\~ begin <<lit/day14.md|solution-day14>>[0]
+```
+
+``` {.haskell #solution-day14}
 pairs :: [a] -> [(a, a)]
 pairs [] = []
 pairs xs = zip xs (tail xs)
@@ -82,12 +90,4 @@ solutionB Input{..} = snd (last counts) - snd (head counts)
                  $ MultiSet.singleton (last axiom)
                  <> foldMap (\p -> m LazyMap.! (p, 40)) (pairs axiom)
           m = countMap rules
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+```
