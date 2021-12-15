@@ -2,7 +2,8 @@
 -- ~\~ begin <<lit/boilerplate.md|app/Parsing.hs>>[0]
 module Parsing
     ( Parser, hspace, string, char, readInputParsing, lexeme
-    , integer, eol, sepEndBy1, sepBy1, failOnException, digit )
+    , integer, eol, sepEndBy1, sepBy1, failOnException, digit
+    , digitArray )
 where
 
 import RIO
@@ -16,6 +17,8 @@ import Text.Megaparsec
 import Text.Megaparsec.Char (hspace, string, char, eol)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
+
+import qualified Data.Massiv.Array as A
 
 type Parser = Parsec Void Text
 
@@ -43,4 +46,13 @@ integer = lexeme L.decimal
 digit :: Parser Int
 digit = toValue <$> C.digitChar
     where toValue c = ord c - ord '0'
+
+-- ~\~ begin <<lit/day09.md|digit-array-parser>>[0]
+type Array2' r a = A.Array r A.Ix2 a
+type Array2 a = Array2' A.U a
+
+digitArray :: Parser (Array2 Int)
+digitArray = sepEndBy1 (some digit) eol >>= toArray2
+    where toArray2 = failOnException . A.fromListsM A.Seq
+-- ~\~ end
 -- ~\~ end

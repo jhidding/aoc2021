@@ -10,7 +10,7 @@ import qualified RIO.Text as Text
 import RIO.State (evalStateT, evalState, execState, MonadState, modify, get, gets)
 import Data.Massiv.Array (Ix2(..))
 import qualified Data.Massiv.Array as A
-import Parsing (Parser, sepEndBy1, failOnException, eol, digit, readInputParsing)
+import Parsing (digitArray, readInputParsing)
 
 <<parser-day-11>>
 <<solution-day-11>>
@@ -21,7 +21,8 @@ import Parsing (Parser, sepEndBy1, failOnException, eol, digit, readInputParsing
 We can reuse the input parser from day 9.
 
 ``` {.haskell #parser-day-11}
-<<digit-array-parser>>
+type Array2' r a = A.Array r A.Ix2 a
+type Array2 a = Array2' A.U a
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day11.txt" digitArray

@@ -53,6 +53,7 @@ executable x2021
                     , Day23
                     , Day24
                     , Parsing
+                    , Dijkstra
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -72,4 +73,4 @@ executable x2021
     default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns
                          FlexibleContexts FlexibleInstances TypeFamilies GeneralizedNewtypeDeriving
                          UndecidableSuperClasses TupleSections ConstraintKinds KindSignatures
-                         LambdaCase
+                         LambdaCase ScopedTypeVariables

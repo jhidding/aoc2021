@@ -27,7 +27,7 @@ import RIO.State (State, evalState, modify, get)
 import RIO.ByteString (putStr)
 import qualified RIO.Text as Text
 
-import Parsing (Parser, sepEndBy1, eol, digit, failOnException, readInputParsing)
+import Parsing (digitArray, readInputParsing)
 
 import Data.Massiv.Array (Array, Ix2(..))
 import qualified Data.Massiv.Array as A
@@ -56,7 +56,8 @@ digitArray = sepEndBy1 (some digit) eol >>= toArray2
 ```
 
 ``` {.haskell #parsing-day-9}
-<<digit-array-parser>>
+type Array2' r a = A.Array r A.Ix2 a
+type Array2 a = Array2' A.U a
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day09.txt" digitArray

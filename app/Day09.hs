@@ -9,7 +9,7 @@ import RIO.State (State, evalState, modify, get)
 import RIO.ByteString (putStr)
 import qualified RIO.Text as Text
 
-import Parsing (Parser, sepEndBy1, eol, digit, failOnException, readInputParsing)
+import Parsing (digitArray, readInputParsing)
 
 import Data.Massiv.Array (Array, Ix2(..))
 import qualified Data.Massiv.Array as A
@@ -21,14 +21,8 @@ import qualified Data.MultiSet as MultiSet
 import System.Random (mkStdGen, genWord8)
 
 -- ~\~ begin <<lit/day09.md|parsing-day-9>>[0]
--- ~\~ begin <<lit/day09.md|digit-array-parser>>[0]
 type Array2' r a = A.Array r A.Ix2 a
 type Array2 a = Array2' A.U a
-
-digitArray :: Parser (Array2 Int)
-digitArray = sepEndBy1 (some digit) eol >>= toArray2
-    where toArray2 = failOnException . A.fromListsM A.Seq
--- ~\~ end
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day09.txt" digitArray

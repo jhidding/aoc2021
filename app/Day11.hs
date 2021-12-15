@@ -8,17 +8,11 @@ import qualified RIO.Text as Text
 import RIO.State (evalStateT, evalState, execState, MonadState, modify, get, gets)
 import Data.Massiv.Array (Ix2(..))
 import qualified Data.Massiv.Array as A
-import Parsing (Parser, sepEndBy1, failOnException, eol, digit, readInputParsing)
+import Parsing (digitArray, readInputParsing)
 
 -- ~\~ begin <<lit/day11.md|parser-day-11>>[0]
--- ~\~ begin <<lit/day09.md|digit-array-parser>>[0]
 type Array2' r a = A.Array r A.Ix2 a
 type Array2 a = Array2' A.U a
-
-digitArray :: Parser (Array2 Int)
-digitArray = sepEndBy1 (some digit) eol >>= toArray2
-    where toArray2 = failOnException . A.fromListsM A.Seq
--- ~\~ end
 
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day11.txt" digitArray
