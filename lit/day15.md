@@ -25,12 +25,23 @@ minOn f x y
     | f x < f y = x
     | otherwise = y
 
-newtype DistLoc a = DistLoc (Ix2, a)
+newtype DistLoc i a = DistLoc (i, a)
     deriving (Eq)
 
-instance (Ord a) => Ord (DistLoc a) where
+instance (Ord a, Eq i) => Ord (DistLoc i a) where
     compare (DistLoc (_, x)) (DistLoc (_, y)) = compare x y
+
+toLoc :: DistLoc i a -> i
 toLoc (DistLoc (l, _)) = l
+
+condM :: (Monad m) => [(m Bool, m a)] -> m a
+condM ((pred, action): cs) = do
+    c <- pred
+    if c then action else condM cs
+condM [] = error "no matching conditions"
+
+otherwiseM :: (Monad m) => m Bool
+otherwiseM = pure True
 
 minDistArray2 :: forall a. (Ord a, Num a, Bounded a, A.Unbox a, M.Manifest A.U a)
               => Array2 a -> (Ix2 -> [Ix2]) -> Ix2 -> Ix2 -> a
@@ -40,55 +51,60 @@ minDistArray2 cost neighbours start end = runST go
           unvisited <- M.newMArray @A.U @Bool size True
           dist      <- M.newMArray @A.U @a size maxBound
           M.write_ dist start 0
-          let current :: Ix2 -> ST s a
-              current n = fromMaybe maxBound <$> M.read dist n
 
-              isUnvisited :: Ix2 -> ST s Bool
-              isUnvisited i = fromMaybe False <$> M.read unvisited i
+          let
+              distLoc :: Ix2 -> Ix2 -> ST s (DistLoc Ix2 a)
+              distLoc i j = do
+                  v <- A.readM dist j
+                  x <- A.readM dist i
+                  return $ DistLoc (j, min v (x + (cost A.! j)))
 
-              updateDist :: Ix2 -> Ix2 -> ST s (DistLoc a)
-              updateDist i j = do
-                  v <- current j
-                  x <- current i
-                  return $ DistLoc (j, min v (x + fromMaybe maxBound (cost A.!? j)))
+              recur :: Q.MinQueue (DistLoc Ix2 a) -> Ix2 -> ST s a
+              recur q pos = condM
+                [ (pure $ pos == end, A.readM dist end)
+                , (A.readM unvisited pos, do
+                     M.write_ unvisited pos False
+                     unvisitedNeighbours <- filterM (A.readM unvisited) (neighbours pos)
+                     newDists <- mapM (distLoc pos) unvisitedNeighbours
+                     mapM_ (\(DistLoc (i, x)) -> M.write_ dist i x) newDists
+                     let q' = foldl' (flip Q.insert) (Q.deleteMin q) newDists
+                     recur q' (toLoc $ Q.findMin q'))
+                , (otherwiseM, do
+                     let q' = Q.deleteMin q
+                     recur q' (toLoc $ Q.findMin q')) ]
 
-              recur :: Q.MinQueue (DistLoc a) -> Ix2 -> ST s a
-              recur q pos
-                | pos == end = fromMaybe maxBound <$> M.read dist end
-                | otherwise  = do
-                    unv <- isUnvisited pos
-                    if unv then do
-                        M.write_ unvisited pos False
-                        unvisitedNeighbours <- filterM isUnvisited (neighbours pos)
-                        newDists <- mapM (updateDist pos) unvisitedNeighbours
-                        mapM_ (\(DistLoc (i, x)) -> M.write_ dist i x) newDists
-                        let q' = foldl' (flip Q.insert) (Q.deleteMin q) newDists
-                        recur q' (toLoc $ Q.findMin q')
-                    else do
-                        let q' = Q.deleteMin q
-                        recur q' (toLoc $ Q.findMin q')
           recur Q.empty start
           where size = A.size cost
 
 minDist :: forall n a. (Ord n, Ord a, Num a, Bounded a)
-        => [n] -> (n -> [n]) -> (n -> n -> Maybe a) -> n -> n -> a
-minDist nodes neighbours distance start end
-  = go (Set.fromList nodes) (Set.singleton start) (Map.singleton start 0) start
-  where go :: Set n -> Set n -> Map n a -> n -> a
-        go unvisited marked dists pos
+        => (n -> [n]) -> (n -> n -> Maybe a) -> n -> n -> a
+minDist neighbours distance start end
+  = go Set.empty (Q.singleton $ DistLoc (start, 0)) (Map.singleton start 0) start
+  where go :: Set n -> Q.MinQueue (DistLoc n a) -> Map n a -> n -> a
+        go visited marked dists pos
           | pos == end         = currentDist pos
-          | Set.null unvisited = maxBound
-          | otherwise          = go (pos `Set.delete` unvisited) newMarked newDists closestUnvisited
-          where unvisitedNeighbours = filter (`Set.member` unvisited) (neighbours pos)
+          | pos `Set.member` visited = go visited marked'' dists (toLoc $ Q.findMin marked'')
+          | otherwise          = go (pos `Set.insert` visited) marked' dists' (toLoc $ Q.findMin marked')
+          where unvisitedNeighbours = filter (`Set.notMember` visited) (neighbours pos)
                 currentDist node = fromMaybe maxBound (dists !? node)
 
                 updateDist :: n -> Maybe a -> Maybe a
                 updateDist node Nothing  = (+) <$> (dists !? pos) <*> distance pos node
                 updateDist node x        = min <$> updateDist node Nothing <*> x
 
-                newDists = foldr (\k -> Map.alter (updateDist k) k) dists unvisitedNeighbours
-                newMarked = (pos `Set.delete` marked) <> Set.fromList unvisitedNeighbours
-                closestUnvisited = foldl1' (minOn currentDist) $ Set.toList newMarked
+                distLoc :: n -> Maybe (DistLoc n a)
+                distLoc node = do
+                    let v = currentDist node
+                    x <- dists !? pos
+                    dx <- distance pos node
+                    return $ DistLoc (node, min v (x + dx))
+
+                newDists = mapMaybe distLoc unvisitedNeighbours
+                dists' = foldl' (\m (DistLoc (i, x)) -> Map.insert i x m) dists newDists
+
+                marked' :: Q.MinQueue (DistLoc n a)
+                marked' = Q.deleteMin marked <> Q.fromList (mapMaybe distLoc unvisitedNeighbours)
+                marked'' = Q.deleteMin marked
 ```
 
 ``` {.haskell file=app/Day15.hs}
@@ -98,7 +114,7 @@ import RIO
 import Data.Massiv.Array (Ix2(..))
 import qualified Data.Massiv.Array as A
 import Parsing (readInputParsing, digitArray)
-import Dijkstra (minDistArray2)
+import Dijkstra (minDistArray2, minDist)
 
 <<parser-day15>>
 
@@ -125,6 +141,7 @@ scaleUp x = stack rowM
           inc h x = (x - 1 + h) `mod` 9 + 1
 
 solutionB :: Array2 Int -> Int
+-- solutionB inp' = minDist (neighbours inp) (distance inp) (0 :. 0) (endPoint inp)
 solutionB inp' = minDistArray2 inp (neighbours inp) (0 :. 0) (endPoint inp)
     where inp = scaleUp inp'
 
