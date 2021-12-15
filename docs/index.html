@@ -1736,38 +1736,93 @@
 <p>We are given a map and need to compute the shortest path from the top left to the right bottom. The algorithm to use here is <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra’s algorithm</a>.</p>
 <div class="named-code-block">
 <p>file:app/Dijkstra.hs</p>
-<div class="sourceCode" id="cb105"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Dijkstra</span> (minDist) <span class="kw">where</span></span>
+<div class="sourceCode" id="cb105"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
 <span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> (foldl1&#39;)</span>
-<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Map</span> ((!?))</span>
-<span id="cb105-7"><a href="#cb105-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
-<span id="cb105-8"><a href="#cb105-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-9"><a href="#cb105-9" aria-hidden="true" tabindex="-1"></a><span class="ot">minOn ::</span> <span class="dt">Ord</span> b <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
-<span id="cb105-10"><a href="#cb105-10" aria-hidden="true" tabindex="-1"></a>minOn f x y</span>
-<span id="cb105-11"><a href="#cb105-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> f x <span class="op">&lt;</span> f y <span class="ot">=</span> x</span>
-<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> y</span>
-<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a><span class="ot">minDist ::</span> <span class="kw">forall</span> n a<span class="op">.</span> (<span class="dt">Ord</span> n, <span class="dt">Ord</span> a, <span class="dt">Num</span> a, <span class="dt">Bounded</span> a)</span>
-<span id="cb105-15"><a href="#cb105-15" aria-hidden="true" tabindex="-1"></a>        <span class="ot">=&gt;</span> [n] <span class="ot">-&gt;</span> (n <span class="ot">-&gt;</span> [n]) <span class="ot">-&gt;</span> (n <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a) <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> a</span>
-<span id="cb105-16"><a href="#cb105-16" aria-hidden="true" tabindex="-1"></a>minDist nodes neighbours distance start end</span>
-<span id="cb105-17"><a href="#cb105-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> go (Set.fromList nodes) (Set.singleton start) (Map.singleton start <span class="dv">0</span>) start</span>
-<span id="cb105-18"><a href="#cb105-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span><span class="ot"> go ::</span> <span class="dt">Set</span> n <span class="ot">-&gt;</span> <span class="dt">Set</span> n <span class="ot">-&gt;</span> <span class="dt">Map</span> n a <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> a</span>
-<span id="cb105-19"><a href="#cb105-19" aria-hidden="true" tabindex="-1"></a>        go unvisited marked dists pos</span>
-<span id="cb105-20"><a href="#cb105-20" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> pos <span class="op">==</span> end         <span class="ot">=</span> currentDist pos</span>
-<span id="cb105-21"><a href="#cb105-21" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> Set.null unvisited <span class="ot">=</span> <span class="fu">maxBound</span></span>
-<span id="cb105-22"><a href="#cb105-22" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> <span class="fu">otherwise</span>          <span class="ot">=</span> go (pos <span class="ot">`Set.delete`</span> unvisited) newMarked newDists closestUnvisited</span>
-<span id="cb105-23"><a href="#cb105-23" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span> unvisitedNeighbours <span class="ot">=</span> <span class="fu">filter</span> (<span class="ot">`Set.member`</span> unvisited) (neighbours pos)</span>
-<span id="cb105-24"><a href="#cb105-24" aria-hidden="true" tabindex="-1"></a>                currentDist node <span class="ot">=</span> fromMaybe <span class="fu">maxBound</span> (dists <span class="op">!?</span> node)</span>
-<span id="cb105-25"><a href="#cb105-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-26"><a href="#cb105-26" aria-hidden="true" tabindex="-1"></a><span class="ot">                updateDist ::</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
-<span id="cb105-27"><a href="#cb105-27" aria-hidden="true" tabindex="-1"></a>                updateDist node <span class="dt">Nothing</span>  <span class="ot">=</span> (<span class="op">+</span>) <span class="op">&lt;$&gt;</span> (dists <span class="op">!?</span> pos) <span class="op">&lt;*&gt;</span> distance pos node</span>
-<span id="cb105-28"><a href="#cb105-28" aria-hidden="true" tabindex="-1"></a>                updateDist node x        <span class="ot">=</span> <span class="fu">min</span> <span class="op">&lt;$&gt;</span> updateDist node <span class="dt">Nothing</span> <span class="op">&lt;*&gt;</span> x</span>
-<span id="cb105-29"><a href="#cb105-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-30"><a href="#cb105-30" aria-hidden="true" tabindex="-1"></a>                newDists <span class="ot">=</span> <span class="fu">foldr</span> (\k <span class="ot">-&gt;</span> Map.alter (updateDist k) k) dists unvisitedNeighbours</span>
-<span id="cb105-31"><a href="#cb105-31" aria-hidden="true" tabindex="-1"></a>                newMarked <span class="ot">=</span> (pos <span class="ot">`Set.delete`</span> marked) <span class="op">&lt;&gt;</span> Set.fromList unvisitedNeighbours</span>
-<span id="cb105-32"><a href="#cb105-32" aria-hidden="true" tabindex="-1"></a>                closestUnvisited <span class="ot">=</span> foldl1&#39; (minOn currentDist) <span class="op">$</span> Set.toList newMarked</span></code></pre></div>
+<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Dijkstra</span> (minDist, minDistArray2) <span class="kw">where</span></span>
+<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> (foldl1&#39;)</span>
+<span id="cb105-7"><a href="#cb105-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb105-8"><a href="#cb105-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Map</span> ((!?))</span>
+<span id="cb105-9"><a href="#cb105-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb105-10"><a href="#cb105-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.PQueue.Min</span> <span class="kw">as</span> <span class="dt">Q</span></span>
+<span id="cb105-11"><a href="#cb105-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
+<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array.Mutable</span> <span class="kw">as</span> <span class="dt">M</span></span>
+<span id="cb105-15"><a href="#cb105-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-16"><a href="#cb105-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2&#39;</span> r a <span class="ot">=</span> <span class="dt">A.Array</span> r <span class="dt">Ix2</span> a</span>
+<span id="cb105-17"><a href="#cb105-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2</span> a <span class="ot">=</span> <span class="dt">Array2&#39;</span> <span class="dt">A.U</span> a</span>
+<span id="cb105-18"><a href="#cb105-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-19"><a href="#cb105-19" aria-hidden="true" tabindex="-1"></a><span class="ot">minOn ::</span> <span class="dt">Ord</span> b <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb105-20"><a href="#cb105-20" aria-hidden="true" tabindex="-1"></a>minOn f x y</span>
+<span id="cb105-21"><a href="#cb105-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> f x <span class="op">&lt;</span> f y <span class="ot">=</span> x</span>
+<span id="cb105-22"><a href="#cb105-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> y</span>
+<span id="cb105-23"><a href="#cb105-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-24"><a href="#cb105-24" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">DistLoc</span> a <span class="ot">=</span> <span class="dt">DistLoc</span> (<span class="dt">Ix2</span>, a)</span>
+<span id="cb105-25"><a href="#cb105-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Eq</span>)</span>
+<span id="cb105-26"><a href="#cb105-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-27"><a href="#cb105-27" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> <span class="dt">Ord</span> (<span class="dt">DistLoc</span> a) <span class="kw">where</span></span>
+<span id="cb105-28"><a href="#cb105-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">compare</span> (<span class="dt">DistLoc</span> (_, x)) (<span class="dt">DistLoc</span> (_, y)) <span class="ot">=</span> <span class="fu">compare</span> x y</span>
+<span id="cb105-29"><a href="#cb105-29" aria-hidden="true" tabindex="-1"></a>toLoc (<span class="dt">DistLoc</span> (l, _)) <span class="ot">=</span> l</span>
+<span id="cb105-30"><a href="#cb105-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-31"><a href="#cb105-31" aria-hidden="true" tabindex="-1"></a><span class="ot">minDistArray2 ::</span> <span class="kw">forall</span> a<span class="op">.</span> (<span class="dt">Ord</span> a, <span class="dt">Num</span> a, <span class="dt">Bounded</span> a, <span class="dt">A.Unbox</span> a, <span class="dt">M.Manifest</span> <span class="dt">A.U</span> a)</span>
+<span id="cb105-32"><a href="#cb105-32" aria-hidden="true" tabindex="-1"></a>              <span class="ot">=&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> (<span class="dt">Ix2</span> <span class="ot">-&gt;</span> [<span class="dt">Ix2</span>]) <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> a</span>
+<span id="cb105-33"><a href="#cb105-33" aria-hidden="true" tabindex="-1"></a>minDistArray2 cost neighbours start end <span class="ot">=</span> runST go</span>
+<span id="cb105-34"><a href="#cb105-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span><span class="ot"> go ::</span> <span class="kw">forall</span> s<span class="op">.</span> <span class="dt">ST</span> s a</span>
+<span id="cb105-35"><a href="#cb105-35" aria-hidden="true" tabindex="-1"></a>        go <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb105-36"><a href="#cb105-36" aria-hidden="true" tabindex="-1"></a>          unvisited <span class="ot">&lt;-</span> M.newMArray <span class="op">@</span><span class="dt">A.U</span> <span class="op">@</span><span class="dt">Bool</span> size <span class="dt">True</span></span>
+<span id="cb105-37"><a href="#cb105-37" aria-hidden="true" tabindex="-1"></a>          dist      <span class="ot">&lt;-</span> M.newMArray <span class="op">@</span><span class="dt">A.U</span> <span class="op">@</span>a size <span class="fu">maxBound</span></span>
+<span id="cb105-38"><a href="#cb105-38" aria-hidden="true" tabindex="-1"></a>          M.write_ dist start <span class="dv">0</span></span>
+<span id="cb105-39"><a href="#cb105-39" aria-hidden="true" tabindex="-1"></a>          <span class="kw">let</span><span class="ot"> current ::</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s a</span>
+<span id="cb105-40"><a href="#cb105-40" aria-hidden="true" tabindex="-1"></a>              current n <span class="ot">=</span> fromMaybe <span class="fu">maxBound</span> <span class="op">&lt;$&gt;</span> M.read dist n</span>
+<span id="cb105-41"><a href="#cb105-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-42"><a href="#cb105-42" aria-hidden="true" tabindex="-1"></a><span class="ot">              isUnvisited ::</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Bool</span></span>
+<span id="cb105-43"><a href="#cb105-43" aria-hidden="true" tabindex="-1"></a>              isUnvisited i <span class="ot">=</span> fromMaybe <span class="dt">False</span> <span class="op">&lt;$&gt;</span> M.read unvisited i</span>
+<span id="cb105-44"><a href="#cb105-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-45"><a href="#cb105-45" aria-hidden="true" tabindex="-1"></a><span class="ot">              updateDist ::</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">DistLoc</span> a)</span>
+<span id="cb105-46"><a href="#cb105-46" aria-hidden="true" tabindex="-1"></a>              updateDist i j <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb105-47"><a href="#cb105-47" aria-hidden="true" tabindex="-1"></a>                  v <span class="ot">&lt;-</span> current j</span>
+<span id="cb105-48"><a href="#cb105-48" aria-hidden="true" tabindex="-1"></a>                  x <span class="ot">&lt;-</span> current i</span>
+<span id="cb105-49"><a href="#cb105-49" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">return</span> <span class="op">$</span> <span class="dt">DistLoc</span> (j, <span class="fu">min</span> v (x <span class="op">+</span> fromMaybe <span class="fu">maxBound</span> (cost <span class="op">A.!?</span> j)))</span>
+<span id="cb105-50"><a href="#cb105-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-51"><a href="#cb105-51" aria-hidden="true" tabindex="-1"></a><span class="ot">              recur ::</span> <span class="dt">Q.MinQueue</span> (<span class="dt">DistLoc</span> a) <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s a</span>
+<span id="cb105-52"><a href="#cb105-52" aria-hidden="true" tabindex="-1"></a>              recur q pos</span>
+<span id="cb105-53"><a href="#cb105-53" aria-hidden="true" tabindex="-1"></a>                <span class="op">|</span> pos <span class="op">==</span> end <span class="ot">=</span> fromMaybe <span class="fu">maxBound</span> <span class="op">&lt;$&gt;</span> M.read dist end</span>
+<span id="cb105-54"><a href="#cb105-54" aria-hidden="true" tabindex="-1"></a>                <span class="op">|</span> <span class="fu">otherwise</span>  <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb105-55"><a href="#cb105-55" aria-hidden="true" tabindex="-1"></a>                    unv <span class="ot">&lt;-</span> isUnvisited pos</span>
+<span id="cb105-56"><a href="#cb105-56" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">if</span> unv <span class="kw">then</span> <span class="kw">do</span></span>
+<span id="cb105-57"><a href="#cb105-57" aria-hidden="true" tabindex="-1"></a>                        M.write_ unvisited pos <span class="dt">False</span></span>
+<span id="cb105-58"><a href="#cb105-58" aria-hidden="true" tabindex="-1"></a>                        unvisitedNeighbours <span class="ot">&lt;-</span> filterM isUnvisited (neighbours pos)</span>
+<span id="cb105-59"><a href="#cb105-59" aria-hidden="true" tabindex="-1"></a>                        newDists <span class="ot">&lt;-</span> <span class="fu">mapM</span> (updateDist pos) unvisitedNeighbours</span>
+<span id="cb105-60"><a href="#cb105-60" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">mapM_</span> (\(<span class="dt">DistLoc</span> (i, x)) <span class="ot">-&gt;</span> M.write_ dist i x) newDists</span>
+<span id="cb105-61"><a href="#cb105-61" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">let</span> q&#39; <span class="ot">=</span> foldl&#39; (<span class="fu">flip</span> Q.insert) (Q.deleteMin q) newDists</span>
+<span id="cb105-62"><a href="#cb105-62" aria-hidden="true" tabindex="-1"></a>                        recur q&#39; (toLoc <span class="op">$</span> Q.findMin q&#39;)</span>
+<span id="cb105-63"><a href="#cb105-63" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">else</span> <span class="kw">do</span></span>
+<span id="cb105-64"><a href="#cb105-64" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">let</span> q&#39; <span class="ot">=</span> Q.deleteMin q</span>
+<span id="cb105-65"><a href="#cb105-65" aria-hidden="true" tabindex="-1"></a>                        recur q&#39; (toLoc <span class="op">$</span> Q.findMin q&#39;)</span>
+<span id="cb105-66"><a href="#cb105-66" aria-hidden="true" tabindex="-1"></a>          recur Q.empty start</span>
+<span id="cb105-67"><a href="#cb105-67" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span> size <span class="ot">=</span> A.size cost</span>
+<span id="cb105-68"><a href="#cb105-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-69"><a href="#cb105-69" aria-hidden="true" tabindex="-1"></a><span class="ot">minDist ::</span> <span class="kw">forall</span> n a<span class="op">.</span> (<span class="dt">Ord</span> n, <span class="dt">Ord</span> a, <span class="dt">Num</span> a, <span class="dt">Bounded</span> a)</span>
+<span id="cb105-70"><a href="#cb105-70" aria-hidden="true" tabindex="-1"></a>        <span class="ot">=&gt;</span> [n] <span class="ot">-&gt;</span> (n <span class="ot">-&gt;</span> [n]) <span class="ot">-&gt;</span> (n <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a) <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> a</span>
+<span id="cb105-71"><a href="#cb105-71" aria-hidden="true" tabindex="-1"></a>minDist nodes neighbours distance start end</span>
+<span id="cb105-72"><a href="#cb105-72" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> go (Set.fromList nodes) (Set.singleton start) (Map.singleton start <span class="dv">0</span>) start</span>
+<span id="cb105-73"><a href="#cb105-73" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span><span class="ot"> go ::</span> <span class="dt">Set</span> n <span class="ot">-&gt;</span> <span class="dt">Set</span> n <span class="ot">-&gt;</span> <span class="dt">Map</span> n a <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> a</span>
+<span id="cb105-74"><a href="#cb105-74" aria-hidden="true" tabindex="-1"></a>        go unvisited marked dists pos</span>
+<span id="cb105-75"><a href="#cb105-75" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> pos <span class="op">==</span> end         <span class="ot">=</span> currentDist pos</span>
+<span id="cb105-76"><a href="#cb105-76" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> Set.null unvisited <span class="ot">=</span> <span class="fu">maxBound</span></span>
+<span id="cb105-77"><a href="#cb105-77" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> <span class="fu">otherwise</span>          <span class="ot">=</span> go (pos <span class="ot">`Set.delete`</span> unvisited) newMarked newDists closestUnvisited</span>
+<span id="cb105-78"><a href="#cb105-78" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span> unvisitedNeighbours <span class="ot">=</span> <span class="fu">filter</span> (<span class="ot">`Set.member`</span> unvisited) (neighbours pos)</span>
+<span id="cb105-79"><a href="#cb105-79" aria-hidden="true" tabindex="-1"></a>                currentDist node <span class="ot">=</span> fromMaybe <span class="fu">maxBound</span> (dists <span class="op">!?</span> node)</span>
+<span id="cb105-80"><a href="#cb105-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-81"><a href="#cb105-81" aria-hidden="true" tabindex="-1"></a><span class="ot">                updateDist ::</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb105-82"><a href="#cb105-82" aria-hidden="true" tabindex="-1"></a>                updateDist node <span class="dt">Nothing</span>  <span class="ot">=</span> (<span class="op">+</span>) <span class="op">&lt;$&gt;</span> (dists <span class="op">!?</span> pos) <span class="op">&lt;*&gt;</span> distance pos node</span>
+<span id="cb105-83"><a href="#cb105-83" aria-hidden="true" tabindex="-1"></a>                updateDist node x        <span class="ot">=</span> <span class="fu">min</span> <span class="op">&lt;$&gt;</span> updateDist node <span class="dt">Nothing</span> <span class="op">&lt;*&gt;</span> x</span>
+<span id="cb105-84"><a href="#cb105-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-85"><a href="#cb105-85" aria-hidden="true" tabindex="-1"></a>                newDists <span class="ot">=</span> <span class="fu">foldr</span> (\k <span class="ot">-&gt;</span> Map.alter (updateDist k) k) dists unvisitedNeighbours</span>
+<span id="cb105-86"><a href="#cb105-86" aria-hidden="true" tabindex="-1"></a>                newMarked <span class="ot">=</span> (pos <span class="ot">`Set.delete`</span> marked) <span class="op">&lt;&gt;</span> Set.fromList unvisitedNeighbours</span>
+<span id="cb105-87"><a href="#cb105-87" aria-hidden="true" tabindex="-1"></a>                closestUnvisited <span class="ot">=</span> foldl1&#39; (minOn currentDist) <span class="op">$</span> Set.toList newMarked</span></code></pre></div>
 </div>
 <div class="named-code-block">
 <p>file:app/Day15.hs</p>
@@ -1777,7 +1832,7 @@
 <span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
 <span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
 <span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (readInputParsing, digitArray)</span>
-<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Dijkstra</span> (minDist)</span>
+<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Dijkstra</span> (minDistArray2)</span>
 <span id="cb106-8"><a href="#cb106-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb106-9"><a href="#cb106-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day15<span class="op">&gt;&gt;</span></span>
 <span id="cb106-10"><a href="#cb106-10" aria-hidden="true" tabindex="-1"></a></span>
@@ -1795,7 +1850,7 @@
 <span id="cb106-22"><a href="#cb106-22" aria-hidden="true" tabindex="-1"></a>endPoint x <span class="ot">=</span> A.unSz (A.size x) <span class="op">-</span> (<span class="dv">1</span> <span class="op">:.</span> <span class="dv">1</span>)</span>
 <span id="cb106-23"><a href="#cb106-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb106-24"><a href="#cb106-24" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb106-25"><a href="#cb106-25" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> minDist (listNodes inp) (neighbours inp) (distance inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
+<span id="cb106-25"><a href="#cb106-25" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> minDistArray2 inp (neighbours inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
 <span id="cb106-26"><a href="#cb106-26" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb106-27"><a href="#cb106-27" aria-hidden="true" tabindex="-1"></a><span class="ot">scaleUp ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Array2</span> <span class="dt">Int</span></span>
 <span id="cb106-28"><a href="#cb106-28" aria-hidden="true" tabindex="-1"></a>scaleUp x <span class="ot">=</span> stack rowM</span>
@@ -1804,7 +1859,7 @@
 <span id="cb106-31"><a href="#cb106-31" aria-hidden="true" tabindex="-1"></a>          inc h x <span class="ot">=</span> (x <span class="op">-</span> <span class="dv">1</span> <span class="op">+</span> h) <span class="ot">`mod`</span> <span class="dv">9</span> <span class="op">+</span> <span class="dv">1</span></span>
 <span id="cb106-32"><a href="#cb106-32" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb106-33"><a href="#cb106-33" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb106-34"><a href="#cb106-34" aria-hidden="true" tabindex="-1"></a>solutionB inp&#39; <span class="ot">=</span> minDist (listNodes inp) (neighbours inp) (distance inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
+<span id="cb106-34"><a href="#cb106-34" aria-hidden="true" tabindex="-1"></a>solutionB inp&#39; <span class="ot">=</span> minDistArray2 inp (neighbours inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
 <span id="cb106-35"><a href="#cb106-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> inp <span class="ot">=</span> scaleUp inp&#39;</span>
 <span id="cb106-36"><a href="#cb106-36" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb106-37"><a href="#cb106-37" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>

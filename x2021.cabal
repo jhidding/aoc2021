@@ -68,6 +68,7 @@ executable x2021
                    , containers
                    , multiset
                    , random
+                   , pqueue
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns

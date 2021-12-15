@@ -6,7 +6,7 @@ import RIO
 import Data.Massiv.Array (Ix2(..))
 import qualified Data.Massiv.Array as A
 import Parsing (readInputParsing, digitArray)
-import Dijkstra (minDist)
+import Dijkstra (minDistArray2)
 
 -- ~\~ begin <<lit/day15.md|parser-day15>>[0]
 type Array2' r a = A.Array r A.Ix2 a
@@ -30,7 +30,7 @@ endPoint :: Array2 Int -> Ix2
 endPoint x = A.unSz (A.size x) - (1 :. 1)
 
 solutionA :: Array2 Int -> Int
-solutionA inp = minDist (listNodes inp) (neighbours inp) (distance inp) (0 :. 0) (endPoint inp)
+solutionA inp = minDistArray2 inp (neighbours inp) (0 :. 0) (endPoint inp)
 
 scaleUp :: Array2 Int -> Array2 Int
 scaleUp x = stack rowM
@@ -39,7 +39,7 @@ scaleUp x = stack rowM
           inc h x = (x - 1 + h) `mod` 9 + 1
 
 solutionB :: Array2 Int -> Int
-solutionB inp' = minDist (listNodes inp) (neighbours inp) (distance inp) (0 :. 0) (endPoint inp)
+solutionB inp' = minDistArray2 inp (neighbours inp) (0 :. 0) (endPoint inp)
     where inp = scaleUp inp'
 
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]

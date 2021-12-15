@@ -67,7 +67,7 @@ header .author {
 
 .footer {
         background-image: url("./structure.jpg");
-        background-size: auto;
+        background-size: cover;
         background-repeat: no-repeat;
         margin: 0;
         padding: 10pt 300pt 10pt 100pt;
@@ -76,7 +76,7 @@ header .author {
 
 header {
         background-image: url("./structure.jpg");
-        background-size: auto;
+        background-size: cover;
         background-repeat: no-repeat;
         margin: 0;
         padding: 10pt;
@@ -209,7 +209,7 @@ code {
   .col-s-12 {width: 100%;}
 }
 
-@media only screen and (min-width: 960px) {
+@media only screen and (min-width: 1600px) {
 header {
         padding: 10pt 100pt 10pt 50pt;
         text-shadow: 0 0 5pt black;
