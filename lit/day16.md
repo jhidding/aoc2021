@@ -65,7 +65,7 @@ import Text.Megaparsec (parse, chunk, try, takeP)
 import Text.Megaparsec.Char (hexDigitChar)
 
 <<parser-day16>>
-<<data-type-day16>>
+<<data-types-day16>>
 <<bits-parser-day16>>
 <<evaluator-day16>>
 <<solution-day16>>

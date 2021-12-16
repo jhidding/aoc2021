@@ -44,7 +44,28 @@ readInput = do
     bits <- readInputParsing "data/day16.txt" bitstream
     readBitstream bits packet
 -- ~\~ end
+-- ~\~ begin <<lit/day16.md|data-types-day16>>[0]
+data TypeId
+    = SumId
+    | ProductId
+    | MinimumId
+    | MaximumId
+    | LiteralValueId
+    | GreaterThanId
+    | LessThanId
+    | EqualToId
+    deriving (Show, Eq, Ord, Enum)
 
+data Packet = Packet
+    { packetVersion :: Int
+    , packetContent :: PacketContent
+    } deriving (Show)
+
+data PacketContent
+    = LiteralValuePacket Int
+    | OperatorPacket TypeId [Packet]
+    deriving (Show)
+-- ~\~ end
 -- ~\~ begin <<lit/day16.md|bits-parser-day16>>[0]
 version :: BitParser Int
 version = intN 3
