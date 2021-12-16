@@ -137,7 +137,7 @@ version :: BitParser Int
 version = intN 3
 
 typeId :: TypeId -> BitParser ()
-typeId i = void $ chunk (Bitstream.fromNBits @Word8 @Int 3 (fromEnum i))
+typeId i = void $ chunk (Bitstream.fromNBits 3 (fromEnum i))
 
 literalValuePacket :: BitParser PacketContent
 literalValuePacket = do
@@ -145,8 +145,8 @@ literalValuePacket = do
     loop 0
     where loop n = do
             continue <- bool
-            nib <- intN @Word8 4
-            let n' = n * 16 + fromIntegral nib
+            nib <- intN 4
+            let n' = n * 16 + nib
             if continue then loop n'
             else return $ LiteralValuePacket n'
 
@@ -157,7 +157,8 @@ operatorPacket = do
     if lengthType == 0 then do
         l <- intN 15
         subbits <- takeP (Just "sub-packets") l
-        subpkts <- either (fail . show) return $ parse (some packet) "-" subbits
+        subpkts <- either (fail . show) return
+                 $ parse (some packet) "-" subbits
         return $ OperatorPacket typeId subpkts
     else do
         l <- intN 11
@@ -175,9 +176,9 @@ To solve part A, we need to sum all version numbers.
 
 ``` {.haskell #solution-day16}
 getVersions :: Packet -> [Int]
-getVersions Packet {..} = [packetVersion] <> contentVersions packetContent
-    where contentVersions (OperatorPacket _ p) = concatMap getVersions p
-          contentVersions _                  = []
+getVersions Packet {..} = [packetVersion] <> versions packetContent
+    where versions (OperatorPacket _ p) = concatMap getVersions p
+          versions _                    = []
 
 solutionA :: Packet -> Int
 solutionA = sum . getVersions
@@ -194,14 +195,15 @@ For part B, we need to evaluate the computation that is contained in the message
 evalPacket :: Packet -> Int
 evalPacket Packet{..} = eval packetContent
     where eval (LiteralValuePacket i) = i
-          eval (OperatorPacket op p) = eval' op p
-          eval' SumId p     = sum (map evalPacket p)
-          eval' ProductId p = product (map evalPacket p)
-          eval' MinimumId p = foldl1' min (map evalPacket p)
-          eval' MaximumId p = foldl1' max (map evalPacket p)
-          eval' GreaterThanId [a, b] = if evalPacket a > evalPacket b then 1 else 0
-          eval' LessThanId [a, b] = if evalPacket a < evalPacket b then 1 else 0
-          eval' EqualToId [a, b] = if evalPacket a == evalPacket b then 1 else 0
+          eval (OperatorPacket op p)  = eval' op (map evalPacket p)
+          eval' SumId p               = sum p
+          eval' ProductId p           = product p
+          eval' MinimumId p           = foldl1' min p
+          eval' MaximumId p           = foldl1' max p
+          eval' GreaterThanId [a, b]  = if a > b then 1 else 0
+          eval' LessThanId [a, b]     = if a < b then 1 else 0
+          eval' EqualToId [a, b]      = if a == b then 1 else 0
+          eval' _ _                   = error "illegal expression"
 ```
 
 So this code is still full of partial functions, which is not so nice, but it's getting late.

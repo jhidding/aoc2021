@@ -2044,7 +2044,7 @@
 <span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>version <span class="ot">=</span> intN <span class="dv">3</span></span>
 <span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a><span class="ot">typeId ::</span> <span class="dt">TypeId</span> <span class="ot">-&gt;</span> <span class="dt">BitParser</span> ()</span>
-<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>typeId i <span class="ot">=</span> void <span class="op">$</span> chunk (Bitstream.fromNBits <span class="op">@</span><span class="dt">Word8</span> <span class="op">@</span><span class="dt">Int</span> <span class="dv">3</span> (<span class="fu">fromEnum</span> i))</span>
+<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>typeId i <span class="ot">=</span> void <span class="op">$</span> chunk (Bitstream.fromNBits <span class="dv">3</span> (<span class="fu">fromEnum</span> i))</span>
 <span id="cb121-6"><a href="#cb121-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb121-7"><a href="#cb121-7" aria-hidden="true" tabindex="-1"></a><span class="ot">literalValuePacket ::</span> <span class="dt">BitParser</span> <span class="dt">PacketContent</span></span>
 <span id="cb121-8"><a href="#cb121-8" aria-hidden="true" tabindex="-1"></a>literalValuePacket <span class="ot">=</span> <span class="kw">do</span></span>
@@ -2052,8 +2052,8 @@
 <span id="cb121-10"><a href="#cb121-10" aria-hidden="true" tabindex="-1"></a>    loop <span class="dv">0</span></span>
 <span id="cb121-11"><a href="#cb121-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> loop n <span class="ot">=</span> <span class="kw">do</span></span>
 <span id="cb121-12"><a href="#cb121-12" aria-hidden="true" tabindex="-1"></a>            continue <span class="ot">&lt;-</span> bool</span>
-<span id="cb121-13"><a href="#cb121-13" aria-hidden="true" tabindex="-1"></a>            nib <span class="ot">&lt;-</span> intN <span class="op">@</span><span class="dt">Word8</span> <span class="dv">4</span></span>
-<span id="cb121-14"><a href="#cb121-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> n&#39; <span class="ot">=</span> n <span class="op">*</span> <span class="dv">16</span> <span class="op">+</span> <span class="fu">fromIntegral</span> nib</span>
+<span id="cb121-13"><a href="#cb121-13" aria-hidden="true" tabindex="-1"></a>            nib <span class="ot">&lt;-</span> intN <span class="dv">4</span></span>
+<span id="cb121-14"><a href="#cb121-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> n&#39; <span class="ot">=</span> n <span class="op">*</span> <span class="dv">16</span> <span class="op">+</span> nib</span>
 <span id="cb121-15"><a href="#cb121-15" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> continue <span class="kw">then</span> loop n&#39;</span>
 <span id="cb121-16"><a href="#cb121-16" aria-hidden="true" tabindex="-1"></a>            <span class="kw">else</span> <span class="fu">return</span> <span class="op">$</span> <span class="dt">LiteralValuePacket</span> n&#39;</span>
 <span id="cb121-17"><a href="#cb121-17" aria-hidden="true" tabindex="-1"></a></span>
@@ -2064,26 +2064,27 @@
 <span id="cb121-22"><a href="#cb121-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> lengthType <span class="op">==</span> <span class="dv">0</span> <span class="kw">then</span> <span class="kw">do</span></span>
 <span id="cb121-23"><a href="#cb121-23" aria-hidden="true" tabindex="-1"></a>        l <span class="ot">&lt;-</span> intN <span class="dv">15</span></span>
 <span id="cb121-24"><a href="#cb121-24" aria-hidden="true" tabindex="-1"></a>        subbits <span class="ot">&lt;-</span> takeP (<span class="dt">Just</span> <span class="st">&quot;sub-packets&quot;</span>) l</span>
-<span id="cb121-25"><a href="#cb121-25" aria-hidden="true" tabindex="-1"></a>        subpkts <span class="ot">&lt;-</span> <span class="fu">either</span> (<span class="fu">fail</span> <span class="op">.</span> <span class="fu">show</span>) <span class="fu">return</span> <span class="op">$</span> parse (some packet) <span class="st">&quot;-&quot;</span> subbits</span>
-<span id="cb121-26"><a href="#cb121-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> <span class="op">$</span> <span class="dt">OperatorPacket</span> typeId subpkts</span>
-<span id="cb121-27"><a href="#cb121-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> <span class="kw">do</span></span>
-<span id="cb121-28"><a href="#cb121-28" aria-hidden="true" tabindex="-1"></a>        l <span class="ot">&lt;-</span> intN <span class="dv">11</span></span>
-<span id="cb121-29"><a href="#cb121-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">OperatorPacket</span> typeId <span class="op">&lt;$&gt;</span> replicateM l packet</span>
-<span id="cb121-30"><a href="#cb121-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb121-31"><a href="#cb121-31" aria-hidden="true" tabindex="-1"></a><span class="ot">packet ::</span> <span class="dt">BitParser</span> <span class="dt">Packet</span></span>
-<span id="cb121-32"><a href="#cb121-32" aria-hidden="true" tabindex="-1"></a>packet <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb121-33"><a href="#cb121-33" aria-hidden="true" tabindex="-1"></a>    packetVersion <span class="ot">&lt;-</span> version</span>
-<span id="cb121-34"><a href="#cb121-34" aria-hidden="true" tabindex="-1"></a>    packetContent <span class="ot">&lt;-</span> try literalValuePacket</span>
-<span id="cb121-35"><a href="#cb121-35" aria-hidden="true" tabindex="-1"></a>                 <span class="op">&lt;|&gt;</span> operatorPacket</span>
-<span id="cb121-36"><a href="#cb121-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">Packet</span> {<span class="op">..</span>}</span></code></pre></div>
+<span id="cb121-25"><a href="#cb121-25" aria-hidden="true" tabindex="-1"></a>        subpkts <span class="ot">&lt;-</span> <span class="fu">either</span> (<span class="fu">fail</span> <span class="op">.</span> <span class="fu">show</span>) <span class="fu">return</span></span>
+<span id="cb121-26"><a href="#cb121-26" aria-hidden="true" tabindex="-1"></a>                 <span class="op">$</span> parse (some packet) <span class="st">&quot;-&quot;</span> subbits</span>
+<span id="cb121-27"><a href="#cb121-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> <span class="op">$</span> <span class="dt">OperatorPacket</span> typeId subpkts</span>
+<span id="cb121-28"><a href="#cb121-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> <span class="kw">do</span></span>
+<span id="cb121-29"><a href="#cb121-29" aria-hidden="true" tabindex="-1"></a>        l <span class="ot">&lt;-</span> intN <span class="dv">11</span></span>
+<span id="cb121-30"><a href="#cb121-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">OperatorPacket</span> typeId <span class="op">&lt;$&gt;</span> replicateM l packet</span>
+<span id="cb121-31"><a href="#cb121-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb121-32"><a href="#cb121-32" aria-hidden="true" tabindex="-1"></a><span class="ot">packet ::</span> <span class="dt">BitParser</span> <span class="dt">Packet</span></span>
+<span id="cb121-33"><a href="#cb121-33" aria-hidden="true" tabindex="-1"></a>packet <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb121-34"><a href="#cb121-34" aria-hidden="true" tabindex="-1"></a>    packetVersion <span class="ot">&lt;-</span> version</span>
+<span id="cb121-35"><a href="#cb121-35" aria-hidden="true" tabindex="-1"></a>    packetContent <span class="ot">&lt;-</span> try literalValuePacket</span>
+<span id="cb121-36"><a href="#cb121-36" aria-hidden="true" tabindex="-1"></a>                 <span class="op">&lt;|&gt;</span> operatorPacket</span>
+<span id="cb121-37"><a href="#cb121-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">Packet</span> {<span class="op">..</span>}</span></code></pre></div>
 </div>
 <p>To solve part A, we need to sum all version numbers.</p>
 <div class="named-code-block">
 <p>«solution-day16»</p>
 <div class="sourceCode" id="cb122"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="ot">getVersions ::</span> <span class="dt">Packet</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
-<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>getVersions <span class="dt">Packet</span> {<span class="op">..</span>} <span class="ot">=</span> [packetVersion] <span class="op">&lt;&gt;</span> contentVersions packetContent</span>
-<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> contentVersions (<span class="dt">OperatorPacket</span> _ p) <span class="ot">=</span> <span class="fu">concatMap</span> getVersions p</span>
-<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a>          contentVersions _                  <span class="ot">=</span> []</span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>getVersions <span class="dt">Packet</span> {<span class="op">..</span>} <span class="ot">=</span> [packetVersion] <span class="op">&lt;&gt;</span> versions packetContent</span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> versions (<span class="dt">OperatorPacket</span> _ p) <span class="ot">=</span> <span class="fu">concatMap</span> getVersions p</span>
+<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a>          versions _                    <span class="ot">=</span> []</span>
 <span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb122-6"><a href="#cb122-6" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Packet</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb122-7"><a href="#cb122-7" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> getVersions</span>
@@ -2099,14 +2100,15 @@
 <div class="sourceCode" id="cb123"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="ot">evalPacket ::</span> <span class="dt">Packet</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>evalPacket <span class="dt">Packet</span>{<span class="op">..</span>} <span class="ot">=</span> eval packetContent</span>
 <span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> eval (<span class="dt">LiteralValuePacket</span> i) <span class="ot">=</span> i</span>
-<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>          eval (<span class="dt">OperatorPacket</span> op p) <span class="ot">=</span> eval&#39; op p</span>
-<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">SumId</span> p     <span class="ot">=</span> <span class="fu">sum</span> (<span class="fu">map</span> evalPacket p)</span>
-<span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">ProductId</span> p <span class="ot">=</span> <span class="fu">product</span> (<span class="fu">map</span> evalPacket p)</span>
-<span id="cb123-7"><a href="#cb123-7" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">MinimumId</span> p <span class="ot">=</span> foldl1&#39; <span class="fu">min</span> (<span class="fu">map</span> evalPacket p)</span>
-<span id="cb123-8"><a href="#cb123-8" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">MaximumId</span> p <span class="ot">=</span> foldl1&#39; <span class="fu">max</span> (<span class="fu">map</span> evalPacket p)</span>
-<span id="cb123-9"><a href="#cb123-9" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">GreaterThanId</span> [a, b] <span class="ot">=</span> <span class="kw">if</span> evalPacket a <span class="op">&gt;</span> evalPacket b <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span>
-<span id="cb123-10"><a href="#cb123-10" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">LessThanId</span> [a, b] <span class="ot">=</span> <span class="kw">if</span> evalPacket a <span class="op">&lt;</span> evalPacket b <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span>
-<span id="cb123-11"><a href="#cb123-11" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">EqualToId</span> [a, b] <span class="ot">=</span> <span class="kw">if</span> evalPacket a <span class="op">==</span> evalPacket b <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span></code></pre></div>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>          eval (<span class="dt">OperatorPacket</span> op p)  <span class="ot">=</span> eval&#39; op (<span class="fu">map</span> evalPacket p)</span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">SumId</span> p               <span class="ot">=</span> <span class="fu">sum</span> p</span>
+<span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">ProductId</span> p           <span class="ot">=</span> <span class="fu">product</span> p</span>
+<span id="cb123-7"><a href="#cb123-7" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">MinimumId</span> p           <span class="ot">=</span> foldl1&#39; <span class="fu">min</span> p</span>
+<span id="cb123-8"><a href="#cb123-8" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">MaximumId</span> p           <span class="ot">=</span> foldl1&#39; <span class="fu">max</span> p</span>
+<span id="cb123-9"><a href="#cb123-9" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">GreaterThanId</span> [a, b]  <span class="ot">=</span> <span class="kw">if</span> a <span class="op">&gt;</span> b <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span>
+<span id="cb123-10"><a href="#cb123-10" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">LessThanId</span> [a, b]     <span class="ot">=</span> <span class="kw">if</span> a <span class="op">&lt;</span> b <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span>
+<span id="cb123-11"><a href="#cb123-11" aria-hidden="true" tabindex="-1"></a>          eval&#39; <span class="dt">EqualToId</span> [a, b]      <span class="ot">=</span> <span class="kw">if</span> a <span class="op">==</span> b <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span>
+<span id="cb123-12"><a href="#cb123-12" aria-hidden="true" tabindex="-1"></a>          eval&#39; _ _                   <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;illegal expression&quot;</span></span></code></pre></div>
 </div>
 <p>So this code is still full of partial functions, which is not so nice, but it’s getting late.</p>
 </section>
