@@ -70,9 +70,10 @@ executable x2021
                    , multiset
                    , random
                    , pqueue
+                   , bitstream
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns
                          FlexibleContexts FlexibleInstances TypeFamilies GeneralizedNewtypeDeriving
                          UndecidableSuperClasses TupleSections ConstraintKinds KindSignatures
-                         LambdaCase ScopedTypeVariables
+                         LambdaCase ScopedTypeVariables TypeApplications

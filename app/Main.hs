@@ -48,7 +48,7 @@ solutions = Map.fromList
     , ("13", (Day13.runA, Day13.runB))
     , ("14", (Day14.runA, Day14.runB))
     , ("15", (Day15.runA, Day15.runB))
---    , ("16", (Day16.runA, Day16.runB))
+    , ("16", (Day16.runA, Day16.runB))
 --    , ("17", (Day17.runA, Day17.runB))
 --    , ("18", (Day18.runA, Day18.runB))
 --    , ("19", (Day19.runA, Day19.runB))
