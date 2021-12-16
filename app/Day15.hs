@@ -15,10 +15,7 @@ type Array2 a = Array2' A.U a
 readInput :: (HasLogFunc env) => RIO env (Array2 Int)
 readInput = readInputParsing "data/day15.txt" digitArray
 -- ~\~ end
-
-listNodes :: (A.Unbox a) => Array2 a -> [Ix2]
-listNodes = A.toList . A.imap const
-
+-- ~\~ begin <<lit/day15.md|solution-day15>>[0]
 neighbours :: (A.Unbox a) => Array2 a -> Ix2 -> [Ix2]
 neighbours x i = filter (isJust . (x A.!?)) $ map (+ i) n
     where n = [-1 :. 0, 1 :. 0, 0 :. -1, 0 :. 1]
@@ -33,16 +30,16 @@ solutionA :: Array2 Int -> Int
 solutionA inp = minDistArray2 inp (neighbours inp) (0 :. 0) (endPoint inp)
 
 scaleUp :: Array2 Int -> Array2 Int
-scaleUp x = stack rowM
-    where rowM = foldl' (\r t -> A.compute $ A.append' 1 r t) x (map (\h -> A.map (inc h) x) [1..4])
-          stack row = foldl' (\r t -> A.compute $ A.append' 2 r t) row (map (\h -> A.map (inc h) row) [1..4])
+scaleUp x = stack 2 (stack 1 x)
+    where stack axis row = foldl' (\r t -> A.compute $ A.append' axis r t) row
+                         $ map (\h -> A.map (inc h) row) [1..4]
           inc h x = (x - 1 + h) `mod` 9 + 1
 
 solutionB :: Array2 Int -> Int
 -- solutionB inp' = minDist (neighbours inp) (distance inp) (0 :. 0) (endPoint inp)
 solutionB inp' = minDistArray2 inp (neighbours inp) (0 :. 0) (endPoint inp)
     where inp = scaleUp inp'
-
+-- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
 runA = readInput >>= logInfo . display . tshow . solutionA 

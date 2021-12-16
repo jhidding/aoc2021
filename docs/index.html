@@ -1734,6 +1734,7 @@
 <section id="day-15-chiton" class="level1">
 <h1>Day 15: Chiton</h1>
 <p>We are given a map and need to compute the shortest path from the top left to the right bottom. The algorithm to use here is <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra’s algorithm</a>.</p>
+<p>I implemented two versions: one for abstract cases, and one on a grid.</p>
 <div class="named-code-block">
 <p>file:app/Dijkstra.hs</p>
 <div class="sourceCode" id="cb105"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
@@ -1747,212 +1748,247 @@
 <span id="cb105-9"><a href="#cb105-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
 <span id="cb105-10"><a href="#cb105-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.PQueue.Min</span> <span class="kw">as</span> <span class="dt">Q</span></span>
 <span id="cb105-11"><a href="#cb105-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
-<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array.Mutable</span> <span class="kw">as</span> <span class="dt">M</span></span>
-<span id="cb105-15"><a href="#cb105-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-16"><a href="#cb105-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2&#39;</span> r a <span class="ot">=</span> <span class="dt">A.Array</span> r <span class="dt">Ix2</span> a</span>
-<span id="cb105-17"><a href="#cb105-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2</span> a <span class="ot">=</span> <span class="dt">Array2&#39;</span> <span class="dt">A.U</span> a</span>
-<span id="cb105-18"><a href="#cb105-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-19"><a href="#cb105-19" aria-hidden="true" tabindex="-1"></a><span class="ot">minOn ::</span> <span class="dt">Ord</span> b <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
-<span id="cb105-20"><a href="#cb105-20" aria-hidden="true" tabindex="-1"></a>minOn f x y</span>
-<span id="cb105-21"><a href="#cb105-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> f x <span class="op">&lt;</span> f y <span class="ot">=</span> x</span>
-<span id="cb105-22"><a href="#cb105-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> y</span>
-<span id="cb105-23"><a href="#cb105-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-24"><a href="#cb105-24" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">DistLoc</span> i a <span class="ot">=</span> <span class="dt">DistLoc</span> (i, a)</span>
-<span id="cb105-25"><a href="#cb105-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Eq</span>)</span>
-<span id="cb105-26"><a href="#cb105-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-27"><a href="#cb105-27" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a, <span class="dt">Eq</span> i) <span class="ot">=&gt;</span> <span class="dt">Ord</span> (<span class="dt">DistLoc</span> i a) <span class="kw">where</span></span>
-<span id="cb105-28"><a href="#cb105-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">compare</span> (<span class="dt">DistLoc</span> (_, x)) (<span class="dt">DistLoc</span> (_, y)) <span class="ot">=</span> <span class="fu">compare</span> x y</span>
-<span id="cb105-29"><a href="#cb105-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-30"><a href="#cb105-30" aria-hidden="true" tabindex="-1"></a><span class="ot">toLoc ::</span> <span class="dt">DistLoc</span> i a <span class="ot">-&gt;</span> i</span>
-<span id="cb105-31"><a href="#cb105-31" aria-hidden="true" tabindex="-1"></a>toLoc (<span class="dt">DistLoc</span> (l, _)) <span class="ot">=</span> l</span>
-<span id="cb105-32"><a href="#cb105-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-33"><a href="#cb105-33" aria-hidden="true" tabindex="-1"></a><span class="ot">condM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> [(m <span class="dt">Bool</span>, m a)] <span class="ot">-&gt;</span> m a</span>
-<span id="cb105-34"><a href="#cb105-34" aria-hidden="true" tabindex="-1"></a>condM ((<span class="fu">pred</span>, action)<span class="op">:</span> cs) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb105-35"><a href="#cb105-35" aria-hidden="true" tabindex="-1"></a>    c <span class="ot">&lt;-</span> <span class="fu">pred</span></span>
-<span id="cb105-36"><a href="#cb105-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> c <span class="kw">then</span> action <span class="kw">else</span> condM cs</span>
-<span id="cb105-37"><a href="#cb105-37" aria-hidden="true" tabindex="-1"></a>condM [] <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;no matching conditions&quot;</span></span>
-<span id="cb105-38"><a href="#cb105-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-39"><a href="#cb105-39" aria-hidden="true" tabindex="-1"></a><span class="ot">otherwiseM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> m <span class="dt">Bool</span></span>
-<span id="cb105-40"><a href="#cb105-40" aria-hidden="true" tabindex="-1"></a>otherwiseM <span class="ot">=</span> <span class="fu">pure</span> <span class="dt">True</span></span>
-<span id="cb105-41"><a href="#cb105-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-42"><a href="#cb105-42" aria-hidden="true" tabindex="-1"></a><span class="ot">minDistArray2 ::</span> <span class="kw">forall</span> a<span class="op">.</span> (<span class="dt">Ord</span> a, <span class="dt">Num</span> a, <span class="dt">Bounded</span> a, <span class="dt">A.Unbox</span> a, <span class="dt">M.Manifest</span> <span class="dt">A.U</span> a)</span>
-<span id="cb105-43"><a href="#cb105-43" aria-hidden="true" tabindex="-1"></a>              <span class="ot">=&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> (<span class="dt">Ix2</span> <span class="ot">-&gt;</span> [<span class="dt">Ix2</span>]) <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> a</span>
-<span id="cb105-44"><a href="#cb105-44" aria-hidden="true" tabindex="-1"></a>minDistArray2 cost neighbours start end <span class="ot">=</span> runST go</span>
-<span id="cb105-45"><a href="#cb105-45" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span><span class="ot"> go ::</span> <span class="kw">forall</span> s<span class="op">.</span> <span class="dt">ST</span> s a</span>
-<span id="cb105-46"><a href="#cb105-46" aria-hidden="true" tabindex="-1"></a>        go <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb105-47"><a href="#cb105-47" aria-hidden="true" tabindex="-1"></a>          unvisited <span class="ot">&lt;-</span> M.newMArray <span class="op">@</span><span class="dt">A.U</span> <span class="op">@</span><span class="dt">Bool</span> size <span class="dt">True</span></span>
-<span id="cb105-48"><a href="#cb105-48" aria-hidden="true" tabindex="-1"></a>          dist      <span class="ot">&lt;-</span> M.newMArray <span class="op">@</span><span class="dt">A.U</span> <span class="op">@</span>a size <span class="fu">maxBound</span></span>
-<span id="cb105-49"><a href="#cb105-49" aria-hidden="true" tabindex="-1"></a>          M.write_ dist start <span class="dv">0</span></span>
-<span id="cb105-50"><a href="#cb105-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-51"><a href="#cb105-51" aria-hidden="true" tabindex="-1"></a>          <span class="kw">let</span></span>
-<span id="cb105-52"><a href="#cb105-52" aria-hidden="true" tabindex="-1"></a><span class="ot">              distLoc ::</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">DistLoc</span> <span class="dt">Ix2</span> a)</span>
-<span id="cb105-53"><a href="#cb105-53" aria-hidden="true" tabindex="-1"></a>              distLoc i j <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb105-54"><a href="#cb105-54" aria-hidden="true" tabindex="-1"></a>                  v <span class="ot">&lt;-</span> A.readM dist j</span>
-<span id="cb105-55"><a href="#cb105-55" aria-hidden="true" tabindex="-1"></a>                  x <span class="ot">&lt;-</span> A.readM dist i</span>
-<span id="cb105-56"><a href="#cb105-56" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">return</span> <span class="op">$</span> <span class="dt">DistLoc</span> (j, <span class="fu">min</span> v (x <span class="op">+</span> (cost <span class="op">A.!</span> j)))</span>
-<span id="cb105-57"><a href="#cb105-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-58"><a href="#cb105-58" aria-hidden="true" tabindex="-1"></a><span class="ot">              recur ::</span> <span class="dt">Q.MinQueue</span> (<span class="dt">DistLoc</span> <span class="dt">Ix2</span> a) <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s a</span>
-<span id="cb105-59"><a href="#cb105-59" aria-hidden="true" tabindex="-1"></a>              recur q pos <span class="ot">=</span> condM</span>
-<span id="cb105-60"><a href="#cb105-60" aria-hidden="true" tabindex="-1"></a>                [ (<span class="fu">pure</span> <span class="op">$</span> pos <span class="op">==</span> end, A.readM dist end)</span>
-<span id="cb105-61"><a href="#cb105-61" aria-hidden="true" tabindex="-1"></a>                , (A.readM unvisited pos, <span class="kw">do</span></span>
-<span id="cb105-62"><a href="#cb105-62" aria-hidden="true" tabindex="-1"></a>                     M.write_ unvisited pos <span class="dt">False</span></span>
-<span id="cb105-63"><a href="#cb105-63" aria-hidden="true" tabindex="-1"></a>                     unvisitedNeighbours <span class="ot">&lt;-</span> filterM (A.readM unvisited) (neighbours pos)</span>
-<span id="cb105-64"><a href="#cb105-64" aria-hidden="true" tabindex="-1"></a>                     newDists <span class="ot">&lt;-</span> <span class="fu">mapM</span> (distLoc pos) unvisitedNeighbours</span>
-<span id="cb105-65"><a href="#cb105-65" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">mapM_</span> (\(<span class="dt">DistLoc</span> (i, x)) <span class="ot">-&gt;</span> M.write_ dist i x) newDists</span>
-<span id="cb105-66"><a href="#cb105-66" aria-hidden="true" tabindex="-1"></a>                     <span class="kw">let</span> q&#39; <span class="ot">=</span> foldl&#39; (<span class="fu">flip</span> Q.insert) (Q.deleteMin q) newDists</span>
-<span id="cb105-67"><a href="#cb105-67" aria-hidden="true" tabindex="-1"></a>                     recur q&#39; (toLoc <span class="op">$</span> Q.findMin q&#39;))</span>
-<span id="cb105-68"><a href="#cb105-68" aria-hidden="true" tabindex="-1"></a>                , (otherwiseM, <span class="kw">do</span></span>
-<span id="cb105-69"><a href="#cb105-69" aria-hidden="true" tabindex="-1"></a>                     <span class="kw">let</span> q&#39; <span class="ot">=</span> Q.deleteMin q</span>
-<span id="cb105-70"><a href="#cb105-70" aria-hidden="true" tabindex="-1"></a>                     recur q&#39; (toLoc <span class="op">$</span> Q.findMin q&#39;)) ]</span>
-<span id="cb105-71"><a href="#cb105-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-72"><a href="#cb105-72" aria-hidden="true" tabindex="-1"></a>          recur Q.empty start</span>
-<span id="cb105-73"><a href="#cb105-73" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span> size <span class="ot">=</span> A.size cost</span>
-<span id="cb105-74"><a href="#cb105-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-75"><a href="#cb105-75" aria-hidden="true" tabindex="-1"></a><span class="ot">minDist ::</span> <span class="kw">forall</span> n a<span class="op">.</span> (<span class="dt">Ord</span> n, <span class="dt">Ord</span> a, <span class="dt">Num</span> a, <span class="dt">Bounded</span> a)</span>
-<span id="cb105-76"><a href="#cb105-76" aria-hidden="true" tabindex="-1"></a>        <span class="ot">=&gt;</span> (n <span class="ot">-&gt;</span> [n]) <span class="ot">-&gt;</span> (n <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a) <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> a</span>
-<span id="cb105-77"><a href="#cb105-77" aria-hidden="true" tabindex="-1"></a>minDist neighbours distance start end</span>
-<span id="cb105-78"><a href="#cb105-78" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> go Set.empty (Q.singleton <span class="op">$</span> <span class="dt">DistLoc</span> (start, <span class="dv">0</span>)) (Map.singleton start <span class="dv">0</span>) start</span>
-<span id="cb105-79"><a href="#cb105-79" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span><span class="ot"> go ::</span> <span class="dt">Set</span> n <span class="ot">-&gt;</span> <span class="dt">Q.MinQueue</span> (<span class="dt">DistLoc</span> n a) <span class="ot">-&gt;</span> <span class="dt">Map</span> n a <span class="ot">-&gt;</span> n <span class="ot">-&gt;</span> a</span>
-<span id="cb105-80"><a href="#cb105-80" aria-hidden="true" tabindex="-1"></a>        go visited marked dists pos</span>
-<span id="cb105-81"><a href="#cb105-81" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> pos <span class="op">==</span> end         <span class="ot">=</span> currentDist pos</span>
-<span id="cb105-82"><a href="#cb105-82" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> pos <span class="ot">`Set.member`</span> visited <span class="ot">=</span> go visited marked&#39;&#39; dists (toLoc <span class="op">$</span> Q.findMin marked&#39;&#39;)</span>
-<span id="cb105-83"><a href="#cb105-83" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> <span class="fu">otherwise</span>          <span class="ot">=</span> go (pos <span class="ot">`Set.insert`</span> visited) marked&#39; dists&#39; (toLoc <span class="op">$</span> Q.findMin marked&#39;)</span>
-<span id="cb105-84"><a href="#cb105-84" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span> unvisitedNeighbours <span class="ot">=</span> <span class="fu">filter</span> (<span class="ot">`Set.notMember`</span> visited) (neighbours pos)</span>
-<span id="cb105-85"><a href="#cb105-85" aria-hidden="true" tabindex="-1"></a>                currentDist node <span class="ot">=</span> fromMaybe <span class="fu">maxBound</span> (dists <span class="op">!?</span> node)</span>
-<span id="cb105-86"><a href="#cb105-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-87"><a href="#cb105-87" aria-hidden="true" tabindex="-1"></a><span class="ot">                updateDist ::</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
-<span id="cb105-88"><a href="#cb105-88" aria-hidden="true" tabindex="-1"></a>                updateDist node <span class="dt">Nothing</span>  <span class="ot">=</span> (<span class="op">+</span>) <span class="op">&lt;$&gt;</span> (dists <span class="op">!?</span> pos) <span class="op">&lt;*&gt;</span> distance pos node</span>
-<span id="cb105-89"><a href="#cb105-89" aria-hidden="true" tabindex="-1"></a>                updateDist node x        <span class="ot">=</span> <span class="fu">min</span> <span class="op">&lt;$&gt;</span> updateDist node <span class="dt">Nothing</span> <span class="op">&lt;*&gt;</span> x</span>
-<span id="cb105-90"><a href="#cb105-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-91"><a href="#cb105-91" aria-hidden="true" tabindex="-1"></a><span class="ot">                distLoc ::</span> n <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">DistLoc</span> n a)</span>
-<span id="cb105-92"><a href="#cb105-92" aria-hidden="true" tabindex="-1"></a>                distLoc node <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb105-93"><a href="#cb105-93" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> v <span class="ot">=</span> currentDist node</span>
-<span id="cb105-94"><a href="#cb105-94" aria-hidden="true" tabindex="-1"></a>                    x <span class="ot">&lt;-</span> dists <span class="op">!?</span> pos</span>
-<span id="cb105-95"><a href="#cb105-95" aria-hidden="true" tabindex="-1"></a>                    dx <span class="ot">&lt;-</span> distance pos node</span>
-<span id="cb105-96"><a href="#cb105-96" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">return</span> <span class="op">$</span> <span class="dt">DistLoc</span> (node, <span class="fu">min</span> v (x <span class="op">+</span> dx))</span>
-<span id="cb105-97"><a href="#cb105-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-98"><a href="#cb105-98" aria-hidden="true" tabindex="-1"></a>                newDists <span class="ot">=</span> mapMaybe distLoc unvisitedNeighbours</span>
-<span id="cb105-99"><a href="#cb105-99" aria-hidden="true" tabindex="-1"></a>                dists&#39; <span class="ot">=</span> foldl&#39; (\m (<span class="dt">DistLoc</span> (i, x)) <span class="ot">-&gt;</span> Map.insert i x m) dists newDists</span>
-<span id="cb105-100"><a href="#cb105-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-101"><a href="#cb105-101" aria-hidden="true" tabindex="-1"></a><span class="ot">                marked&#39; ::</span> <span class="dt">Q.MinQueue</span> (<span class="dt">DistLoc</span> n a)</span>
-<span id="cb105-102"><a href="#cb105-102" aria-hidden="true" tabindex="-1"></a>                marked&#39; <span class="ot">=</span> Q.deleteMin marked <span class="op">&lt;&gt;</span> Q.fromList (mapMaybe distLoc unvisitedNeighbours)</span>
-<span id="cb105-103"><a href="#cb105-103" aria-hidden="true" tabindex="-1"></a>                marked&#39;&#39; <span class="ot">=</span> Q.deleteMin marked</span></code></pre></div>
+<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>dijkstra<span class="op">-</span>imports<span class="op">&gt;&gt;</span></span>
+<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>dijkstra<span class="op">-</span>generic<span class="op">&gt;&gt;</span></span>
+<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>dijkstra<span class="op">-</span>array<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
+<p>To put elements on a priority-queue, I defined a <code>newtype</code> that sorts on the second element of a tuple.</p>
+<div class="named-code-block">
+<p>«dijkstra-generic»</p>
+<div class="sourceCode" id="cb106"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">DistLoc</span> i a <span class="ot">=</span> <span class="dt">DistLoc</span> (i, a)</span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Eq</span>)</span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Ord</span> a, <span class="dt">Eq</span> i) <span class="ot">=&gt;</span> <span class="dt">Ord</span> (<span class="dt">DistLoc</span> i a) <span class="kw">where</span></span>
+<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">compare</span> (<span class="dt">DistLoc</span> (_, x)) (<span class="dt">DistLoc</span> (_, y)) <span class="ot">=</span> <span class="fu">compare</span> x y</span>
+<span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a><span class="ot">toLoc ::</span> <span class="dt">DistLoc</span> i a <span class="ot">-&gt;</span> i</span>
+<span id="cb106-8"><a href="#cb106-8" aria-hidden="true" tabindex="-1"></a>toLoc (<span class="dt">DistLoc</span> (l, _)) <span class="ot">=</span> l</span></code></pre></div>
+</div>
+<p>The generic algorithm looks rather horrible, I won’t bother you with it.</p>
+<section id="array-version" class="level3">
+<h3>Array version</h3>
+<p>For our case with path-finding on a grid. We can have a much more efficient implementation than the generic one.</p>
+<div class="named-code-block">
+<p>«dijkstra-imports»</p>
+<div class="sourceCode" id="cb107"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
+<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span></code></pre></div>
+</div>
+<p>The entire algorithm now runs in the <code>ST</code> monad, so that we can do array mutation.</p>
+<div class="named-code-block">
+<p>«dijkstra-array»</p>
+<div class="sourceCode" id="cb108"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2&#39;</span> r a <span class="ot">=</span> <span class="dt">A.Array</span> r <span class="dt">Ix2</span> a</span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2</span> a <span class="ot">=</span> <span class="dt">Array2&#39;</span> <span class="dt">A.U</span> a</span>
+<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>condM<span class="op">&gt;&gt;</span></span>
+<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a><span class="ot">minDistArray2 ::</span> <span class="kw">forall</span> a<span class="op">.</span> (<span class="dt">Ord</span> a, <span class="dt">Num</span> a, <span class="dt">Bounded</span> a, <span class="dt">A.Unbox</span> a, <span class="dt">A.Manifest</span> <span class="dt">A.U</span> a)</span>
+<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>              <span class="ot">=&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> (<span class="dt">Ix2</span> <span class="ot">-&gt;</span> [<span class="dt">Ix2</span>]) <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> a</span>
+<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>minDistArray2 cost neighbours start end <span class="ot">=</span> runST go</span>
+<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span><span class="ot"> go ::</span> <span class="kw">forall</span> s<span class="op">.</span> <span class="dt">ST</span> s a</span>
+<span id="cb108-10"><a href="#cb108-10" aria-hidden="true" tabindex="-1"></a>        go <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb108-11"><a href="#cb108-11" aria-hidden="true" tabindex="-1"></a>          <span class="op">&lt;&lt;</span>dijkstra<span class="op">-</span>array<span class="op">-</span><span class="fu">init</span><span class="op">&gt;&gt;</span></span>
+<span id="cb108-12"><a href="#cb108-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-13"><a href="#cb108-13" aria-hidden="true" tabindex="-1"></a>          <span class="kw">let</span></span>
+<span id="cb108-14"><a href="#cb108-14" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span>dijkstra<span class="op">-</span>array<span class="op">-</span>distloc<span class="op">&gt;&gt;</span></span>
+<span id="cb108-15"><a href="#cb108-15" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span>dijkstra<span class="op">-</span>array<span class="op">-</span>recur<span class="op">&gt;&gt;</span></span>
+<span id="cb108-16"><a href="#cb108-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-17"><a href="#cb108-17" aria-hidden="true" tabindex="-1"></a>          recur Q.empty start</span>
+<span id="cb108-18"><a href="#cb108-18" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span> size <span class="ot">=</span> A.size cost</span></code></pre></div>
+</div>
+<section id="init" class="level4">
+<h4>Init</h4>
+<p>The algorithm is initialised with the <code>unvisited</code> set, encoded as an array of bools, and the tentative distances, stored in another array (of int).</p>
+<div class="named-code-block">
+<p>«dijkstra-array-init»</p>
+<div class="sourceCode" id="cb109"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>unvisited <span class="ot">&lt;-</span> A.newMArray <span class="op">@</span><span class="dt">A.U</span> <span class="op">@</span><span class="dt">Bool</span> size <span class="dt">True</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>dist      <span class="ot">&lt;-</span> A.newMArray <span class="op">@</span><span class="dt">A.U</span> <span class="op">@</span>a size <span class="fu">maxBound</span></span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>A.write_ dist start <span class="dv">0</span></span></code></pre></div>
+</div>
+</section>
+<section id="estimating-distance" class="level4">
+<h4>Estimating distance</h4>
+<p>Distance is estimated as the minimum of the last known estimate and the distance from the current node plus the confirmed total distance to the current node.</p>
+<div class="named-code-block">
+<p>«dijkstra-array-distloc»</p>
+<div class="sourceCode" id="cb110"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distLoc ::</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">DistLoc</span> <span class="dt">Ix2</span> a)</span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>distLoc i j <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>    v <span class="ot">&lt;-</span> A.readM dist j</span>
+<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> A.readM dist i</span>
+<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">DistLoc</span> (j, <span class="fu">min</span> v (x <span class="op">+</span> (cost <span class="op">A.!</span> j)))</span></code></pre></div>
+</div>
+</section>
+<section id="recursion" class="level4">
+<h4>Recursion</h4>
+<p>The recursion keeps the priority-queue of nodes to visit. There are three cases:</p>
+<ul>
+<li>The node is the end node: we’re done.</li>
+<li>The node was already visited: we can skip it.</li>
+<li>Otherwise, set the current node to visited, check the neighbours, compute distances for them, update the priority queue and recurse.</li>
+</ul>
+<div class="named-code-block">
+<p>«dijkstra-array-recur»</p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="ot">recur ::</span> <span class="dt">Q.MinQueue</span> (<span class="dt">DistLoc</span> <span class="dt">Ix2</span> a) <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s a</span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>recur q pos <span class="ot">=</span> condM</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  [ (<span class="fu">pure</span> <span class="op">$</span> pos <span class="op">==</span> end, A.readM dist end)</span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>  , (A.readM unvisited pos, <span class="kw">do</span></span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>       A.write_ unvisited pos <span class="dt">False</span></span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a>       unvisitedNeighbours <span class="ot">&lt;-</span> filterM (A.readM unvisited) (neighbours pos)</span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a>       newDists <span class="ot">&lt;-</span> <span class="fu">mapM</span> (distLoc pos) unvisitedNeighbours</span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a>       <span class="fu">mapM_</span> (\(<span class="dt">DistLoc</span> (i, x)) <span class="ot">-&gt;</span> A.write_ dist i x) newDists</span>
+<span id="cb111-9"><a href="#cb111-9" aria-hidden="true" tabindex="-1"></a>       <span class="kw">let</span> q&#39; <span class="ot">=</span> foldl&#39; (<span class="fu">flip</span> Q.insert) (Q.deleteMin q) newDists</span>
+<span id="cb111-10"><a href="#cb111-10" aria-hidden="true" tabindex="-1"></a>       recur q&#39; (toLoc <span class="op">$</span> Q.findMin q&#39;))</span>
+<span id="cb111-11"><a href="#cb111-11" aria-hidden="true" tabindex="-1"></a>  , (otherwiseM, <span class="kw">do</span></span>
+<span id="cb111-12"><a href="#cb111-12" aria-hidden="true" tabindex="-1"></a>       <span class="kw">let</span> q&#39; <span class="ot">=</span> Q.deleteMin q</span>
+<span id="cb111-13"><a href="#cb111-13" aria-hidden="true" tabindex="-1"></a>       recur q&#39; (toLoc <span class="op">$</span> Q.findMin q&#39;)) ]</span></code></pre></div>
+</div>
+<p>Here <code>condM</code> is a little helper function to write monadic conditions.</p>
+<div class="named-code-block">
+<p>«condM»</p>
+<div class="sourceCode" id="cb112"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="ot">condM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> [(m <span class="dt">Bool</span>, m a)] <span class="ot">-&gt;</span> m a</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>condM ((<span class="fu">pred</span>, action)<span class="op">:</span> cs) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>    c <span class="ot">&lt;-</span> <span class="fu">pred</span></span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> c <span class="kw">then</span> action <span class="kw">else</span> condM cs</span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a>condM [] <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;no matching conditions&quot;</span></span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a><span class="ot">otherwiseM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> m <span class="dt">Bool</span></span>
+<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a>otherwiseM <span class="ot">=</span> <span class="fu">pure</span> <span class="dt">True</span></span></code></pre></div>
+</div>
+</section>
+</section>
+<section id="solution" class="level3">
+<h3>Solution</h3>
 <div class="named-code-block">
 <p>file:app/Day15.hs</p>
-<div class="sourceCode" id="cb106"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day15</span> <span class="kw">where</span></span>
-<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
-<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (readInputParsing, digitArray)</span>
-<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Dijkstra</span> (minDistArray2, minDist)</span>
-<span id="cb106-8"><a href="#cb106-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-9"><a href="#cb106-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day15<span class="op">&gt;&gt;</span></span>
-<span id="cb106-10"><a href="#cb106-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-11"><a href="#cb106-11" aria-hidden="true" tabindex="-1"></a><span class="ot">listNodes ::</span> (<span class="dt">A.Unbox</span> a) <span class="ot">=&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> [<span class="dt">Ix2</span>]</span>
-<span id="cb106-12"><a href="#cb106-12" aria-hidden="true" tabindex="-1"></a>listNodes <span class="ot">=</span> A.toList <span class="op">.</span> A.imap <span class="fu">const</span></span>
-<span id="cb106-13"><a href="#cb106-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-14"><a href="#cb106-14" aria-hidden="true" tabindex="-1"></a><span class="ot">neighbours ::</span> (<span class="dt">A.Unbox</span> a) <span class="ot">=&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> [<span class="dt">Ix2</span>]</span>
-<span id="cb106-15"><a href="#cb106-15" aria-hidden="true" tabindex="-1"></a>neighbours x i <span class="ot">=</span> <span class="fu">filter</span> (isJust <span class="op">.</span> (x <span class="op">A.!?</span>)) <span class="op">$</span> <span class="fu">map</span> (<span class="op">+</span> i) n</span>
-<span id="cb106-16"><a href="#cb106-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> n <span class="ot">=</span> [<span class="op">-</span><span class="dv">1</span> <span class="op">:.</span> <span class="dv">0</span>, <span class="dv">1</span> <span class="op">:.</span> <span class="dv">0</span>, <span class="dv">0</span> <span class="op">:.</span> <span class="op">-</span><span class="dv">1</span>, <span class="dv">0</span> <span class="op">:.</span> <span class="dv">1</span>]</span>
-<span id="cb106-17"><a href="#cb106-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-18"><a href="#cb106-18" aria-hidden="true" tabindex="-1"></a><span class="ot">distance ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb106-19"><a href="#cb106-19" aria-hidden="true" tabindex="-1"></a>distance x _ i <span class="ot">=</span> x <span class="op">A.!?</span> i</span>
-<span id="cb106-20"><a href="#cb106-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-21"><a href="#cb106-21" aria-hidden="true" tabindex="-1"></a><span class="ot">endPoint ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span></span>
-<span id="cb106-22"><a href="#cb106-22" aria-hidden="true" tabindex="-1"></a>endPoint x <span class="ot">=</span> A.unSz (A.size x) <span class="op">-</span> (<span class="dv">1</span> <span class="op">:.</span> <span class="dv">1</span>)</span>
-<span id="cb106-23"><a href="#cb106-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-24"><a href="#cb106-24" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb106-25"><a href="#cb106-25" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> minDistArray2 inp (neighbours inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
-<span id="cb106-26"><a href="#cb106-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-27"><a href="#cb106-27" aria-hidden="true" tabindex="-1"></a><span class="ot">scaleUp ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Array2</span> <span class="dt">Int</span></span>
-<span id="cb106-28"><a href="#cb106-28" aria-hidden="true" tabindex="-1"></a>scaleUp x <span class="ot">=</span> stack rowM</span>
-<span id="cb106-29"><a href="#cb106-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> rowM <span class="ot">=</span> foldl&#39; (\r t <span class="ot">-&gt;</span> A.compute <span class="op">$</span> A.append&#39; <span class="dv">1</span> r t) x (<span class="fu">map</span> (\h <span class="ot">-&gt;</span> A.map (inc h) x) [<span class="dv">1</span><span class="op">..</span><span class="dv">4</span>])</span>
-<span id="cb106-30"><a href="#cb106-30" aria-hidden="true" tabindex="-1"></a>          stack row <span class="ot">=</span> foldl&#39; (\r t <span class="ot">-&gt;</span> A.compute <span class="op">$</span> A.append&#39; <span class="dv">2</span> r t) row (<span class="fu">map</span> (\h <span class="ot">-&gt;</span> A.map (inc h) row) [<span class="dv">1</span><span class="op">..</span><span class="dv">4</span>])</span>
-<span id="cb106-31"><a href="#cb106-31" aria-hidden="true" tabindex="-1"></a>          inc h x <span class="ot">=</span> (x <span class="op">-</span> <span class="dv">1</span> <span class="op">+</span> h) <span class="ot">`mod`</span> <span class="dv">9</span> <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb106-32"><a href="#cb106-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-33"><a href="#cb106-33" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb106-34"><a href="#cb106-34" aria-hidden="true" tabindex="-1"></a><span class="co">-- solutionB inp&#39; = minDist (neighbours inp) (distance inp) (0 :. 0) (endPoint inp)</span></span>
-<span id="cb106-35"><a href="#cb106-35" aria-hidden="true" tabindex="-1"></a>solutionB inp&#39; <span class="ot">=</span> minDistArray2 inp (neighbours inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
-<span id="cb106-36"><a href="#cb106-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> inp <span class="ot">=</span> scaleUp inp&#39;</span>
-<span id="cb106-37"><a href="#cb106-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-38"><a href="#cb106-38" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb113"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day15</span> <span class="kw">where</span></span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (readInputParsing, digitArray)</span>
+<span id="cb113-7"><a href="#cb113-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Dijkstra</span> (minDistArray2, minDist)</span>
+<span id="cb113-8"><a href="#cb113-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-9"><a href="#cb113-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day15<span class="op">&gt;&gt;</span></span>
+<span id="cb113-10"><a href="#cb113-10" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day15<span class="op">&gt;&gt;</span></span>
+<span id="cb113-11"><a href="#cb113-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
+<p>We again reuse the parser from day 9.</p>
 <div class="named-code-block">
 <p>«parser-day15»</p>
-<div class="sourceCode" id="cb107"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2&#39;</span> r a <span class="ot">=</span> <span class="dt">A.Array</span> r <span class="dt">A.Ix2</span> a</span>
-<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2</span> a <span class="ot">=</span> <span class="dt">Array2&#39;</span> <span class="dt">A.U</span> a</span>
-<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env (<span class="dt">Array2</span> <span class="dt">Int</span>)</span>
-<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day15.txt&quot;</span> digitArray</span></code></pre></div>
+<div class="sourceCode" id="cb114"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2&#39;</span> r a <span class="ot">=</span> <span class="dt">A.Array</span> r <span class="dt">A.Ix2</span> a</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Array2</span> a <span class="ot">=</span> <span class="dt">Array2&#39;</span> <span class="dt">A.U</span> a</span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env (<span class="dt">Array2</span> <span class="dt">Int</span>)</span>
+<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day15.txt&quot;</span> digitArray</span></code></pre></div>
+</div>
+<p>With Dijkstra’s algorithm in place, the solution is not too hard.</p>
+<div class="named-code-block">
+<p>«solution-day15»</p>
+<div class="sourceCode" id="cb115"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="ot">neighbours ::</span> (<span class="dt">A.Unbox</span> a) <span class="ot">=&gt;</span> <span class="dt">Array2</span> a <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> [<span class="dt">Ix2</span>]</span>
+<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>neighbours x i <span class="ot">=</span> <span class="fu">filter</span> (isJust <span class="op">.</span> (x <span class="op">A.!?</span>)) <span class="op">$</span> <span class="fu">map</span> (<span class="op">+</span> i) n</span>
+<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> n <span class="ot">=</span> [<span class="op">-</span><span class="dv">1</span> <span class="op">:.</span> <span class="dv">0</span>, <span class="dv">1</span> <span class="op">:.</span> <span class="dv">0</span>, <span class="dv">0</span> <span class="op">:.</span> <span class="op">-</span><span class="dv">1</span>, <span class="dv">0</span> <span class="op">:.</span> <span class="dv">1</span>]</span>
+<span id="cb115-4"><a href="#cb115-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-5"><a href="#cb115-5" aria-hidden="true" tabindex="-1"></a><span class="ot">distance ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb115-6"><a href="#cb115-6" aria-hidden="true" tabindex="-1"></a>distance x _ i <span class="ot">=</span> x <span class="op">A.!?</span> i</span>
+<span id="cb115-7"><a href="#cb115-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-8"><a href="#cb115-8" aria-hidden="true" tabindex="-1"></a><span class="ot">endPoint ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Ix2</span></span>
+<span id="cb115-9"><a href="#cb115-9" aria-hidden="true" tabindex="-1"></a>endPoint x <span class="ot">=</span> A.unSz (A.size x) <span class="op">-</span> (<span class="dv">1</span> <span class="op">:.</span> <span class="dv">1</span>)</span>
+<span id="cb115-10"><a href="#cb115-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-11"><a href="#cb115-11" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb115-12"><a href="#cb115-12" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> minDistArray2 inp (neighbours inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
+<span id="cb115-13"><a href="#cb115-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-14"><a href="#cb115-14" aria-hidden="true" tabindex="-1"></a><span class="ot">scaleUp ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Array2</span> <span class="dt">Int</span></span>
+<span id="cb115-15"><a href="#cb115-15" aria-hidden="true" tabindex="-1"></a>scaleUp x <span class="ot">=</span> stack <span class="dv">2</span> (stack <span class="dv">1</span> x)</span>
+<span id="cb115-16"><a href="#cb115-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> stack axis row <span class="ot">=</span> foldl&#39; (\r t <span class="ot">-&gt;</span> A.compute <span class="op">$</span> A.append&#39; axis r t) row</span>
+<span id="cb115-17"><a href="#cb115-17" aria-hidden="true" tabindex="-1"></a>                         <span class="op">$</span> <span class="fu">map</span> (\h <span class="ot">-&gt;</span> A.map (inc h) row) [<span class="dv">1</span><span class="op">..</span><span class="dv">4</span>]</span>
+<span id="cb115-18"><a href="#cb115-18" aria-hidden="true" tabindex="-1"></a>          inc h x <span class="ot">=</span> (x <span class="op">-</span> <span class="dv">1</span> <span class="op">+</span> h) <span class="ot">`mod`</span> <span class="dv">9</span> <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb115-19"><a href="#cb115-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-20"><a href="#cb115-20" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Array2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb115-21"><a href="#cb115-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- solutionB inp&#39; = minDist (neighbours inp) (distance inp) (0 :. 0) (endPoint inp)</span></span>
+<span id="cb115-22"><a href="#cb115-22" aria-hidden="true" tabindex="-1"></a>solutionB inp&#39; <span class="ot">=</span> minDistArray2 inp (neighbours inp) (<span class="dv">0</span> <span class="op">:.</span> <span class="dv">0</span>) (endPoint inp)</span>
+<span id="cb115-23"><a href="#cb115-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> inp <span class="ot">=</span> scaleUp inp&#39;</span></code></pre></div>
+</div>
+</section>
+</section>
+<section id="day-16-packet-decoder" class="level1">
+<h1>Day 16: Packet Decoder</h1>
+<div class="named-code-block">
+<p>file:app/Parsing/Binary.hs</p>
+<div class="sourceCode" id="cb116"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing.Binary</span> <span class="kw">where</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb116-4"><a href="#cb116-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Vector</span> <span class="kw">as</span> <span class="dt">Vector</span></span>
+<span id="cb116-5"><a href="#cb116-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Vector</span> (<span class="dt">Vector</span>)</span>
+<span id="cb116-6"><a href="#cb116-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb116-7"><a href="#cb116-7" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Cursor</span> <span class="ot">=</span> <span class="dt">Cursor</span></span>
+<span id="cb116-8"><a href="#cb116-8" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> cursorData ::</span> <span class="dt">Vector</span> <span class="dt">Int8</span></span>
+<span id="cb116-9"><a href="#cb116-9" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> cursorByte ::</span> <span class="dt">Int</span></span>
+<span id="cb116-10"><a href="#cb116-10" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> cursorBit  ::</span> <span class="dt">Int8</span></span>
+<span id="cb116-11"><a href="#cb116-11" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-boiler-plate" class="level1">
 <h1>Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>
-<div class="sourceCode" id="cb108"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
-<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
+<div class="sourceCode" id="cb117"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-parsing" class="level1">
 <h1>Appendix: Parsing</h1>
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
-<div class="sourceCode" id="cb109"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
-<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit</span>
-<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>    , digitArray )</span>
-<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
-<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord)</span>
-<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
-<span id="cb109-14"><a href="#cb109-14" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
-<span id="cb109-15"><a href="#cb109-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
-<span id="cb109-16"><a href="#cb109-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
-<span id="cb109-17"><a href="#cb109-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb109-18"><a href="#cb109-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-19"><a href="#cb109-19" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb109-20"><a href="#cb109-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-21"><a href="#cb109-21" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
-<span id="cb109-22"><a href="#cb109-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-23"><a href="#cb109-23" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb109-24"><a href="#cb109-24" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
-<span id="cb109-25"><a href="#cb109-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-26"><a href="#cb109-26" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb109-27"><a href="#cb109-27" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
-<span id="cb109-28"><a href="#cb109-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
-<span id="cb109-29"><a href="#cb109-29" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
-<span id="cb109-30"><a href="#cb109-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-31"><a href="#cb109-31" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
-<span id="cb109-32"><a href="#cb109-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb109-33"><a href="#cb109-33" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb109-34"><a href="#cb109-34" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb109-35"><a href="#cb109-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb109-36"><a href="#cb109-36" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb109-37"><a href="#cb109-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-38"><a href="#cb109-38" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb109-39"><a href="#cb109-39" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb109-40"><a href="#cb109-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-41"><a href="#cb109-41" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb109-42"><a href="#cb109-42" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span>
-<span id="cb109-43"><a href="#cb109-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-44"><a href="#cb109-44" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb109-45"><a href="#cb109-45" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
-<span id="cb109-46"><a href="#cb109-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span>
-<span id="cb109-47"><a href="#cb109-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb109-48"><a href="#cb109-48" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb118"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
+<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
+<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit</span>
+<span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a>    , digitArray )</span>
+<span id="cb118-5"><a href="#cb118-5" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb118-6"><a href="#cb118-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-7"><a href="#cb118-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb118-8"><a href="#cb118-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord)</span>
+<span id="cb118-9"><a href="#cb118-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb118-10"><a href="#cb118-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb118-11"><a href="#cb118-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-12"><a href="#cb118-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb118-13"><a href="#cb118-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
+<span id="cb118-14"><a href="#cb118-14" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>) )</span>
+<span id="cb118-15"><a href="#cb118-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb118-16"><a href="#cb118-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
+<span id="cb118-17"><a href="#cb118-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb118-18"><a href="#cb118-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-19"><a href="#cb118-19" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb118-20"><a href="#cb118-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-21"><a href="#cb118-21" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
+<span id="cb118-22"><a href="#cb118-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-23"><a href="#cb118-23" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb118-24"><a href="#cb118-24" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb118-25"><a href="#cb118-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-26"><a href="#cb118-26" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb118-27"><a href="#cb118-27" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
+<span id="cb118-28"><a href="#cb118-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
+<span id="cb118-29"><a href="#cb118-29" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
+<span id="cb118-30"><a href="#cb118-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-31"><a href="#cb118-31" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb118-32"><a href="#cb118-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb118-33"><a href="#cb118-33" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb118-34"><a href="#cb118-34" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb118-35"><a href="#cb118-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb118-36"><a href="#cb118-36" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb118-37"><a href="#cb118-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-38"><a href="#cb118-38" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb118-39"><a href="#cb118-39" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb118-40"><a href="#cb118-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-41"><a href="#cb118-41" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb118-42"><a href="#cb118-42" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> lexeme L.decimal</span>
+<span id="cb118-43"><a href="#cb118-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-44"><a href="#cb118-44" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb118-45"><a href="#cb118-45" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
+<span id="cb118-46"><a href="#cb118-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span>
+<span id="cb118-47"><a href="#cb118-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-48"><a href="#cb118-48" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 </section>
         </div>
@@ -1976,6 +2012,7 @@
                                 <li><a href="#day-13-transparent-origami">Day 13: Transparent Origami</a></li>
                                 <li><a href="#day-14-extended-polymerization">Day 14: Extended Polymerization</a></li>
                                 <li><a href="#day-15-chiton">Day 15: Chiton</a></li>
+                                <li><a href="#day-16-packet-decoder">Day 16: Packet Decoder</a></li>
                                 <li><a href="#appendix-boiler-plate">Appendix: Boiler plate</a></li>
                                 <li><a href="#appendix-parsing">Appendix: Parsing</a></li>
                                 </ul>

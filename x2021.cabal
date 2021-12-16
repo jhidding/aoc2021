@@ -53,6 +53,7 @@ executable x2021
                     , Day23
                     , Day24
                     , Parsing
+                    , Parsing.Binary
                     , Dijkstra
 
     -- LANGUAGE extensions used by modules in this package.
