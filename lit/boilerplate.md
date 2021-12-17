@@ -52,7 +52,10 @@ lexeme :: Parser a -> Parser a
 lexeme = L.lexeme hspace
 
 integer :: Parser Int
-integer = lexeme L.decimal
+integer = do
+    sign_ <- maybe 1 (const (-1)) <$> optional (char '-')
+    abs_  <- lexeme L.decimal
+    return (sign_ * abs_)
 
 digit :: Parser Int
 digit = toValue <$> C.digitChar
