@@ -42,7 +42,11 @@ readInput :: (HasLogFunc env) => RIO env Area
 readInput = readInputParsing "data/day17.txt" (string "target area: " *> areaP)
 ```
 
-The rules are that each timestep, the velocity in x-direction decreases due to drag and the velocity in y-direction increases in negative direction by one.
+The rules are that each timestep:
+
+* position increases with velocity
+* the velocity in x-direction decreases in magnitude due to drag
+* the velocity in y-direction increases in negative direction by one due to gravity
 
 ``` {.haskell #solution-day17}
 step :: PhaseSpace -> PhaseSpace
@@ -68,7 +72,7 @@ The key is now to find the maximum velocity upward. The point being that the pro
 The height attained at the maximum y velocity is $(v_y (v_y + 1)) / 2$.
 
 For the velocity in the X direction, the final X position we reach is $(v_x (v_x + 1))/2$,
-so the minimum velocity is $\lfloor \sqrt{x_{\rm min} * 2} \rfloor$. The maximum velocity is $x_{\rm max}$.
+so the minimum velocity is $\lfloor \sqrt{2 x_{\rm min}} \rfloor$. The maximum velocity is $x_{\rm max}$.
 
 ``` {.haskell #solution-day17}
 velocityBounds :: Area -> (V2 Int, V2 Int)

@@ -2155,7 +2155,12 @@
 <span id="cb126-8"><a href="#cb126-8" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">Area</span></span>
 <span id="cb126-9"><a href="#cb126-9" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day17.txt&quot;</span> (string <span class="st">&quot;target area: &quot;</span> <span class="op">*&gt;</span> areaP)</span></code></pre></div>
 </div>
-<p>The rules are that each timestep, the velocity in x-direction decreases due to drag and the velocity in y-direction increases in negative direction by one.</p>
+<p>The rules are that each timestep:</p>
+<ul>
+<li>position increases with velocity</li>
+<li>the velocity in x-direction decreases in magnitude due to drag</li>
+<li>the velocity in y-direction increases in negative direction by one due to gravity</li>
+</ul>
 <div class="named-code-block">
 <p>«solution-day17»</p>
 <div class="sourceCode" id="cb127"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="ot">step ::</span> <span class="dt">PhaseSpace</span> <span class="ot">-&gt;</span> <span class="dt">PhaseSpace</span></span>
@@ -2176,7 +2181,7 @@
 </div>
 <p>The key is now to find the maximum velocity upward. The point being that the probe always returns to level 0, with negative that velocity. If that velocity will make the probe overshoot, than we definetly miss target. The minimum velocity is <span class="math inline">\(y_{\rm min}\)</span>, so the maximum velocity is <span class="math inline">\(-y_{\rm min} - 1\)</span>.</p>
 <p>The height attained at the maximum y velocity is <span class="math inline">\((v_y (v_y + 1)) / 2\)</span>.</p>
-<p>For the velocity in the X direction, the final X position we reach is <span class="math inline">\((v_x (v_x + 1))/2\)</span>, so the minimum velocity is <span class="math inline">\(\lfloor \sqrt{x_{\rm min} * 2} \rfloor\)</span>. The maximum velocity is <span class="math inline">\(x_{\rm max}\)</span>.</p>
+<p>For the velocity in the X direction, the final X position we reach is <span class="math inline">\((v_x (v_x + 1))/2\)</span>, so the minimum velocity is <span class="math inline">\(\lfloor \sqrt{2 x_{\rm min}} \rfloor\)</span>. The maximum velocity is <span class="math inline">\(x_{\rm max}\)</span>.</p>
 <div class="named-code-block">
 <p>«solution-day17»</p>
 <div class="sourceCode" id="cb129"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="ot">velocityBounds ::</span> <span class="dt">Area</span> <span class="ot">-&gt;</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>)</span>
