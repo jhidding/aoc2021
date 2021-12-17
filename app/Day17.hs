@@ -3,6 +3,8 @@
 module Day17 where
 
 import RIO
+import RIO.List (iterate)
+import Print
 import Parsing (Parser, readInputParsing, string, integer, lexeme, char)
 import Linear.V2 (V2(..))
 
@@ -43,7 +45,8 @@ hit Area{..} (PhaseSpace (V2 x y) _) = minX <= x && x <= maxX
                                     && minY <= y && y <= maxY
 
 miss :: Area -> PhaseSpace -> Bool
-miss Area{..} (PhaseSpace (V2 _ y) (V2 _ dy)) = y < minY && dy < 0
+miss Area{..} (PhaseSpace (V2 x y) (V2 _ dy)) 
+    = y < minY && dy < 0 || x > maxX
 -- ~\~ end
 -- ~\~ begin <<lit/day17.md|solution-day17>>[2]
 velocityBounds :: Area -> (V2 Int, V2 Int)
@@ -76,6 +79,40 @@ solutionB a = length [ V2 vx vy
                      , vy <- [minvy .. maxvy]
                      , outcome a (V2 vx vy) == Hit ]
     where (V2 minvx minvy, V2 maxvx maxvy) = velocityBounds a
+-- ~\~ end
+-- ~\~ begin <<lit/day17.md|solution-day17>>[4]
+iterateUntil' :: (a -> a) -> (a -> Bool) -> a -> [a]
+iterateUntil' f p init
+    | p init = [init]
+    | otherwise = init : iterateUntil' f p (f init)
+
+showData :: IO ()
+showData = do
+    area <- runSimpleApp readInput
+    let (V2 minvx minvy, V2 maxvx maxvy) = velocityBounds area
+        startVels = [ V2 vx vy
+                           | vx <- [minvx .. maxvx]
+                           , vy <- [minvy .. maxvy] ]
+    mapM_ (printStats area) startVels
+    printLn "\n"
+    printLn $ "# " <> tshow (length startVels)
+    mapM_ (printShot area) startVels
+    where printShot area v = do
+            let o = if outcome area v == Hit then 1 else 0
+            let path = iterateUntil' step (\x -> hit area x || miss area x) 
+                                (PhaseSpace (V2 0 0) v)
+            when (length path > 10) (mapM_ (printPs o) path >> printLn "\n")
+          printPs o (PhaseSpace (V2 x y) (V2 vx vy)) = printLn 
+            $ tshow x <> " " <> tshow y <> " " <> tshow vx <> " "
+            <> tshow vy <> " " <> tshow o
+          printStats area v@(V2 vx vy) = do
+            let o = if outcome area v == Hit then 1 else 0
+            let l = if o == 1
+                    then length $ iterateUntil' step (\x -> hit area x || miss area x) 
+                                (PhaseSpace (V2 0 0) v)
+                    else -1
+            when (o == 1) $
+                printLn $ tshow vx <> " " <> tshow vy <> " " <> tshow o <> " " <> tshow l
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()

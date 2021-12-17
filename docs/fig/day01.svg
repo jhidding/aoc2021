@@ -149,7 +149,7 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M62.2,18.1 L62.2,464.0 L775.0,464.0 M775.0,18.1 M62.2,18.1  '/></g>
+	<path stroke='rgb(240, 160,  64)'  d='M62.2,18.1 L62.2,464.0 L775.0,464.0 L775.0,18.1 L62.2,18.1 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 	<g id="gnuplot_plot_1" ><title>"data/day01.txt"</title>
@@ -418,7 +418,7 @@
 <g fill="none" color="black" stroke="black" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M62.2,18.1 L62.2,464.0 L775.0,464.0 M775.0,18.1 M62.2,18.1  '/></g>
+	<path stroke='rgb(240, 160,  64)'  d='M62.2,18.1 L62.2,464.0 L775.0,464.0 L775.0,18.1 L62.2,18.1 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 </g>

@@ -129,7 +129,7 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M37.3,28.1 L37.3,154.0 L775.0,154.0 M775.0,28.1 M37.3,28.1  '/></g>
+	<path stroke='rgb(240, 160,  64)'  d='M37.3,28.1 L37.3,154.0 L775.0,154.0 L775.0,28.1 L37.3,28.1 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 	<g id="gnuplot_plot_1" ><title>gnuplot_plot_1</title>
@@ -241,7 +241,7 @@
 <g fill="none" color="black" stroke="black" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M37.3,28.1 L37.3,154.0 L775.0,154.0 M775.0,28.1 M37.3,28.1  '/></g>
+	<path stroke='rgb(240, 160,  64)'  d='M37.3,28.1 L37.3,154.0 L775.0,154.0 L775.0,28.1 L37.3,28.1 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 </g>

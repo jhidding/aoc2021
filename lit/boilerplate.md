@@ -8,6 +8,27 @@ runB :: (HasLogFunc env) => RIO env ()
 runB = readInput >>= logInfo . display . tshow . solutionB
 ```
 
+# Appendix: Output
+RIO is missing easy functions for standard output, it's a bit principled in that regard.
+
+``` {.haskell file=app/Print.hs}
+module Print where
+
+import RIO
+import qualified RIO.Text as Text
+import RIO.ByteString (putStr)
+import Data.Massiv.Array (Ix2(..))
+
+print :: (MonadIO m) => Text -> m ()
+print = putStr . Text.encodeUtf8
+
+printLn :: (MonadIO m) => Text -> m ()
+printLn = print . (<> "\n") 
+
+printCoords :: MonadIO m => [Ix2] -> m ()
+printCoords = mapM_ (\(x :. y) -> printLn $ tshow x <> " " <> tshow y)
+```
+
 # Appendix: Parsing
 
 ``` {.haskell file=app/Parsing.hs}

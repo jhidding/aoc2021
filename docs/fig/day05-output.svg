@@ -104,7 +104,7 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M147.1,18.1 L147.1,464.0 L593.0,464.0 M593.0,18.1 M147.1,18.1  '/></g>
+	<path stroke='rgb(240, 160,  64)'  d='M147.1,18.1 L147.1,464.0 L593.0,464.0 L593.0,18.1 L147.1,18.1 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 	<g id="gnuplot_plot_1" ><title>gnuplot_plot_1</title>
@@ -119,7 +119,7 @@
 <g fill="none" color="black" stroke="black" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M147.1,18.1 L147.1,464.0 L593.0,464.0 M593.0,18.1 M147.1,18.1  '/>	<g stroke='none' shape-rendering='crispEdges'>
+	<path stroke='rgb(240, 160,  64)'  d='M147.1,18.1 L147.1,464.0 L593.0,464.0 L593.0,18.1 L147.1,18.1 Z  '/>	<g stroke='none' shape-rendering='crispEdges'>
 		<polygon fill = 'rgb( 60,  84, 162)' points = '604.1,464.0 626.3,464.0 626.3,460.5 604.1,460.5 '/>
 		<polygon fill = 'rgb( 57,  87, 165)' points = '604.1,460.6 626.3,460.6 626.3,457.0 604.1,457.0 '/>
 		<polygon fill = 'rgb( 54,  91, 168)' points = '604.1,457.1 626.3,457.1 626.3,453.5 604.1,453.5 '/>

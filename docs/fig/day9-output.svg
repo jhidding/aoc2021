@@ -104,7 +104,7 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M142.5,18.1 L142.5,464.0 L588.5,464.0 M588.5,18.1 M142.5,18.1  '/></g>
+	<path stroke='rgb(240, 160,  64)'  d='M142.5,18.1 L142.5,464.0 L588.5,464.0 L588.5,18.1 L142.5,18.1 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 	<g id="gnuplot_plot_1" ><title>'data/day09-output.txt' i 1 matrix</title>
@@ -124,7 +124,7 @@
 <g fill="none" color="black" stroke="black" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(240, 160,  64)'  d='M142.5,18.1 L142.5,464.0 L588.5,464.0 M588.5,18.1 M142.5,18.1  '/>	<g stroke='none' shape-rendering='crispEdges'>
+	<path stroke='rgb(240, 160,  64)'  d='M142.5,18.1 L142.5,464.0 L588.5,464.0 L588.5,18.1 L142.5,18.1 Z  '/>	<g stroke='none' shape-rendering='crispEdges'>
 		<polygon fill = 'rgb( 60,  84, 162)' points = '599.7,464.0 622.0,464.0 622.0,460.5 599.7,460.5 '/>
 		<polygon fill = 'rgb( 57,  87, 165)' points = '599.7,460.6 622.0,460.6 622.0,457.0 599.7,457.0 '/>
 		<polygon fill = 'rgb( 54,  91, 168)' points = '599.7,457.1 622.0,457.1 622.0,453.5 599.7,453.5 '/>

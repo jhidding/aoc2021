@@ -55,6 +55,7 @@ executable x2021
                     , Parsing
                     , Parsing.Binary
                     , Dijkstra
+                    , Print
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

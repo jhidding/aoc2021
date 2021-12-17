@@ -24,7 +24,7 @@ bcol(x) = 1/(1.579 - 4.03*x + 12.92*x**2 - 31.4*x**3 + 48.6*x**4 - 23.36*x**5)
 set palette model RGB functions rcol(gray), gcol(gray), bcol(gray)
 
 set style line 101 lc rgb '#f0a040' lt 1 lw 1
-set border 3 front ls 101
+set border 15 front ls 101
 set key textcolor rgb '#f0a040'
 
 ${script}

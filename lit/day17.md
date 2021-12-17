@@ -5,6 +5,8 @@ Today we need to do some math. The first part, we can even compute by hand! We a
 module Day17 where
 
 import RIO
+import RIO.List (iterate)
+import Print
 import Parsing (Parser, readInputParsing, string, integer, lexeme, char)
 import Linear.V2 (V2(..))
 
@@ -64,7 +66,8 @@ hit Area{..} (PhaseSpace (V2 x y) _) = minX <= x && x <= maxX
                                     && minY <= y && y <= maxY
 
 miss :: Area -> PhaseSpace -> Bool
-miss Area{..} (PhaseSpace (V2 _ y) (V2 _ dy)) = y < minY && dy < 0
+miss Area{..} (PhaseSpace (V2 x y) (V2 _ dy)) 
+    = y < minY && dy < 0 || x > maxX
 ```
 
 The key is now to find the maximum velocity upward. The point being that the probe always returns to level 0, with negative that velocity. If that velocity will make the probe overshoot, than we definetly miss target. The minimum velocity is $y_{\rm min}$, so the maximum velocity is $-y_{\rm min} - 1$.
@@ -109,3 +112,54 @@ solutionB a = length [ V2 vx vy
                      , outcome a (V2 vx vy) == Hit ]
     where (V2 minvx minvy, V2 maxvx maxvy) = velocityBounds a
 ```
+
+``` {.haskell .hide #solution-day17}
+iterateUntil' :: (a -> a) -> (a -> Bool) -> a -> [a]
+iterateUntil' f p init
+    | p init = [init]
+    | otherwise = init : iterateUntil' f p (f init)
+
+showData :: IO ()
+showData = do
+    area <- runSimpleApp readInput
+    let (V2 minvx minvy, V2 maxvx maxvy) = velocityBounds area
+        startVels = [ V2 vx vy
+                           | vx <- [minvx .. maxvx]
+                           , vy <- [minvy .. maxvy] ]
+    mapM_ (printStats area) startVels
+    printLn "\n"
+    printLn $ "# " <> tshow (length startVels)
+    mapM_ (printShot area) startVels
+    where printShot area v = do
+            let o = if outcome area v == Hit then 1 else 0
+            let path = iterateUntil' step (\x -> hit area x || miss area x) 
+                                (PhaseSpace (V2 0 0) v)
+            when (length path > 10) (mapM_ (printPs o) path >> printLn "\n")
+          printPs o (PhaseSpace (V2 x y) (V2 vx vy)) = printLn 
+            $ tshow x <> " " <> tshow y <> " " <> tshow vx <> " "
+            <> tshow vy <> " " <> tshow o
+          printStats area v@(V2 vx vy) = do
+            let o = if outcome area v == Hit then 1 else 0
+            let l = if o == 1
+                    then length $ iterateUntil' step (\x -> hit area x || miss area x) 
+                                (PhaseSpace (V2 0 0) v)
+                    else -1
+            when (o == 1) $
+                printLn $ tshow vx <> " " <> tshow vy <> " " <> tshow o <> " " <> tshow l
+```
+
+``` {.gnuplot .hide file=build/plot-day17.gp}
+set term svg size 800, 800
+set size ratio -1
+set xrange [10:205]
+set yrange [-120:120]
+plot 'data/day17-output.txt' i 0 u 1:2:4 w p lc palette pt 7 ps 0.5 t''
+```
+
+``` {.make target=fig/day17-code.svg}
+$(target): export output=$(target)
+$(target): export script=load "build/plot-day17.gp"
+$(target): build/plot-day17.gp data/day17-output.txt
+    cat templates/gnuplot.preamble | envsubst | gnuplot
+```
+
