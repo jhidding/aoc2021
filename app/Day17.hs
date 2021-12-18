@@ -3,10 +3,9 @@
 module Day17 where
 
 import RIO
-import RIO.List (iterate)
-import Print
 import Parsing (Parser, readInputParsing, string, integer, lexeme, char)
 import Linear.V2 (V2(..))
+import Print ( printLn )
 
 -- ~\~ begin <<lit/day17.md|data-types-day17>>[0]
 data Area = Area
@@ -45,8 +44,7 @@ hit Area{..} (PhaseSpace (V2 x y) _) = minX <= x && x <= maxX
                                     && minY <= y && y <= maxY
 
 miss :: Area -> PhaseSpace -> Bool
-miss Area{..} (PhaseSpace (V2 x y) (V2 _ dy)) 
-    = y < minY && dy < 0 || x > maxX
+miss Area{..} (PhaseSpace (V2 _ y) (V2 _ dy)) = y < minY && dy < 0
 -- ~\~ end
 -- ~\~ begin <<lit/day17.md|solution-day17>>[2]
 velocityBounds :: Area -> (V2 Int, V2 Int)
@@ -138,7 +136,7 @@ showData2 :: IO ()
 showData2 = do
     area <- runSimpleApp readInput
     mapM_ (\t -> printArea (invertArea area t) >> printLn "\n")
-          [0 .. 2*(negate $ minY area)]
+          [0 .. 2 * negate (minY area)]
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()

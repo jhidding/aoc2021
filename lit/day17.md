@@ -5,10 +5,9 @@ Today we need to do some math. The first part, we can even compute by hand! We a
 module Day17 where
 
 import RIO
-import RIO.List (iterate)
-import Print
 import Parsing (Parser, readInputParsing, string, integer, lexeme, char)
 import Linear.V2 (V2(..))
+import Print ( printLn )
 
 <<data-types-day17>>
 <<parser-day17>>
@@ -66,8 +65,7 @@ hit Area{..} (PhaseSpace (V2 x y) _) = minX <= x && x <= maxX
                                     && minY <= y && y <= maxY
 
 miss :: Area -> PhaseSpace -> Bool
-miss Area{..} (PhaseSpace (V2 x y) (V2 _ dy)) 
-    = y < minY && dy < 0 || x > maxX
+miss Area{..} (PhaseSpace (V2 _ y) (V2 _ dy)) = y < minY && dy < 0
 ```
 
 The key is now to find the maximum velocity upward. The point being that the probe always returns to level 0, with negative that velocity. If that velocity will make the probe overshoot, than we definetly miss target. The minimum velocity is $y_{\rm min}$, so the maximum velocity is $-y_{\rm min} - 1$.
@@ -217,6 +215,6 @@ showData2 :: IO ()
 showData2 = do
     area <- runSimpleApp readInput
     mapM_ (\t -> printArea (invertArea area t) >> printLn "\n")
-          [0 .. 2*(negate $ minY area)]
+          [0 .. 2 * negate (minY area)]
 ```
 

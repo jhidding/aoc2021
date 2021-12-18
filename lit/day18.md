@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day18.hs
--- ~\~ begin <<lit/day18.md|app/Day18.hs>>[0]
+# Day 18: Snailfish
+
+``` {.haskell file=app/Day18.hs}
 module Day18 where
 
 import RIO
@@ -7,7 +8,12 @@ import RIO.List.Partial (foldl1', maximum)
 import Parsing (Parser, readInputParsing, char, integer, eol, sepEndBy1)
 import Text.Megaparsec (parse)
 
--- ~\~ begin <<lit/day18.md|parser-day18>>[0]
+<<parser-day18>>
+<<solution-day18>>
+<<run-solutions>>
+```
+
+``` {.haskell #parser-day18}
 data Number a
     = Regular a
     | Snailfish (Number a) (Number a)
@@ -78,19 +84,12 @@ readInput = readInputParsing "data/day18.txt" (snailfishP `sepEndBy1` eol)
 
 read :: Text -> Number Int
 read s = fromRight (Regular (-1)) $ parse snailfishP "-" s
--- ~\~ end
--- ~\~ begin <<lit/day18.md|solution-day18>>[0]
+```
+
+``` {.haskell #solution-day18}
 solutionA :: [Number Int] -> Int
 solutionA = magnitude . foldl1' (<+>)
 
 solutionB :: [Number Int] -> Int
 solutionB inp = maximum [magnitude (a <+> b) | a <- inp, b <- inp, a /= b]
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+```
