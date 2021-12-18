@@ -11,7 +11,6 @@ import qualified RIO.Text as Text
 import qualified RIO.Set as Set
 import Parsing (readInputParsing, Parser, string, sepEndBy1, eol, integer, char)
 import Data.Massiv.Array (Ix2(..))
-import Print ( printLn, printCoords )
 
 <<parser-day-13>>
 <<solution-day-13>>
@@ -77,6 +76,15 @@ foldAllFolds Input{..} = Set.toList $ foldl' makeFold
 Apparently the answer is in visualizing the result, so I'll print out the coordinates and plot them with Gnuplot.
 
 ``` {.haskell #solution-day-13}
+print :: (MonadIO m) => Text -> m ()
+print = putStr . Text.encodeUtf8
+
+printLn :: (MonadIO m) => Text -> m ()
+printLn = print . (<> "\n") 
+
+printCoords :: MonadIO m => [Ix2] -> m ()
+printCoords = mapM_ (\(x :. y) -> printLn $ tshow x <> " " <> tshow y)
+
 runA :: (HasLogFunc env) => RIO env ()
 runA = do
     inp <- readInput
