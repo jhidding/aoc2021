@@ -114,6 +114,32 @@ showData = do
             when (o == 1) $
                 printLn $ tshow vx <> " " <> tshow vy <> " " <> tshow o <> " " <> tshow l
 -- ~\~ end
+-- ~\~ begin <<lit/day17.md|solution-day17>>[5]
+invertArea :: Area -> Int -> Area
+invertArea Area{..} t = Area minX' maxX' minY' maxY'
+    where invertDelta x = floor (sqrt (fromIntegral $ 2 * x))
+          invertQuadratic :: Int -> Float
+          invertQuadratic x = fromIntegral x / fromIntegral t 
+                            + (fromIntegral t - 1) / 2
+          minX' = max (invertDelta minX) (ceiling $ invertQuadratic minX)
+          maxX' = floor (invertQuadratic maxX)
+          minY' = ceiling (invertQuadratic minY)
+          maxY' = floor (invertQuadratic maxY)
+
+printArea :: Area -> IO ()
+printArea Area{..} = do
+    printLn $ tshow minX <> " " <> tshow minY
+    printLn $ tshow maxX <> " " <> tshow minY
+    printLn $ tshow maxX <> " " <> tshow maxY
+    printLn $ tshow minX <> " " <> tshow maxY
+    printLn $ tshow minX <> " " <> tshow minY
+
+showData2 :: IO ()
+showData2 = do
+    area <- runSimpleApp readInput
+    mapM_ (\t -> printArea (invertArea area t) >> printLn "\n")
+          [0 .. 2*(negate $ minY area)]
+-- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
 runA = readInput >>= logInfo . display . tshow . solutionA 
