@@ -5,7 +5,7 @@ Boy, this was a hard one.
 module Day19 where
 
 import RIO hiding (try)
-import RIO.List (sortBy, find, sort)
+import RIO.List (sortBy, find, sort, headMaybe)
 import RIO.List.Partial (head, last, maximum)
 import qualified RIO.Map as Map
 import qualified Data.Set as Set
@@ -30,7 +30,7 @@ For this problem I use the `Linear` module quite a lot: `V3 Int` for coordinates
 
 ``` {.haskell #data-types-day19}
 type Pt = V3 Int
-type Scan = Set Pt
+type Scan = [Pt]
 
 type Transform = M33 Int
 data Affine = Affine Transform Pt
@@ -52,8 +52,8 @@ applyAffine (Affine t p) q = t !* q + p
 
 ``` {.haskell #parser-day19}
 inputP :: Parser Scan
-inputP = Set.fromList <$> (string "---" >> dropUntilEol
-       >> (V3 <$> integer <* char ',' <*> integer <* char ',' <*> integer) `sepEndBy1` eol)
+inputP = string "---" >> dropUntilEol
+       >> (V3 <$> integer <* char ',' <*> integer <* char ',' <*> integer) `sepEndBy1` eol
 
 readInput :: (HasLogFunc env) => RIO env (Vector Scan)
 readInput = readInputParsing "data/day19.txt" (Vector.fromList <$> inputP `sepEndBy1` eol)
@@ -75,49 +75,21 @@ allTransforms = [ p * s | p <- permutations (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
                        , V3 (-1) (-1) 1, V3 (-1) (-1) (-1) ]
 ```
 
-To see if two scans match (in their current orientation), I have to translate one by some coordinate and see if more than 12 points line up. To get this with decent speed, I do this first along every axis, and then try combinations of those. I tried doing this with `IntSet` first, but the problem is then, that values can appear multiple times. I've thought about using `MultiSet` from our previous problems. We are looking at lists of 25 numbers each, so I expect that a normal `[Int]` is fine. Still need an `intersection` function though. This assumes that input lists are sorted.
-
-I considered comparing relative coordinates, but rejected this because it would mean comparing $N^2$ numbers. My scanning method is potentially fast, with emphasis on *potentially*.
+At first, I had a terribly complicated method here to detect the relative offsets of two scans. I happened across a solution by someone else that is much more elegant.
 
 ``` {.haskell #solution-day19}
-intersect :: (Ord a) => [a] -> [a] -> [a]
-intersect [] _ = []
-intersect _ [] = []
-intersect (a:as) (b:bs)
-    | a == b    = a : intersect as bs
-    | a < b     = intersect as (b:bs)
-    | otherwise = intersect (a:as) bs
-```
-
-Now, I can implement a function that takes two sorted lists, and returns a list of `(offset, overlap)` pairs, sorted such that the offset with largest overlap is returned first.
-
-``` {.haskell #solution-day19}
-matchInts :: [Int] -> [Int] -> [(Int, Int)]
-matchInts a b = sortBy (compare `on` (negate . snd))
-              $ map overlap range
-    where range = [(head a - last b) .. (last a - head b)]
-          overlap i = (i, length $ intersect a (map (+ i) b))
-```
-
-The trick is now to combine offsets found for each axis. I make a list of candidates by taking the cartesian product of matches from each axis. The first candidate to yield an intersection larger or equal than 12 points gets through.
-
-``` {.haskell #solution-day19}
-matchScans :: Set Pt -> Set Pt -> Maybe Pt
-matchScans a b = find approve candidates
-    where candidates = V3 <$> matchOn _x <*> matchOn _y <*> matchOn _z
-          approve d = Set.size (Set.intersection a (Set.map (+ d) b)) >= 12
-          matchOn coord = map fst
-                        $ takeWhile (\(i, s) -> s >= 12)
-                        $ matchInts (sort $ map (view coord) $ Set.toList a)
-                                    (sort $ map (view coord) $ Set.toList b)
+matchScans :: [Pt] -> [Pt] -> Maybe Pt
+matchScans a b = headMaybe $ Map.keys $ Map.filter (>= 12) $ count diffs
+    where diffs = (-) <$> a <*> b
+          count = Map.fromListWith (+) . map (,1)
 ```
 
 We still have to try this for every rotation and reflection of one of the scans.
 
 ``` {.haskell #solution-day19}
-match :: Set Pt -> Set Pt -> Maybe Affine
+match :: [Pt] -> [Pt] -> Maybe Affine
 match a b = asum (go <$> allTransforms)
-    where go t = Affine t <$> matchScans a (Set.map (t !*) b)
+    where go t = Affine t <$> matchScans a (map (t !*) b)
 ```
 
 I build an index of `Affine` transformations. Starting with scan 0, I find the first remaining scan that produces a match, add that to the map and repeat. This could be sped up by memoizing matches we already know to fail; for me this gives a factor 60 speedup.
@@ -146,8 +118,8 @@ buildMap f n m
 That was the hard bit. This code runs in about 15 seconds on my laptop.
 
 ``` {.haskell #solution-day19}
-mergeScans :: Vector Scan -> Map Int Affine -> Scan
-mergeScans s = Map.foldMapWithKey (\i a -> Set.map (applyAffine a) (s Vector.! i))
+mergeScans :: Vector Scan -> Map Int Affine -> Set Pt
+mergeScans s = Map.foldMapWithKey (\i a -> Set.fromList $ map (applyAffine a) (s Vector.! i))
 
 solutionA :: Vector Scan -> Maybe Int
 solutionA inp = Set.size . mergeScans inp

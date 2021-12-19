@@ -3,7 +3,7 @@
 module Day19 where
 
 import RIO hiding (try)
-import RIO.List (sortBy, find, sort)
+import RIO.List (sortBy, find, sort, headMaybe)
 import RIO.List.Partial (head, last, maximum)
 import qualified RIO.Map as Map
 import qualified Data.Set as Set
@@ -20,7 +20,7 @@ import Linear.Vector ( negated )
 
 -- ~\~ begin <<lit/day19.md|data-types-day19>>[0]
 type Pt = V3 Int
-type Scan = Set Pt
+type Scan = [Pt]
 
 type Transform = M33 Int
 data Affine = Affine Transform Pt
@@ -41,8 +41,8 @@ applyAffine (Affine t p) q = t !* q + p
 -- ~\~ end
 -- ~\~ begin <<lit/day19.md|parser-day19>>[0]
 inputP :: Parser Scan
-inputP = Set.fromList <$> (string "---" >> dropUntilEol
-       >> (V3 <$> integer <* char ',' <*> integer <* char ',' <*> integer) `sepEndBy1` eol)
+inputP = string "---" >> dropUntilEol
+       >> (V3 <$> integer <* char ',' <*> integer <* char ',' <*> integer) `sepEndBy1` eol
 
 readInput :: (HasLogFunc env) => RIO env (Vector Scan)
 readInput = readInputParsing "data/day19.txt" (Vector.fromList <$> inputP `sepEndBy1` eol)
@@ -61,37 +61,17 @@ allTransforms = [ p * s | p <- permutations (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
                        , V3 (-1) (-1) 1, V3 (-1) (-1) (-1) ]
 -- ~\~ end
 -- ~\~ begin <<lit/day19.md|solution-day19>>[1]
-intersect :: (Ord a) => [a] -> [a] -> [a]
-intersect [] _ = []
-intersect _ [] = []
-intersect (a:as) (b:bs)
-    | a == b    = a : intersect as bs
-    | a < b     = intersect as (b:bs)
-    | otherwise = intersect (a:as) bs
+matchScans :: [Pt] -> [Pt] -> Maybe Pt
+matchScans a b = headMaybe $ Map.keys $ Map.filter (>= 12) $ count diffs
+    where diffs = (-) <$> a <*> b
+          count = Map.fromListWith (+) . map (,1)
 -- ~\~ end
 -- ~\~ begin <<lit/day19.md|solution-day19>>[2]
-matchInts :: [Int] -> [Int] -> [(Int, Int)]
-matchInts a b = sortBy (compare `on` (negate . snd))
-              $ map overlap range
-    where range = [(head a - last b) .. (last a - head b)]
-          overlap i = (i, length $ intersect a (map (+ i) b))
+match :: [Pt] -> [Pt] -> Maybe Affine
+match a b = asum (go <$> allTransforms)
+    where go t = Affine t <$> matchScans a (map (t !*) b)
 -- ~\~ end
 -- ~\~ begin <<lit/day19.md|solution-day19>>[3]
-matchScans :: Set Pt -> Set Pt -> Maybe Pt
-matchScans a b = find approve candidates
-    where candidates = V3 <$> matchOn _x <*> matchOn _y <*> matchOn _z
-          approve d = Set.size (Set.intersection a (Set.map (+ d) b)) >= 12
-          matchOn coord = map fst
-                        $ takeWhile (\(i, s) -> s >= 12)
-                        $ matchInts (sort $ map (view coord) $ Set.toList a)
-                                    (sort $ map (view coord) $ Set.toList b)
--- ~\~ end
--- ~\~ begin <<lit/day19.md|solution-day19>>[4]
-match :: Set Pt -> Set Pt -> Maybe Affine
-match a b = asum (go <$> allTransforms)
-    where go t = Affine t <$> matchScans a (Set.map (t !*) b)
--- ~\~ end
--- ~\~ begin <<lit/day19.md|solution-day19>>[5]
 memoizeMatch :: Vector Scan -> Int -> Int -> Maybe Affine
 memoizeMatch s = lookup
     where lookup i j = join $ LazyMap.lookup (i, j) cache
@@ -111,9 +91,9 @@ buildMap f n m
                     , j <- [0..(n - 1)]
                     , j `Map.notMember` m ]
 -- ~\~ end
--- ~\~ begin <<lit/day19.md|solution-day19>>[6]
-mergeScans :: Vector Scan -> Map Int Affine -> Scan
-mergeScans s = Map.foldMapWithKey (\i a -> Set.map (applyAffine a) (s Vector.! i))
+-- ~\~ begin <<lit/day19.md|solution-day19>>[4]
+mergeScans :: Vector Scan -> Map Int Affine -> Set Pt
+mergeScans s = Map.foldMapWithKey (\i a -> Set.fromList $ map (applyAffine a) (s Vector.! i))
 
 solutionA :: Vector Scan -> Maybe Int
 solutionA inp = Set.size . mergeScans inp

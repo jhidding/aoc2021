@@ -2375,7 +2375,7 @@
 <div class="sourceCode" id="cb140"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day19</span> <span class="kw">where</span></span>
 <span id="cb140-2"><a href="#cb140-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb140-3"><a href="#cb140-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span> <span class="kw">hiding</span> (try)</span>
-<span id="cb140-4"><a href="#cb140-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (sortBy, find, sort)</span>
+<span id="cb140-4"><a href="#cb140-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (sortBy, find, sort, headMaybe)</span>
 <span id="cb140-5"><a href="#cb140-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> (head, last, maximum)</span>
 <span id="cb140-6"><a href="#cb140-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
 <span id="cb140-7"><a href="#cb140-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
@@ -2399,7 +2399,7 @@
 <div class="named-code-block">
 <p>«data-types-day19»</p>
 <div class="sourceCode" id="cb141"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Pt</span> <span class="ot">=</span> <span class="dt">V3</span> <span class="dt">Int</span></span>
-<span id="cb141-2"><a href="#cb141-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Scan</span> <span class="ot">=</span> <span class="dt">Set</span> <span class="dt">Pt</span></span>
+<span id="cb141-2"><a href="#cb141-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Scan</span> <span class="ot">=</span> [<span class="dt">Pt</span>]</span>
 <span id="cb141-3"><a href="#cb141-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb141-4"><a href="#cb141-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Transform</span> <span class="ot">=</span> <span class="dt">M33</span> <span class="dt">Int</span></span>
 <span id="cb141-5"><a href="#cb141-5" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Affine</span> <span class="ot">=</span> <span class="dt">Affine</span> <span class="dt">Transform</span> <span class="dt">Pt</span></span>
@@ -2421,8 +2421,8 @@
 <div class="named-code-block">
 <p>«parser-day19»</p>
 <div class="sourceCode" id="cb142"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="ot">inputP ::</span> <span class="dt">Parser</span> <span class="dt">Scan</span></span>
-<span id="cb142-2"><a href="#cb142-2" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> Set.fromList <span class="op">&lt;$&gt;</span> (string <span class="st">&quot;---&quot;</span> <span class="op">&gt;&gt;</span> dropUntilEol</span>
-<span id="cb142-3"><a href="#cb142-3" aria-hidden="true" tabindex="-1"></a>       <span class="op">&gt;&gt;</span> (<span class="dt">V3</span> <span class="op">&lt;$&gt;</span> integer <span class="op">&lt;*</span> char <span class="ch">&#39;,&#39;</span> <span class="op">&lt;*&gt;</span> integer <span class="op">&lt;*</span> char <span class="ch">&#39;,&#39;</span> <span class="op">&lt;*&gt;</span> integer) <span class="ot">`sepEndBy1`</span> eol)</span>
+<span id="cb142-2"><a href="#cb142-2" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> string <span class="st">&quot;---&quot;</span> <span class="op">&gt;&gt;</span> dropUntilEol</span>
+<span id="cb142-3"><a href="#cb142-3" aria-hidden="true" tabindex="-1"></a>       <span class="op">&gt;&gt;</span> (<span class="dt">V3</span> <span class="op">&lt;$&gt;</span> integer <span class="op">&lt;*</span> char <span class="ch">&#39;,&#39;</span> <span class="op">&lt;*&gt;</span> integer <span class="op">&lt;*</span> char <span class="ch">&#39;,&#39;</span> <span class="op">&lt;*&gt;</span> integer) <span class="ot">`sepEndBy1`</span> eol</span>
 <span id="cb142-4"><a href="#cb142-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb142-5"><a href="#cb142-5" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env (<span class="dt">Vector</span> <span class="dt">Scan</span>)</span>
 <span id="cb142-6"><a href="#cb142-6" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day19.txt&quot;</span> (Vector.fromList <span class="op">&lt;$&gt;</span> inputP <span class="ot">`sepEndBy1`</span> eol)</span></code></pre></div>
@@ -2442,98 +2442,73 @@
 <span id="cb143-10"><a href="#cb143-10" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span> <span class="dv">1</span>,    <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>)</span>
 <span id="cb143-11"><a href="#cb143-11" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span>, <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) ]</span></code></pre></div>
 </div>
-<p>To see if two scans match (in their current orientation), I have to translate one by some coordinate and see if more than 12 points line up. To get this with decent speed, I do this first along every axis, and then try combinations of those. I tried doing this with <code>IntSet</code> first, but the problem is then, that values can appear multiple times. I’ve thought about using <code>MultiSet</code> from our previous problems. We are looking at lists of 25 numbers each, so I expect that a normal <code>[Int]</code> is fine. Still need an <code>intersection</code> function though. This assumes that input lists are sorted.</p>
-<p>I considered comparing relative coordinates, but rejected this because it would mean comparing <span class="math inline">\(N^2\)</span> numbers. My scanning method is potentially fast, with emphasis on <em>potentially</em>.</p>
+<p>At first, I had a terribly complicated method here to detect the relative offsets of two scans. I happened across a solution by someone else that is much more elegant.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
-<div class="sourceCode" id="cb144"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="ot">intersect ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
-<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a>intersect [] _ <span class="ot">=</span> []</span>
-<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a>intersect _ [] <span class="ot">=</span> []</span>
-<span id="cb144-4"><a href="#cb144-4" aria-hidden="true" tabindex="-1"></a>intersect (a<span class="op">:</span>as) (b<span class="op">:</span>bs)</span>
-<span id="cb144-5"><a href="#cb144-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> a <span class="op">==</span> b    <span class="ot">=</span> a <span class="op">:</span> intersect as bs</span>
-<span id="cb144-6"><a href="#cb144-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> a <span class="op">&lt;</span> b     <span class="ot">=</span> intersect as (b<span class="op">:</span>bs)</span>
-<span id="cb144-7"><a href="#cb144-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> intersect (a<span class="op">:</span>as) bs</span></code></pre></div>
-</div>
-<p>Now, I can implement a function that takes two sorted lists, and returns a list of <code>(offset, overlap)</code> pairs, sorted such that the offset with largest overlap is returned first.</p>
-<div class="named-code-block">
-<p>«solution-day19»</p>
-<div class="sourceCode" id="cb145"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a><span class="ot">matchInts ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [(<span class="dt">Int</span>, <span class="dt">Int</span>)]</span>
-<span id="cb145-2"><a href="#cb145-2" aria-hidden="true" tabindex="-1"></a>matchInts a b <span class="ot">=</span> sortBy (<span class="fu">compare</span> <span class="ot">`on`</span> (<span class="fu">negate</span> <span class="op">.</span> <span class="fu">snd</span>))</span>
-<span id="cb145-3"><a href="#cb145-3" aria-hidden="true" tabindex="-1"></a>              <span class="op">$</span> <span class="fu">map</span> overlap <span class="fu">range</span></span>
-<span id="cb145-4"><a href="#cb145-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> <span class="fu">range</span> <span class="ot">=</span> [(<span class="fu">head</span> a <span class="op">-</span> <span class="fu">last</span> b) <span class="op">..</span> (<span class="fu">last</span> a <span class="op">-</span> <span class="fu">head</span> b)]</span>
-<span id="cb145-5"><a href="#cb145-5" aria-hidden="true" tabindex="-1"></a>          overlap i <span class="ot">=</span> (i, <span class="fu">length</span> <span class="op">$</span> intersect a (<span class="fu">map</span> (<span class="op">+</span> i) b))</span></code></pre></div>
-</div>
-<p>The trick is now to combine offsets found for each axis. I make a list of candidates by taking the cartesian product of matches from each axis. The first candidate to yield an intersection larger or equal than 12 points gets through.</p>
-<div class="named-code-block">
-<p>«solution-day19»</p>
-<div class="sourceCode" id="cb146"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a><span class="ot">matchScans ::</span> <span class="dt">Set</span> <span class="dt">Pt</span> <span class="ot">-&gt;</span> <span class="dt">Set</span> <span class="dt">Pt</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Pt</span></span>
-<span id="cb146-2"><a href="#cb146-2" aria-hidden="true" tabindex="-1"></a>matchScans a b <span class="ot">=</span> find approve candidates</span>
-<span id="cb146-3"><a href="#cb146-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> candidates <span class="ot">=</span> <span class="dt">V3</span> <span class="op">&lt;$&gt;</span> matchOn _x <span class="op">&lt;*&gt;</span> matchOn _y <span class="op">&lt;*&gt;</span> matchOn _z</span>
-<span id="cb146-4"><a href="#cb146-4" aria-hidden="true" tabindex="-1"></a>          approve d <span class="ot">=</span> Set.size (Set.intersection a (Set.map (<span class="op">+</span> d) b)) <span class="op">&gt;=</span> <span class="dv">12</span></span>
-<span id="cb146-5"><a href="#cb146-5" aria-hidden="true" tabindex="-1"></a>          matchOn coord <span class="ot">=</span> <span class="fu">map</span> <span class="fu">fst</span></span>
-<span id="cb146-6"><a href="#cb146-6" aria-hidden="true" tabindex="-1"></a>                        <span class="op">$</span> <span class="fu">takeWhile</span> (\(i, s) <span class="ot">-&gt;</span> s <span class="op">&gt;=</span> <span class="dv">12</span>)</span>
-<span id="cb146-7"><a href="#cb146-7" aria-hidden="true" tabindex="-1"></a>                        <span class="op">$</span> matchInts (<span class="fu">sort</span> <span class="op">$</span> <span class="fu">map</span> (view coord) <span class="op">$</span> Set.toList a)</span>
-<span id="cb146-8"><a href="#cb146-8" aria-hidden="true" tabindex="-1"></a>                                    (<span class="fu">sort</span> <span class="op">$</span> <span class="fu">map</span> (view coord) <span class="op">$</span> Set.toList b)</span></code></pre></div>
+<div class="sourceCode" id="cb144"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="ot">matchScans ::</span> [<span class="dt">Pt</span>] <span class="ot">-&gt;</span> [<span class="dt">Pt</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Pt</span></span>
+<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a>matchScans a b <span class="ot">=</span> headMaybe <span class="op">$</span> Map.keys <span class="op">$</span> Map.filter (<span class="op">&gt;=</span> <span class="dv">12</span>) <span class="op">$</span> count diffs</span>
+<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> diffs <span class="ot">=</span> (<span class="op">-</span>) <span class="op">&lt;$&gt;</span> a <span class="op">&lt;*&gt;</span> b</span>
+<span id="cb144-4"><a href="#cb144-4" aria-hidden="true" tabindex="-1"></a>          count <span class="ot">=</span> Map.fromListWith (<span class="op">+</span>) <span class="op">.</span> <span class="fu">map</span> (,<span class="dv">1</span>)</span></code></pre></div>
 </div>
 <p>We still have to try this for every rotation and reflection of one of the scans.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
-<div class="sourceCode" id="cb147"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb147-1"><a href="#cb147-1" aria-hidden="true" tabindex="-1"></a><span class="ot">match ::</span> <span class="dt">Set</span> <span class="dt">Pt</span> <span class="ot">-&gt;</span> <span class="dt">Set</span> <span class="dt">Pt</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Affine</span></span>
-<span id="cb147-2"><a href="#cb147-2" aria-hidden="true" tabindex="-1"></a>match a b <span class="ot">=</span> asum (go <span class="op">&lt;$&gt;</span> allTransforms)</span>
-<span id="cb147-3"><a href="#cb147-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go t <span class="ot">=</span> <span class="dt">Affine</span> t <span class="op">&lt;$&gt;</span> matchScans a (Set.map (t <span class="op">!*</span>) b)</span></code></pre></div>
+<div class="sourceCode" id="cb145"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a><span class="ot">match ::</span> [<span class="dt">Pt</span>] <span class="ot">-&gt;</span> [<span class="dt">Pt</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Affine</span></span>
+<span id="cb145-2"><a href="#cb145-2" aria-hidden="true" tabindex="-1"></a>match a b <span class="ot">=</span> asum (go <span class="op">&lt;$&gt;</span> allTransforms)</span>
+<span id="cb145-3"><a href="#cb145-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> go t <span class="ot">=</span> <span class="dt">Affine</span> t <span class="op">&lt;$&gt;</span> matchScans a (<span class="fu">map</span> (t <span class="op">!*</span>) b)</span></code></pre></div>
 </div>
 <p>I build an index of <code>Affine</code> transformations. Starting with scan 0, I find the first remaining scan that produces a match, add that to the map and repeat. This could be sped up by memoizing matches we already know to fail; for me this gives a factor 60 speedup.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
-<div class="sourceCode" id="cb148"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a><span class="ot">memoizeMatch ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Affine</span></span>
-<span id="cb148-2"><a href="#cb148-2" aria-hidden="true" tabindex="-1"></a>memoizeMatch s <span class="ot">=</span> <span class="fu">lookup</span></span>
-<span id="cb148-3"><a href="#cb148-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> <span class="fu">lookup</span> i j <span class="ot">=</span> join <span class="op">$</span> LazyMap.lookup (i, j) cache</span>
-<span id="cb148-4"><a href="#cb148-4" aria-hidden="true" tabindex="-1"></a>          cache <span class="ot">=</span> LazyMap.fromList [ ((i, j), match (s <span class="op">Vector.!</span> i) (s <span class="op">Vector.!</span> j))</span>
-<span id="cb148-5"><a href="#cb148-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="op">|</span> i <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> Vector.length s <span class="op">-</span> <span class="dv">1</span>]</span>
-<span id="cb148-6"><a href="#cb148-6" aria-hidden="true" tabindex="-1"></a>                                   , j <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> Vector.length s <span class="op">-</span> <span class="dv">1</span>]</span>
-<span id="cb148-7"><a href="#cb148-7" aria-hidden="true" tabindex="-1"></a>                                   , i <span class="op">/=</span> j ]</span>
-<span id="cb148-8"><a href="#cb148-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb148-9"><a href="#cb148-9" aria-hidden="true" tabindex="-1"></a><span class="ot">buildMap ::</span> (<span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Affine</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span>)</span>
-<span id="cb148-10"><a href="#cb148-10" aria-hidden="true" tabindex="-1"></a>buildMap f n m</span>
-<span id="cb148-11"><a href="#cb148-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> Map.size m <span class="op">==</span> n <span class="ot">=</span> <span class="dt">Just</span> m</span>
-<span id="cb148-12"><a href="#cb148-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> asum matches <span class="op">&gt;&gt;=</span> insert <span class="op">&gt;&gt;=</span> buildMap f n</span>
-<span id="cb148-13"><a href="#cb148-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> insert (i, j, aff) <span class="ot">=</span> <span class="kw">do</span> { a <span class="ot">&lt;-</span> m <span class="op">Map.!?</span> i;</span>
-<span id="cb148-14"><a href="#cb148-14" aria-hidden="true" tabindex="-1"></a>                                    <span class="fu">return</span> <span class="op">$</span> Map.insert j (a <span class="op">&lt;&gt;</span> aff) m }</span>
-<span id="cb148-15"><a href="#cb148-15" aria-hidden="true" tabindex="-1"></a>          matches <span class="ot">=</span> [ (i, j,) <span class="op">&lt;$&gt;</span> f i j</span>
-<span id="cb148-16"><a href="#cb148-16" aria-hidden="true" tabindex="-1"></a>                    <span class="op">|</span> i <span class="ot">&lt;-</span> Map.keys m</span>
-<span id="cb148-17"><a href="#cb148-17" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">&lt;-</span> [<span class="dv">0</span><span class="op">..</span>(n <span class="op">-</span> <span class="dv">1</span>)]</span>
-<span id="cb148-18"><a href="#cb148-18" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">`Map.notMember`</span> m ]</span></code></pre></div>
+<div class="sourceCode" id="cb146"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a><span class="ot">memoizeMatch ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Affine</span></span>
+<span id="cb146-2"><a href="#cb146-2" aria-hidden="true" tabindex="-1"></a>memoizeMatch s <span class="ot">=</span> <span class="fu">lookup</span></span>
+<span id="cb146-3"><a href="#cb146-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> <span class="fu">lookup</span> i j <span class="ot">=</span> join <span class="op">$</span> LazyMap.lookup (i, j) cache</span>
+<span id="cb146-4"><a href="#cb146-4" aria-hidden="true" tabindex="-1"></a>          cache <span class="ot">=</span> LazyMap.fromList [ ((i, j), match (s <span class="op">Vector.!</span> i) (s <span class="op">Vector.!</span> j))</span>
+<span id="cb146-5"><a href="#cb146-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="op">|</span> i <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> Vector.length s <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb146-6"><a href="#cb146-6" aria-hidden="true" tabindex="-1"></a>                                   , j <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> Vector.length s <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb146-7"><a href="#cb146-7" aria-hidden="true" tabindex="-1"></a>                                   , i <span class="op">/=</span> j ]</span>
+<span id="cb146-8"><a href="#cb146-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb146-9"><a href="#cb146-9" aria-hidden="true" tabindex="-1"></a><span class="ot">buildMap ::</span> (<span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Affine</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span>)</span>
+<span id="cb146-10"><a href="#cb146-10" aria-hidden="true" tabindex="-1"></a>buildMap f n m</span>
+<span id="cb146-11"><a href="#cb146-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> Map.size m <span class="op">==</span> n <span class="ot">=</span> <span class="dt">Just</span> m</span>
+<span id="cb146-12"><a href="#cb146-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> asum matches <span class="op">&gt;&gt;=</span> insert <span class="op">&gt;&gt;=</span> buildMap f n</span>
+<span id="cb146-13"><a href="#cb146-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> insert (i, j, aff) <span class="ot">=</span> <span class="kw">do</span> { a <span class="ot">&lt;-</span> m <span class="op">Map.!?</span> i;</span>
+<span id="cb146-14"><a href="#cb146-14" aria-hidden="true" tabindex="-1"></a>                                    <span class="fu">return</span> <span class="op">$</span> Map.insert j (a <span class="op">&lt;&gt;</span> aff) m }</span>
+<span id="cb146-15"><a href="#cb146-15" aria-hidden="true" tabindex="-1"></a>          matches <span class="ot">=</span> [ (i, j,) <span class="op">&lt;$&gt;</span> f i j</span>
+<span id="cb146-16"><a href="#cb146-16" aria-hidden="true" tabindex="-1"></a>                    <span class="op">|</span> i <span class="ot">&lt;-</span> Map.keys m</span>
+<span id="cb146-17"><a href="#cb146-17" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">&lt;-</span> [<span class="dv">0</span><span class="op">..</span>(n <span class="op">-</span> <span class="dv">1</span>)]</span>
+<span id="cb146-18"><a href="#cb146-18" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">`Map.notMember`</span> m ]</span></code></pre></div>
 </div>
 <p>That was the hard bit. This code runs in about 15 seconds on my laptop.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
-<div class="sourceCode" id="cb149"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mergeScans ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Scan</span></span>
-<span id="cb149-2"><a href="#cb149-2" aria-hidden="true" tabindex="-1"></a>mergeScans s <span class="ot">=</span> Map.foldMapWithKey (\i a <span class="ot">-&gt;</span> Set.map (applyAffine a) (s <span class="op">Vector.!</span> i))</span>
-<span id="cb149-3"><a href="#cb149-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb149-4"><a href="#cb149-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb149-5"><a href="#cb149-5" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> Set.size <span class="op">.</span> mergeScans inp</span>
-<span id="cb149-6"><a href="#cb149-6" aria-hidden="true" tabindex="-1"></a>            <span class="op">&lt;$&gt;</span> buildMap (memoizeMatch inp) (Vector.length inp)</span>
-<span id="cb149-7"><a href="#cb149-7" aria-hidden="true" tabindex="-1"></a>                         (Map.singleton <span class="dv">0</span> <span class="fu">mempty</span>)</span>
-<span id="cb149-8"><a href="#cb149-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb149-9"><a href="#cb149-9" aria-hidden="true" tabindex="-1"></a><span class="ot">maxDist ::</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb149-10"><a href="#cb149-10" aria-hidden="true" tabindex="-1"></a>maxDist m <span class="ot">=</span> <span class="fu">maximum</span> [dist a b <span class="op">|</span> a <span class="ot">&lt;-</span> Map.elems m, b <span class="ot">&lt;-</span> Map.elems m]</span>
-<span id="cb149-11"><a href="#cb149-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> dist (<span class="dt">Affine</span> _ a) (<span class="dt">Affine</span> _ b) <span class="ot">=</span> <span class="fu">sum</span> (<span class="fu">abs</span> (a <span class="op">-</span> b))</span>
-<span id="cb149-12"><a href="#cb149-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb149-13"><a href="#cb149-13" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb149-14"><a href="#cb149-14" aria-hidden="true" tabindex="-1"></a>solutionB inp <span class="ot">=</span> maxDist</span>
-<span id="cb149-15"><a href="#cb149-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">&lt;$&gt;</span> buildMap (memoizeMatch inp) (Vector.length inp)</span>
-<span id="cb149-16"><a href="#cb149-16" aria-hidden="true" tabindex="-1"></a>                         (Map.singleton <span class="dv">0</span> <span class="fu">mempty</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb147"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb147-1"><a href="#cb147-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mergeScans ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Set</span> <span class="dt">Pt</span></span>
+<span id="cb147-2"><a href="#cb147-2" aria-hidden="true" tabindex="-1"></a>mergeScans s <span class="ot">=</span> Map.foldMapWithKey (\i a <span class="ot">-&gt;</span> Set.fromList <span class="op">$</span> <span class="fu">map</span> (applyAffine a) (s <span class="op">Vector.!</span> i))</span>
+<span id="cb147-3"><a href="#cb147-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb147-4"><a href="#cb147-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb147-5"><a href="#cb147-5" aria-hidden="true" tabindex="-1"></a>solutionA inp <span class="ot">=</span> Set.size <span class="op">.</span> mergeScans inp</span>
+<span id="cb147-6"><a href="#cb147-6" aria-hidden="true" tabindex="-1"></a>            <span class="op">&lt;$&gt;</span> buildMap (memoizeMatch inp) (Vector.length inp)</span>
+<span id="cb147-7"><a href="#cb147-7" aria-hidden="true" tabindex="-1"></a>                         (Map.singleton <span class="dv">0</span> <span class="fu">mempty</span>)</span>
+<span id="cb147-8"><a href="#cb147-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb147-9"><a href="#cb147-9" aria-hidden="true" tabindex="-1"></a><span class="ot">maxDist ::</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb147-10"><a href="#cb147-10" aria-hidden="true" tabindex="-1"></a>maxDist m <span class="ot">=</span> <span class="fu">maximum</span> [dist a b <span class="op">|</span> a <span class="ot">&lt;-</span> Map.elems m, b <span class="ot">&lt;-</span> Map.elems m]</span>
+<span id="cb147-11"><a href="#cb147-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> dist (<span class="dt">Affine</span> _ a) (<span class="dt">Affine</span> _ b) <span class="ot">=</span> <span class="fu">sum</span> (<span class="fu">abs</span> (a <span class="op">-</span> b))</span>
+<span id="cb147-12"><a href="#cb147-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb147-13"><a href="#cb147-13" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb147-14"><a href="#cb147-14" aria-hidden="true" tabindex="-1"></a>solutionB inp <span class="ot">=</span> maxDist</span>
+<span id="cb147-15"><a href="#cb147-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">&lt;$&gt;</span> buildMap (memoizeMatch inp) (Vector.length inp)</span>
+<span id="cb147-16"><a href="#cb147-16" aria-hidden="true" tabindex="-1"></a>                         (Map.singleton <span class="dv">0</span> <span class="fu">mempty</span>)</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-boiler-plate" class="level1">
 <h1>Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>
-<div class="sourceCode" id="cb150"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA</span>
-<span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb150-5"><a href="#cb150-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
+<div class="sourceCode" id="cb148"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb148-2"><a href="#cb148-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA</span>
+<span id="cb148-3"><a href="#cb148-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb148-4"><a href="#cb148-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb148-5"><a href="#cb148-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-output" class="level1">
@@ -2541,83 +2516,83 @@
 <p>RIO is missing easy functions for standard output, it’s a bit principled in that regard.</p>
 <div class="named-code-block">
 <p>file:app/Print.hs</p>
-<div class="sourceCode" id="cb151"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Print</span> <span class="kw">where</span></span>
-<span id="cb151-2"><a href="#cb151-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb151-3"><a href="#cb151-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb151-4"><a href="#cb151-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb151-5"><a href="#cb151-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (putStr)</span>
-<span id="cb151-6"><a href="#cb151-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
-<span id="cb151-7"><a href="#cb151-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb151-8"><a href="#cb151-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span><span class="ot"> ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
-<span id="cb151-9"><a href="#cb151-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span> <span class="ot">=</span> <span class="fu">putStr</span> <span class="op">.</span> Text.encodeUtf8</span>
-<span id="cb151-10"><a href="#cb151-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb151-11"><a href="#cb151-11" aria-hidden="true" tabindex="-1"></a><span class="ot">printLn ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
-<span id="cb151-12"><a href="#cb151-12" aria-hidden="true" tabindex="-1"></a>printLn <span class="ot">=</span> <span class="fu">print</span> <span class="op">.</span> (<span class="op">&lt;&gt;</span> <span class="st">&quot;\n&quot;</span>) </span>
-<span id="cb151-13"><a href="#cb151-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb151-14"><a href="#cb151-14" aria-hidden="true" tabindex="-1"></a><span class="ot">printCoords ::</span> <span class="dt">MonadIO</span> m <span class="ot">=&gt;</span> [<span class="dt">Ix2</span>] <span class="ot">-&gt;</span> m ()</span>
-<span id="cb151-15"><a href="#cb151-15" aria-hidden="true" tabindex="-1"></a>printCoords <span class="ot">=</span> <span class="fu">mapM_</span> (\(x <span class="op">:.</span> y) <span class="ot">-&gt;</span> printLn <span class="op">$</span> tshow x <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow y)</span></code></pre></div>
+<div class="sourceCode" id="cb149"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Print</span> <span class="kw">where</span></span>
+<span id="cb149-2"><a href="#cb149-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb149-3"><a href="#cb149-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb149-4"><a href="#cb149-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb149-5"><a href="#cb149-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (putStr)</span>
+<span id="cb149-6"><a href="#cb149-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
+<span id="cb149-7"><a href="#cb149-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb149-8"><a href="#cb149-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span><span class="ot"> ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
+<span id="cb149-9"><a href="#cb149-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span> <span class="ot">=</span> <span class="fu">putStr</span> <span class="op">.</span> Text.encodeUtf8</span>
+<span id="cb149-10"><a href="#cb149-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb149-11"><a href="#cb149-11" aria-hidden="true" tabindex="-1"></a><span class="ot">printLn ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
+<span id="cb149-12"><a href="#cb149-12" aria-hidden="true" tabindex="-1"></a>printLn <span class="ot">=</span> <span class="fu">print</span> <span class="op">.</span> (<span class="op">&lt;&gt;</span> <span class="st">&quot;\n&quot;</span>) </span>
+<span id="cb149-13"><a href="#cb149-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb149-14"><a href="#cb149-14" aria-hidden="true" tabindex="-1"></a><span class="ot">printCoords ::</span> <span class="dt">MonadIO</span> m <span class="ot">=&gt;</span> [<span class="dt">Ix2</span>] <span class="ot">-&gt;</span> m ()</span>
+<span id="cb149-15"><a href="#cb149-15" aria-hidden="true" tabindex="-1"></a>printCoords <span class="ot">=</span> <span class="fu">mapM_</span> (\(x <span class="op">:.</span> y) <span class="ot">-&gt;</span> printLn <span class="op">$</span> tshow x <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow y)</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-parsing" class="level1">
 <h1>Appendix: Parsing</h1>
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
-<div class="sourceCode" id="cb152"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
-<span id="cb152-2"><a href="#cb152-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
-<span id="cb152-3"><a href="#cb152-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit</span>
-<span id="cb152-4"><a href="#cb152-4" aria-hidden="true" tabindex="-1"></a>    , digitArray, dropUntilEol )</span>
-<span id="cb152-5"><a href="#cb152-5" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
-<span id="cb152-6"><a href="#cb152-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-7"><a href="#cb152-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb152-8"><a href="#cb152-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord, <span class="dt">GeneralCategory</span>(<span class="dt">LineSeparator</span>), generalCategory)</span>
-<span id="cb152-9"><a href="#cb152-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb152-10"><a href="#cb152-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb152-11"><a href="#cb152-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-12"><a href="#cb152-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb152-13"><a href="#cb152-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
-<span id="cb152-14"><a href="#cb152-14" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>), takeWhileP )</span>
-<span id="cb152-15"><a href="#cb152-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
-<span id="cb152-16"><a href="#cb152-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
-<span id="cb152-17"><a href="#cb152-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb152-18"><a href="#cb152-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-19"><a href="#cb152-19" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb152-20"><a href="#cb152-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-21"><a href="#cb152-21" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
-<span id="cb152-22"><a href="#cb152-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-23"><a href="#cb152-23" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb152-24"><a href="#cb152-24" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
-<span id="cb152-25"><a href="#cb152-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-26"><a href="#cb152-26" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb152-27"><a href="#cb152-27" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
-<span id="cb152-28"><a href="#cb152-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
-<span id="cb152-29"><a href="#cb152-29" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
-<span id="cb152-30"><a href="#cb152-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-31"><a href="#cb152-31" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
-<span id="cb152-32"><a href="#cb152-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb152-33"><a href="#cb152-33" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb152-34"><a href="#cb152-34" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb152-35"><a href="#cb152-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb152-36"><a href="#cb152-36" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb152-37"><a href="#cb152-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-38"><a href="#cb152-38" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb152-39"><a href="#cb152-39" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb152-40"><a href="#cb152-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-41"><a href="#cb152-41" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb152-42"><a href="#cb152-42" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb152-43"><a href="#cb152-43" aria-hidden="true" tabindex="-1"></a>    sign_ <span class="ot">&lt;-</span> <span class="fu">maybe</span> <span class="dv">1</span> (<span class="fu">const</span> (<span class="op">-</span><span class="dv">1</span>)) <span class="op">&lt;$&gt;</span> optional (char <span class="ch">&#39;-&#39;</span>)</span>
-<span id="cb152-44"><a href="#cb152-44" aria-hidden="true" tabindex="-1"></a>    abs_  <span class="ot">&lt;-</span> lexeme L.decimal</span>
-<span id="cb152-45"><a href="#cb152-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (sign_ <span class="op">*</span> abs_)</span>
-<span id="cb152-46"><a href="#cb152-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-47"><a href="#cb152-47" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb152-48"><a href="#cb152-48" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
-<span id="cb152-49"><a href="#cb152-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span>
-<span id="cb152-50"><a href="#cb152-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-51"><a href="#cb152-51" aria-hidden="true" tabindex="-1"></a><span class="ot">dropUntilEol ::</span> <span class="dt">Parser</span> ()</span>
-<span id="cb152-52"><a href="#cb152-52" aria-hidden="true" tabindex="-1"></a>dropUntilEol <span class="ot">=</span> void <span class="op">$</span> takeWhileP (<span class="dt">Just</span> <span class="st">&quot;reading to eol&quot;</span>)</span>
-<span id="cb152-53"><a href="#cb152-53" aria-hidden="true" tabindex="-1"></a>                                 (<span class="op">/=</span> <span class="ch">&#39;\n&#39;</span>)</span>
-<span id="cb152-54"><a href="#cb152-54" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&gt;&gt;</span> eol</span>
-<span id="cb152-55"><a href="#cb152-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb152-56"><a href="#cb152-56" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb150"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
+<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
+<span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit</span>
+<span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a>    , digitArray, dropUntilEol )</span>
+<span id="cb150-5"><a href="#cb150-5" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb150-6"><a href="#cb150-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-7"><a href="#cb150-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb150-8"><a href="#cb150-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord, <span class="dt">GeneralCategory</span>(<span class="dt">LineSeparator</span>), generalCategory)</span>
+<span id="cb150-9"><a href="#cb150-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb150-10"><a href="#cb150-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb150-11"><a href="#cb150-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-12"><a href="#cb150-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb150-13"><a href="#cb150-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
+<span id="cb150-14"><a href="#cb150-14" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>), takeWhileP )</span>
+<span id="cb150-15"><a href="#cb150-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb150-16"><a href="#cb150-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
+<span id="cb150-17"><a href="#cb150-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb150-18"><a href="#cb150-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-19"><a href="#cb150-19" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb150-20"><a href="#cb150-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-21"><a href="#cb150-21" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
+<span id="cb150-22"><a href="#cb150-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-23"><a href="#cb150-23" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb150-24"><a href="#cb150-24" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb150-25"><a href="#cb150-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-26"><a href="#cb150-26" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb150-27"><a href="#cb150-27" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
+<span id="cb150-28"><a href="#cb150-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
+<span id="cb150-29"><a href="#cb150-29" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
+<span id="cb150-30"><a href="#cb150-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-31"><a href="#cb150-31" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb150-32"><a href="#cb150-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb150-33"><a href="#cb150-33" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb150-34"><a href="#cb150-34" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb150-35"><a href="#cb150-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb150-36"><a href="#cb150-36" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb150-37"><a href="#cb150-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-38"><a href="#cb150-38" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb150-39"><a href="#cb150-39" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb150-40"><a href="#cb150-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-41"><a href="#cb150-41" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb150-42"><a href="#cb150-42" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb150-43"><a href="#cb150-43" aria-hidden="true" tabindex="-1"></a>    sign_ <span class="ot">&lt;-</span> <span class="fu">maybe</span> <span class="dv">1</span> (<span class="fu">const</span> (<span class="op">-</span><span class="dv">1</span>)) <span class="op">&lt;$&gt;</span> optional (char <span class="ch">&#39;-&#39;</span>)</span>
+<span id="cb150-44"><a href="#cb150-44" aria-hidden="true" tabindex="-1"></a>    abs_  <span class="ot">&lt;-</span> lexeme L.decimal</span>
+<span id="cb150-45"><a href="#cb150-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (sign_ <span class="op">*</span> abs_)</span>
+<span id="cb150-46"><a href="#cb150-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-47"><a href="#cb150-47" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb150-48"><a href="#cb150-48" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
+<span id="cb150-49"><a href="#cb150-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span>
+<span id="cb150-50"><a href="#cb150-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-51"><a href="#cb150-51" aria-hidden="true" tabindex="-1"></a><span class="ot">dropUntilEol ::</span> <span class="dt">Parser</span> ()</span>
+<span id="cb150-52"><a href="#cb150-52" aria-hidden="true" tabindex="-1"></a>dropUntilEol <span class="ot">=</span> void <span class="op">$</span> takeWhileP (<span class="dt">Just</span> <span class="st">&quot;reading to eol&quot;</span>)</span>
+<span id="cb150-53"><a href="#cb150-53" aria-hidden="true" tabindex="-1"></a>                                 (<span class="op">/=</span> <span class="ch">&#39;\n&#39;</span>)</span>
+<span id="cb150-54"><a href="#cb150-54" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&gt;&gt;</span> eol</span>
+<span id="cb150-55"><a href="#cb150-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-56"><a href="#cb150-56" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 </section>
         </div>
