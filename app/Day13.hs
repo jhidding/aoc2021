@@ -9,6 +9,7 @@ import qualified RIO.Text as Text
 import qualified RIO.Set as Set
 import Parsing (readInputParsing, Parser, string, sepEndBy1, eol, integer, char)
 import Data.Massiv.Array (Ix2(..))
+import Print ( printLn, printCoords )
 
 -- ~\~ begin <<lit/day13.md|parser-day-13>>[0]
 data Input = Input
@@ -59,15 +60,6 @@ foldAllFolds Input{..} = Set.toList $ foldl' makeFold
     where makeFold s i = Set.map (foldTransform i) s
 -- ~\~ end
 -- ~\~ begin <<lit/day13.md|solution-day-13>>[2]
-print :: (MonadIO m) => Text -> m ()
-print = putStr . Text.encodeUtf8
-
-printLn :: (MonadIO m) => Text -> m ()
-printLn = print . (<> "\n") 
-
-printCoords :: MonadIO m => [Ix2] -> m ()
-printCoords = mapM_ (\(x :. y) -> printLn $ tshow x <> " " <> tshow y)
-
 runA :: (HasLogFunc env) => RIO env ()
 runA = do
     inp <- readInput
