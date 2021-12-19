@@ -14,17 +14,17 @@ runB = readInput >>= logInfo . display . tshow . solutionB
 module Parsing
     ( Parser, hspace, string, char, readInputParsing, lexeme
     , integer, eol, sepEndBy1, sepBy1, failOnException, digit
-    , digitArray )
+    , digitArray, dropUntilEol )
 where
 
 import RIO
-import RIO.Char (ord)
+import RIO.Char (ord, GeneralCategory(LineSeparator), generalCategory)
 import qualified RIO.Set as Set
 import qualified RIO.Text as Text
 
 import Text.Megaparsec
     ( ParseErrorBundle, Parsec, parse, errorBundlePretty, sepEndBy1
-    , sepBy1, fancyFailure, ErrorFancy(..) )
+    , sepBy1, fancyFailure, ErrorFancy(..), takeWhileP )
 import Text.Megaparsec.Char (hspace, string, char, eol)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
@@ -60,6 +60,11 @@ integer = do
 digit :: Parser Int
 digit = toValue <$> C.digitChar
     where toValue c = ord c - ord '0'
+
+dropUntilEol :: Parser ()
+dropUntilEol = void $ takeWhileP (Just "reading to eol")
+                                 (/= '\n')
+                    >> eol
 
 <<digit-array-parser>>
 ```

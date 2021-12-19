@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day19.hs
--- ~\~ begin <<lit/day19.md|app/Day19.hs>>[0]
+# Day 19: Beacon Scanner
+
+``` {.haskell file=app/Day19.hs}
 module Day19 where
 
 import RIO hiding (try)
@@ -35,11 +36,5 @@ solutionB :: [Scan] -> Int
 solutionB = length
 
 
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+<<run-solutions>>
+```
