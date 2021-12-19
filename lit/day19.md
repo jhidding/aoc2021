@@ -16,7 +16,7 @@ import qualified Data.Vector as Vector
 import Parsing (Parser, readInputParsing, string, integer, char, eol, sepEndBy1, dropUntilEol)
 import Text.Megaparsec (try)
 
-import Linear.Matrix ( M33, (!*), (!!*), (!*!), transpose )
+import Linear.Matrix ( M33, (!*), (!!*), (!*!), transpose, det33 )
 import Linear.V3 ( V3(..), _x, _y, _z )
 import Linear.Vector ( negated )
 
@@ -59,12 +59,13 @@ readInput :: (HasLogFunc env) => RIO env (Vector Scan)
 readInput = readInputParsing "data/day19.txt" (Vector.fromList <$> inputP `sepEndBy1` eol)
 ```
 
-To find if two scans have matching points, I try all transpositions and reflections of coordinates. This may not be the most compact way of writing these down, but it works.
+To find if two scans have matching points, I try all transpositions and reflections of coordinates. This may not be the most compact way of writing these down, but it works. At first I didn't read well enough and did too many transformations. I fixed it by filtering on ones that have determinant of one.
 
 ``` {.haskell #solution-day19}
 allTransforms :: [Transform]
 allTransforms = [ p * s | p <- permutations (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
-                        , s <- signatures ]
+                        , s <- signatures
+                        , det33 (p * s) == 1 ]
     where
           permutations a b c = [ V3 a b c, V3 a c b, V3 b a c
                                , V3 b c a, V3 c a b, V3 c b a ]
@@ -75,6 +76,8 @@ allTransforms = [ p * s | p <- permutations (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
 ```
 
 To see if two scans match (in their current orientation), I have to translate one by some coordinate and see if more than 12 points line up. To get this with decent speed, I do this first along every axis, and then try combinations of those. I tried doing this with `IntSet` first, but the problem is then, that values can appear multiple times. I've thought about using `MultiSet` from our previous problems. We are looking at lists of 25 numbers each, so I expect that a normal `[Int]` is fine. Still need an `intersection` function though. This assumes that input lists are sorted.
+
+I considered comparing relative coordinates, but rejected this because it would mean comparing $N^2$ numbers. My scanning method is potentially fast, with emphasis on *potentially*.
 
 ``` {.haskell #solution-day19}
 intersect :: (Ord a) => [a] -> [a] -> [a]
@@ -140,7 +143,7 @@ buildMap f n m
                     , j `Map.notMember` m ]
 ```
 
-That was the hard bit. This code runs in about 30 seconds on my laptop.
+That was the hard bit. This code runs in about 15 seconds on my laptop.
 
 ``` {.haskell #solution-day19}
 mergeScans :: Vector Scan -> Map Int Affine -> Scan

@@ -2,7 +2,7 @@
 
 ``` {.haskell #run-solutions}
 runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
+runA = readInput >>= logInfo . display . tshow . solutionA
 
 runB :: (HasLogFunc env) => RIO env ()
 runB = readInput >>= logInfo . display . tshow . solutionB

@@ -2292,8 +2292,13 @@
 <p>We are told that numbers are added by creating a new pair and then reducing.</p>
 <div class="named-code-block">
 <p>«solution-day18»</p>
-<div class="sourceCode" id="cb134"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(&lt;+&gt;) ::</span> <span class="dt">Number</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Number</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Number</span> <span class="dt">Int</span></span>
-<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a>a <span class="op">&lt;+&gt;</span> b <span class="ot">=</span> reduce <span class="op">$</span> <span class="dt">Snailfish</span> a b</span></code></pre></div>
+<div class="sourceCode" id="cb134"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Semigroup</span> (<span class="dt">Number</span> <span class="dt">Int</span>) <span class="kw">where</span></span>
+<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Regular</span> <span class="dv">0</span> <span class="op">&lt;&gt;</span> b <span class="ot">=</span> b</span>
+<span id="cb134-3"><a href="#cb134-3" aria-hidden="true" tabindex="-1"></a>    a <span class="op">&lt;&gt;</span> <span class="dt">Regular</span> <span class="dv">0</span> <span class="ot">=</span> a</span>
+<span id="cb134-4"><a href="#cb134-4" aria-hidden="true" tabindex="-1"></a>    a <span class="op">&lt;&gt;</span> b <span class="ot">=</span> reduce <span class="op">$</span> <span class="dt">Snailfish</span> a b</span>
+<span id="cb134-5"><a href="#cb134-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb134-6"><a href="#cb134-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monoid</span> (<span class="dt">Number</span> <span class="dt">Int</span>) <span class="kw">where</span></span>
+<span id="cb134-7"><a href="#cb134-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">Regular</span> <span class="dv">0</span></span></code></pre></div>
 </div>
 <p>To reduce a number, we either explode or split. It took me a long time to understand that we don’t split unless there’s nothing to explode.</p>
 <div class="named-code-block">
@@ -2355,10 +2360,10 @@
 <span id="cb139-3"><a href="#cb139-3" aria-hidden="true" tabindex="-1"></a>magnitude (<span class="dt">Snailfish</span> a b) <span class="ot">=</span> magnitude a <span class="op">*</span> <span class="dv">3</span> <span class="op">+</span> magnitude b <span class="op">*</span> <span class="dv">2</span></span>
 <span id="cb139-4"><a href="#cb139-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb139-5"><a href="#cb139-5" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> [<span class="dt">Number</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb139-6"><a href="#cb139-6" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> magnitude <span class="op">.</span> foldl1&#39; (<span class="op">&lt;+&gt;</span>)</span>
+<span id="cb139-6"><a href="#cb139-6" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> magnitude <span class="op">.</span> fold</span>
 <span id="cb139-7"><a href="#cb139-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb139-8"><a href="#cb139-8" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> [<span class="dt">Number</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb139-9"><a href="#cb139-9" aria-hidden="true" tabindex="-1"></a>solutionB inp <span class="ot">=</span> <span class="fu">maximum</span> [ magnitude (a <span class="op">&lt;+&gt;</span> b) </span>
+<span id="cb139-9"><a href="#cb139-9" aria-hidden="true" tabindex="-1"></a>solutionB inp <span class="ot">=</span> <span class="fu">maximum</span> [ magnitude (a <span class="op">&lt;&gt;</span> b)</span>
 <span id="cb139-10"><a href="#cb139-10" aria-hidden="true" tabindex="-1"></a>                        <span class="op">|</span> a <span class="ot">&lt;-</span> inp, b <span class="ot">&lt;-</span> inp, a <span class="op">/=</span> b]</span></code></pre></div>
 </div>
 </section>
@@ -2381,7 +2386,7 @@
 <span id="cb140-12"><a href="#cb140-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span> (<span class="dt">Parser</span>, readInputParsing, string, integer, char, eol, sepEndBy1, dropUntilEol)</span>
 <span id="cb140-13"><a href="#cb140-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span> (try)</span>
 <span id="cb140-14"><a href="#cb140-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb140-15"><a href="#cb140-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.Matrix</span> ( <span class="dt">M33</span>, (!*), (!!*), (!*!), transpose )</span>
+<span id="cb140-15"><a href="#cb140-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.Matrix</span> ( <span class="dt">M33</span>, (!*), (!!*), (!*!), transpose, det33 )</span>
 <span id="cb140-16"><a href="#cb140-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V3</span> ( <span class="dt">V3</span>(..), _x, _y, _z )</span>
 <span id="cb140-17"><a href="#cb140-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.Vector</span> ( negated )</span>
 <span id="cb140-18"><a href="#cb140-18" aria-hidden="true" tabindex="-1"></a></span>
@@ -2422,21 +2427,23 @@
 <span id="cb142-5"><a href="#cb142-5" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env (<span class="dt">Vector</span> <span class="dt">Scan</span>)</span>
 <span id="cb142-6"><a href="#cb142-6" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day19.txt&quot;</span> (Vector.fromList <span class="op">&lt;$&gt;</span> inputP <span class="ot">`sepEndBy1`</span> eol)</span></code></pre></div>
 </div>
-<p>To find if two scans have matching points, I try all transpositions and reflections of coordinates. This may not be the most compact way of writing these down, but it works.</p>
+<p>To find if two scans have matching points, I try all transpositions and reflections of coordinates. This may not be the most compact way of writing these down, but it works. At first I didn’t read well enough and did too many transformations. I fixed it by filtering on ones that have determinant of one.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
 <div class="sourceCode" id="cb143"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="ot">allTransforms ::</span> [<span class="dt">Transform</span>]</span>
 <span id="cb143-2"><a href="#cb143-2" aria-hidden="true" tabindex="-1"></a>allTransforms <span class="ot">=</span> [ p <span class="op">*</span> s <span class="op">|</span> p <span class="ot">&lt;-</span> permutations (<span class="dt">V3</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span>) (<span class="dt">V3</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span>) (<span class="dt">V3</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span>)</span>
-<span id="cb143-3"><a href="#cb143-3" aria-hidden="true" tabindex="-1"></a>                        , s <span class="ot">&lt;-</span> signatures ]</span>
-<span id="cb143-4"><a href="#cb143-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
-<span id="cb143-5"><a href="#cb143-5" aria-hidden="true" tabindex="-1"></a>          permutations a b c <span class="ot">=</span> [ <span class="dt">V3</span> a b c, <span class="dt">V3</span> a c b, <span class="dt">V3</span> b a c</span>
-<span id="cb143-6"><a href="#cb143-6" aria-hidden="true" tabindex="-1"></a>                               , <span class="dt">V3</span> b c a, <span class="dt">V3</span> c a b, <span class="dt">V3</span> c b a ]</span>
-<span id="cb143-7"><a href="#cb143-7" aria-hidden="true" tabindex="-1"></a>          signatures <span class="ot">=</span> [ <span class="dt">V3</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>,       <span class="dt">V3</span> <span class="dv">1</span> <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb143-8"><a href="#cb143-8" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span>,    <span class="dt">V3</span> <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb143-9"><a href="#cb143-9" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span> <span class="dv">1</span>,    <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb143-10"><a href="#cb143-10" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span>, <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) ]</span></code></pre></div>
+<span id="cb143-3"><a href="#cb143-3" aria-hidden="true" tabindex="-1"></a>                        , s <span class="ot">&lt;-</span> signatures</span>
+<span id="cb143-4"><a href="#cb143-4" aria-hidden="true" tabindex="-1"></a>                        , det33 (p <span class="op">*</span> s) <span class="op">==</span> <span class="dv">1</span> ]</span>
+<span id="cb143-5"><a href="#cb143-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb143-6"><a href="#cb143-6" aria-hidden="true" tabindex="-1"></a>          permutations a b c <span class="ot">=</span> [ <span class="dt">V3</span> a b c, <span class="dt">V3</span> a c b, <span class="dt">V3</span> b a c</span>
+<span id="cb143-7"><a href="#cb143-7" aria-hidden="true" tabindex="-1"></a>                               , <span class="dt">V3</span> b c a, <span class="dt">V3</span> c a b, <span class="dt">V3</span> c b a ]</span>
+<span id="cb143-8"><a href="#cb143-8" aria-hidden="true" tabindex="-1"></a>          signatures <span class="ot">=</span> [ <span class="dt">V3</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>,       <span class="dt">V3</span> <span class="dv">1</span> <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb143-9"><a href="#cb143-9" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span>,    <span class="dt">V3</span> <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb143-10"><a href="#cb143-10" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span> <span class="dv">1</span>,    <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span> (<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb143-11"><a href="#cb143-11" aria-hidden="true" tabindex="-1"></a>                       , <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) <span class="dv">1</span>, <span class="dt">V3</span> (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">1</span>) ]</span></code></pre></div>
 </div>
 <p>To see if two scans match (in their current orientation), I have to translate one by some coordinate and see if more than 12 points line up. To get this with decent speed, I do this first along every axis, and then try combinations of those. I tried doing this with <code>IntSet</code> first, but the problem is then, that values can appear multiple times. I’ve thought about using <code>MultiSet</code> from our previous problems. We are looking at lists of 25 numbers each, so I expect that a normal <code>[Int]</code> is fine. Still need an <code>intersection</code> function though. This assumes that input lists are sorted.</p>
+<p>I considered comparing relative coordinates, but rejected this because it would mean comparing <span class="math inline">\(N^2\)</span> numbers. My scanning method is potentially fast, with emphasis on <em>potentially</em>.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
 <div class="sourceCode" id="cb144"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="ot">intersect ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
@@ -2497,7 +2504,7 @@
 <span id="cb148-17"><a href="#cb148-17" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">&lt;-</span> [<span class="dv">0</span><span class="op">..</span>(n <span class="op">-</span> <span class="dv">1</span>)]</span>
 <span id="cb148-18"><a href="#cb148-18" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">`Map.notMember`</span> m ]</span></code></pre></div>
 </div>
-<p>That was the hard bit. This code runs in about 30 seconds on my laptop.</p>
+<p>That was the hard bit. This code runs in about 15 seconds on my laptop.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
 <div class="sourceCode" id="cb149"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mergeScans ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Scan</span></span>
@@ -2523,7 +2530,7 @@
 <div class="named-code-block">
 <p>«run-solutions»</p>
 <div class="sourceCode" id="cb150"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA </span>
+<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA</span>
 <span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
 <span id="cb150-5"><a href="#cb150-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>

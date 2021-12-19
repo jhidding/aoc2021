@@ -38,8 +38,13 @@ readInput = readInputParsing "data/day18.txt" (snailfishP `sepEndBy1` eol)
 We are told that numbers are added by creating a new pair and then reducing.
 
 ``` {.haskell #solution-day18}
-(<+>) :: Number Int -> Number Int -> Number Int
-a <+> b = reduce $ Snailfish a b
+instance Semigroup (Number Int) where
+    Regular 0 <> b = b
+    a <> Regular 0 = a
+    a <> b = reduce $ Snailfish a b
+
+instance Monoid (Number Int) where
+    mempty = Regular 0
 ```
 
 To reduce a number, we either explode or split. It took me a long time to understand that we don't split unless there's nothing to explode.
@@ -107,9 +112,9 @@ magnitude (Regular x) = x
 magnitude (Snailfish a b) = magnitude a * 3 + magnitude b * 2
 
 solutionA :: [Number Int] -> Int
-solutionA = magnitude . foldl1' (<+>)
+solutionA = magnitude . fold
 
 solutionB :: [Number Int] -> Int
-solutionB inp = maximum [ magnitude (a <+> b) 
+solutionB inp = maximum [ magnitude (a <> b)
                         | a <- inp, b <- inp, a /= b]
 ```

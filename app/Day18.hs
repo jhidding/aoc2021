@@ -26,8 +26,13 @@ readInput :: (HasLogFunc env) => RIO env [Number Int]
 readInput = readInputParsing "data/day18.txt" (snailfishP `sepEndBy1` eol)
 -- ~\~ end
 -- ~\~ begin <<lit/day18.md|solution-day18>>[0]
-(<+>) :: Number Int -> Number Int -> Number Int
-a <+> b = reduce $ Snailfish a b
+instance Semigroup (Number Int) where
+    Regular 0 <> b = b
+    a <> Regular 0 = a
+    a <> b = reduce $ Snailfish a b
+
+instance Monoid (Number Int) where
+    mempty = Regular 0
 -- ~\~ end
 -- ~\~ begin <<lit/day18.md|solution-day18>>[1]
 reduce :: Number Int -> Number Int
@@ -78,15 +83,15 @@ magnitude (Regular x) = x
 magnitude (Snailfish a b) = magnitude a * 3 + magnitude b * 2
 
 solutionA :: [Number Int] -> Int
-solutionA = magnitude . foldl1' (<+>)
+solutionA = magnitude . fold
 
 solutionB :: [Number Int] -> Int
-solutionB inp = maximum [ magnitude (a <+> b) 
+solutionB inp = maximum [ magnitude (a <> b)
                         | a <- inp, b <- inp, a /= b]
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
+runA = readInput >>= logInfo . display . tshow . solutionA
 
 runB :: (HasLogFunc env) => RIO env ()
 runB = readInput >>= logInfo . display . tshow . solutionB

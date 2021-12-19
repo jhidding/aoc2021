@@ -97,7 +97,7 @@ solutionB = length . findRoutesB . routing
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
+runA = readInput >>= logInfo . display . tshow . solutionA
 
 runB :: (HasLogFunc env) => RIO env ()
 runB = readInput >>= logInfo . display . tshow . solutionB

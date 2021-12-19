@@ -14,7 +14,7 @@ import qualified Data.Vector as Vector
 import Parsing (Parser, readInputParsing, string, integer, char, eol, sepEndBy1, dropUntilEol)
 import Text.Megaparsec (try)
 
-import Linear.Matrix ( M33, (!*), (!!*), (!*!), transpose )
+import Linear.Matrix ( M33, (!*), (!!*), (!*!), transpose, det33 )
 import Linear.V3 ( V3(..), _x, _y, _z )
 import Linear.Vector ( negated )
 
@@ -50,7 +50,8 @@ readInput = readInputParsing "data/day19.txt" (Vector.fromList <$> inputP `sepEn
 -- ~\~ begin <<lit/day19.md|solution-day19>>[0]
 allTransforms :: [Transform]
 allTransforms = [ p * s | p <- permutations (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
-                        , s <- signatures ]
+                        , s <- signatures
+                        , det33 (p * s) == 1 ]
     where
           permutations a b c = [ V3 a b c, V3 a c b, V3 b a c
                                , V3 b c a, V3 c a b, V3 c b a ]
@@ -130,7 +131,7 @@ solutionB inp = maxDist
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA 
+runA = readInput >>= logInfo . display . tshow . solutionA
 
 runB :: (HasLogFunc env) => RIO env ()
 runB = readInput >>= logInfo . display . tshow . solutionB
