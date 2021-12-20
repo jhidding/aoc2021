@@ -115,7 +115,7 @@ buildMap f n m
                     , j `Map.notMember` m ]
 ```
 
-That was the hard bit. This code runs in about 15 seconds on my laptop.
+That was the hard bit. This code runs in about a second on my laptop.
 
 ``` {.haskell #solution-day19}
 mergeScans :: Vector Scan -> Map Int Affine -> Set Pt

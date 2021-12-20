@@ -2479,7 +2479,7 @@
 <span id="cb146-17"><a href="#cb146-17" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">&lt;-</span> [<span class="dv">0</span><span class="op">..</span>(n <span class="op">-</span> <span class="dv">1</span>)]</span>
 <span id="cb146-18"><a href="#cb146-18" aria-hidden="true" tabindex="-1"></a>                    , j <span class="ot">`Map.notMember`</span> m ]</span></code></pre></div>
 </div>
-<p>That was the hard bit. This code runs in about 15 seconds on my laptop.</p>
+<p>That was the hard bit. This code runs in about a second on my laptop.</p>
 <div class="named-code-block">
 <p>«solution-day19»</p>
 <div class="sourceCode" id="cb147"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb147-1"><a href="#cb147-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mergeScans ::</span> <span class="dt">Vector</span> <span class="dt">Scan</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Affine</span> <span class="ot">-&gt;</span> <span class="dt">Set</span> <span class="dt">Pt</span></span>
