@@ -1,5 +1,7 @@
--- ~\~ language=Haskell filename=app/Day20.hs
--- ~\~ begin <<lit/day20.md|app/Day20.hs>>[0]
+# Day 20: Trench Map
+It's game of life time!
+
+``` {.haskell file=app/Day20.hs}
 module Day20 where
 
 import RIO
@@ -10,7 +12,12 @@ import qualified Data.Massiv.Array as A
 
 import Parsing (Parser, readInputParsing, char, failOnException, sepEndBy1, eol)
 
--- ~\~ begin <<lit/day20.md|parser-day20>>[0]
+<<parser-day20>>
+<<solution-day20>>
+<<run-solutions>>
+```
+
+``` {.haskell #parser-day20}
 type Array1 a = A.Array U Ix1 a
 type Array2 a = A.Array U Ix2 a
 type Input = (Array1 Int, Array2 Int)
@@ -27,8 +34,11 @@ gridP = failOnException . A.fromListsM A.Seq =<< (lineP `sepEndBy1` eol)
 readInput :: (HasLogFunc env) => RIO env Input
 readInput = readInputParsing "data/day20.txt"
             ((,) <$> rulesP <* eol <*> gridP)
--- ~\~ end
--- ~\~ begin <<lit/day20.md|solution-day20>>[0]
+```
+
+Little comment needed. Take care with the value at infinity!
+
+``` {.haskell #solution-day20}
 patch :: [Ix2]
 patch = [i :. j | i <- [(-1)..1], j <- [(-1)..1]]
 
@@ -57,12 +67,6 @@ solutionA (rules, src) = A.sum $ fst $ step' $ step' (src, 0)
 
 solutionB :: Input -> Int
 solutionB (rules, src) = A.sum $ fst $ (!! 50) $ iterate (step rules) (src, 0)
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA
+```
 
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+
