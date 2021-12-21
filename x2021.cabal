@@ -56,7 +56,8 @@ executable x2021
                     , Parsing.Binary
                     , Dijkstra
                     , Print
-
+                    , IntDist
+                    , Tally
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:   base >=4.14 && <5
@@ -73,6 +74,7 @@ executable x2021
                    , pqueue
                    , bitstream
                    , linear
+                   , microlens-platform
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions:  NoImplicitPrelude OverloadedStrings RecordWildCards NamedFieldPuns

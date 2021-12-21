@@ -24,4 +24,5 @@ cabal.project.local~
 
 output
 build
+.*.swp
 

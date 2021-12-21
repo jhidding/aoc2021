@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day21.hs
--- ~\~ begin <<lit/day21.md|app/Day21.hs>>[0]
+# Day 21: Dirac Dice
+
+``` {.haskell file=app/Day21.hs}
 module Day21 where
 
 import RIO
@@ -124,11 +125,16 @@ runGameB (p1, p2) = execState (gameStateB play)
     $ GameData 0 (PlayerData p1 0) (PlayerData p2 0)
 
 solutionB = runGameB
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA
+<<run-solutions>>
+```
 
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+``` {.haskell #tally}
+instance (Integral n) => Num (Tally n) where
+    (+) = cliftA2 (+)
+    (-) = cliftA2 (-)
+    (*) = cliftA2 (*)
+    negate = cmap negate
+    abs = cmap abs
+    fromInteger = singleton . fromInteger
+    signum = cmap signum
+```

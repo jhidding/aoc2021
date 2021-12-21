@@ -11,7 +11,7 @@ import Parsing ( Parser, readInputParsing, sepEndBy1
                , lexeme, char, integer)
 import RIO.Map (Map, (!?))
 import qualified RIO.Map as Map
-import Data.Constraint (Constraint)
+<<imports-day-6>>
 
 <<parser-day-6>>
 <<solution-day-6>>
@@ -56,14 +56,14 @@ The problem is that this solution doesn't scale very well. To solve this more ef
 
 For tallying the amount of lanternfish in each state, I like to use a `Map Int Int`. 
 
-``` {.haskell #solution-day-6}
-newtype Tally a = Tally { tallyMap :: Map a Int }
+``` {.haskell #tally}
+newtype Tally a = Tally { tallyMap :: Map a Integer }
     deriving (Show)
 ```
 
 Now we can implement `Semigroup` and `Monoid`:
 
-``` {.haskell #solution-day-6}
+``` {.haskell #tally}
 instance (Ord a) => Semigroup (Tally a) where
     Tally a <> Tally b = Tally $ Map.unionWith (+) a b
 
@@ -100,7 +100,7 @@ But this comes with another problem: our intended container `Tally` can never be
 
 We have to reimplement the `Functor > Applicative > Monad` stack.
 
-``` {.haskell #solution-day-6}
+``` {.haskell #tally}
 class CFunctor f where
     type ElemCt f a :: Constraint
     cmap :: (ElemCt f a, ElemCt f b) => (a -> b) -> f a -> f b
@@ -113,7 +113,7 @@ class CFunctor f => CApplicative f where
 
 It is already impossible to implement the constraint version of `<*>` from the type signature. The default implementation of `cliftA2 id` assumes `ElemCt f (b -> c)` which we can never guarantee. There is no problem however defining `CMonad`.
 
-``` {.haskell #solution-day-6}
+``` {.haskell #tally}
 class CApplicative f => CMonad f where
     cbind :: (ElemCt f a, ElemCt f b) => (a -> f b) -> f a -> f b
 ```
@@ -133,14 +133,14 @@ step = cbind rules
 ### Implementation for List
 There is the little annoyance that we need to be able to signal an `Empty` constraint:
 
-``` {.haskell #solution-day-6}
+``` {.haskell #tally}
 class EmptyCt a
 instance EmptyCt a
 ```
 
 We now need to implement `CMonad` on lists and we should have our first naive implementation back in working order.
 
-``` {.haskell #solution-day-6}
+``` {.haskell #tally}
 instance CFunctor [] where
     type ElemCt [] a = EmptyCt a
     cmap = fmap
@@ -157,12 +157,12 @@ This even means we could have `do` notation on constraint monads without loss of
 
 ### Implementation for `Tally`
 
-``` {.haskell #solution-day-6}
+``` {.haskell #tally}
 instance CFunctor Tally where
     type ElemCt Tally a = Ord a
-    cmap f (Tally a) = Tally (Map.mapKeys f a)
+    cmap f (Tally a) = Map.foldMapWithKey (\k v -> Tally (Map.singleton (f k) v)) a
 
-multiply :: Tally a -> Int -> Tally a
+multiply :: Tally a -> Integer -> Tally a
 multiply (Tally a) n = Tally (Map.map (* n) a)
 
 instance CApplicative Tally where
@@ -176,14 +176,37 @@ instance CMonad Tally where
 
 Notice that the implementation of `cliftA2` is as if the elements were all stored in a list. This is motivated by the linear property that `(f <*> a) <> (f <*> b) == f <*> (a <> b)`. We don't need `cliftA2` in our problem, but I included it here for completeness.
 
+``` {.haskell #tally}
+size :: Tally a -> Integer
+size (Tally a) = sum $ Map.elems a
+
+singleton :: Ord a => a -> Tally a
+singleton = cpure
+
+fromList :: Ord a => [a] -> Tally a
+fromList = foldMap cpure
+
+distinct :: Ord a => Tally a -> [a]
+distinct (Tally a) = Map.keys a
+```
+
+``` {.haskell file=app/Tally.hs}
+module Tally where
+
+import RIO
+import qualified RIO.Map as Map
+import Data.Constraint (Constraint)
+
+<<tally>>
+```
+
+``` {.haskell #imports-day-6}
+import Tally (Tally, CFunctor(..), CApplicative(..), CMonad(..), ElemCt)
+import qualified Tally
+```
+
 ``` {.haskell #solution-day-6}
-tallyLength :: Tally a -> Int
-tallyLength (Tally a) = sum $ Map.elems a
-
-tallyFromList :: Ord a => [a] -> Tally a
-tallyFromList = foldMap cpure
-
-solutionB :: [Int] -> Int
-solutionB = tallyLength . last . iterate 256 step . tallyFromList
+solutionB :: [Int] -> Integer
+solutionB = Tally.size . last . iterate 256 step . Tally.fromList
 ```
 
