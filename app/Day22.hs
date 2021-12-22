@@ -18,13 +18,12 @@ intRangeP = (,) <$> integer <* string ".." <*> integer
 
 rangeP :: Parser (Command, V3Range)
 rangeP = (,) <$> lexeme (CommandOn <$ string "on" <|> (CommandOff <$ string "off"))
-             <*> (do
-                    (xmin, xmax) <- string "x=" *> intRangeP
-                    string ","
-                    (ymin, ymax) <- string "y=" *> intRangeP
-                    string ","
-                    (zmin, zmax) <- string "z=" *> intRangeP
-                    return (V3 xmin ymin zmin, V3 xmax ymax zmax))
+             <*> (do (xmin, xmax) <- string "x=" *> intRangeP
+                     string ","
+                     (ymin, ymax) <- string "y=" *> intRangeP
+                     string ","
+                     (zmin, zmax) <- string "z=" *> intRangeP
+                     return (V3 xmin ymin zmin, V3 xmax ymax zmax))
 
 inputP :: Parser Input
 inputP = rangeP `sepEndBy1` eol
@@ -35,9 +34,7 @@ readInput = readInputParsing "data/day22.txt" inputP
 -- ~\~ begin <<lit/day22.md|solution-day22>>[0]
 class Range a where
     intersect :: a -> a -> Maybe a
-
-(=/=) :: (Range a) => a -> a -> Maybe a
-(=/=) = intersect
+    area :: a -> Int
 
 instance Range (Int, Int) where
     intersect (a1, a2) (b1, b2)
@@ -46,34 +43,45 @@ instance Range (Int, Int) where
         | a1 >= b1 && a2 >= b2 = Just (a1, b2)
         | b1 >= a1 && b2 <= a2 = Just (b1, b2)
         | a1 >= b1 && a2 <= b2 = Just (a1, a2)
-        | otherwise = error $ "no known configuration: " <> show ((a1, a2), (b1, b2))
+        | otherwise = error $ "no known configuration: "
+                            <> show ((a1, a2), (b1, b2))
 
+    area (a1, a2) = a2 - a1 + 1
+-- ~\~ end
+-- ~\~ begin <<lit/day22.md|solution-day22>>[1]
 instance Range (V3 Int, V3 Int) where
     intersect (a1, a2) (b1, b2) = do
-        (x1, x2) <- intersect (a1 ^. _x, a2 ^. _x) (b1 ^. _x, b2 ^. _x)
-        (y1, y2) <- intersect (a1 ^. _y, a2 ^. _y) (b1 ^. _y, b2 ^. _y)
-        (z1, z2) <- intersect (a1 ^. _z, a2 ^. _z) (b1 ^. _z, b2 ^. _z)
+        (x1, x2) <- (a1 ^. _x, a2 ^. _x) `intersect` (b1 ^. _x, b2 ^. _x)
+        (y1, y2) <- (a1 ^. _y, a2 ^. _y) `intersect` (b1 ^. _y, b2 ^. _y)
+        (z1, z2) <- (a1 ^. _z, a2 ^. _z) `intersect` (b1 ^. _z, b2 ^. _z)
         return (V3 x1 y1 z1, V3 x2 y2 z2)
 
+    area (a, b) = product (b - a + 1)
+-- ~\~ end
+-- ~\~ begin <<lit/day22.md|solution-day22>>[2]
 newtype MultiRange r = MultiRange { toList :: [(r, Int)] }
-    deriving (Show)
-
-(=+=) :: Range r => MultiRange r -> r -> MultiRange r
-(MultiRange m) =+= r = MultiRange $ (r, 1) : (mapMaybe isect m <> m)
-    where isect (s, m) = (, negate m) <$> (s =/= r)
+    deriving (Show, Semigroup, Monoid)
 
 (=-=) :: Range r => MultiRange r -> r -> MultiRange r
 (MultiRange m) =-= r = MultiRange $ mapMaybe isect m <> m
-    where isect (s, m) = (, negate m) <$> (s =/= r)
+    where isect (s, m) = (, negate m) <$> (s `intersect` r)
+-- ~\~ end
+-- ~\~ begin <<lit/day22.md|solution-day22>>[3]
+(=+=) :: Range r => MultiRange r -> r -> MultiRange r
+m =+= r = (m =-= r) <> MultiRange [(r, 1)]
 
-solutionA :: Input -> MultiRange (V3 Int, V3 Int)
-solutionA = foldl' switch (MultiRange []) . filter (small . snd)
+runCommands :: Input -> Int
+runCommands = totalArea . foldl' switch (MultiRange []) 
     where switch m (CommandOn, r) = m =+= r
           switch m (CommandOff, r) = m =-= r
-          small (a, b) = all ((<=50) . abs) a && all ((<=50) . abs) b
+          totalArea (MultiRange m) = foldl' (\t (r, s) -> t + area r * s) 0 m
 
-solutionB :: b -> Int
-solutionB = const 0
+solutionA :: Input -> Int
+solutionA = runCommands . filter (small . snd)
+    where small (a, b) = all ((<=50) . abs) a && all ((<=50) . abs) b
+
+solutionB :: Input -> Int
+solutionB = runCommands
 -- ~\~ end
 -- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
 runA :: (HasLogFunc env) => RIO env ()

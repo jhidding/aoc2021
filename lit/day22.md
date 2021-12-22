@@ -1,4 +1,5 @@
 # Day 22: Reactor Reboot
+For today's puzzle it is immediately clear what the second part is about. We need to find the number of lights turned on in a crazy large space.
 
 ``` {.haskell file=app/Day22.hs}
 module Day22 where
@@ -14,6 +15,8 @@ import Parsing
 <<run-solutions>>
 ```
 
+Obligatory parser of the day:
+
 ``` {.haskell #parser-day22}
 type V3Range = (V3 Int, V3 Int)
 data Command = CommandOn | CommandOff deriving (Show, Eq, Ord, Bounded, Enum)
@@ -24,13 +27,12 @@ intRangeP = (,) <$> integer <* string ".." <*> integer
 
 rangeP :: Parser (Command, V3Range)
 rangeP = (,) <$> lexeme (CommandOn <$ string "on" <|> (CommandOff <$ string "off"))
-             <*> (do
-                    (xmin, xmax) <- string "x=" *> intRangeP
-                    string ","
-                    (ymin, ymax) <- string "y=" *> intRangeP
-                    string ","
-                    (zmin, zmax) <- string "z=" *> intRangeP
-                    return (V3 xmin ymin zmin, V3 xmax ymax zmax))
+             <*> (do (xmin, xmax) <- string "x=" *> intRangeP
+                     string ","
+                     (ymin, ymax) <- string "y=" *> intRangeP
+                     string ","
+                     (zmin, zmax) <- string "z=" *> intRangeP
+                     return (V3 xmin ymin zmin, V3 xmax ymax zmax))
 
 inputP :: Parser Input
 inputP = rangeP `sepEndBy1` eol
@@ -39,12 +41,12 @@ readInput :: (HasLogFunc env) => RIO env Input
 readInput = readInputParsing "data/day22.txt" inputP
 ```
 
+I define a class `Range` on which an `intersection` and `area` are defined. This has a rather straight forward implementation on `(Int, Int)`.
+
 ``` {.haskell #solution-day22}
 class Range a where
     intersect :: a -> a -> Maybe a
-
-(=/=) :: (Range a) => a -> a -> Maybe a
-(=/=) = intersect
+    area :: a -> Int
 
 instance Range (Int, Int) where
     intersect (a1, a2) (b1, b2)
@@ -53,32 +55,52 @@ instance Range (Int, Int) where
         | a1 >= b1 && a2 >= b2 = Just (a1, b2)
         | b1 >= a1 && b2 <= a2 = Just (b1, b2)
         | a1 >= b1 && a2 <= b2 = Just (a1, a2)
-        | otherwise = error $ "no known configuration: " <> show ((a1, a2), (b1, b2))
+        | otherwise = error $ "no known configuration: "
+                            <> show ((a1, a2), (b1, b2))
 
+    area (a1, a2) = a2 - a1 + 1
+```
+
+Now, for `(V3 Int, V3 Int)` it is just the combination of the integer intersections.
+
+``` {.haskell #solution-day22}
 instance Range (V3 Int, V3 Int) where
     intersect (a1, a2) (b1, b2) = do
-        (x1, x2) <- intersect (a1 ^. _x, a2 ^. _x) (b1 ^. _x, b2 ^. _x)
-        (y1, y2) <- intersect (a1 ^. _y, a2 ^. _y) (b1 ^. _y, b2 ^. _y)
-        (z1, z2) <- intersect (a1 ^. _z, a2 ^. _z) (b1 ^. _z, b2 ^. _z)
+        (x1, x2) <- (a1 ^. _x, a2 ^. _x) `intersect` (b1 ^. _x, b2 ^. _x)
+        (y1, y2) <- (a1 ^. _y, a2 ^. _y) `intersect` (b1 ^. _y, b2 ^. _y)
+        (z1, z2) <- (a1 ^. _z, a2 ^. _z) `intersect` (b1 ^. _z, b2 ^. _z)
         return (V3 x1 y1 z1, V3 x2 y2 z2)
 
-newtype MultiRange r = MultiRange { toList :: [(r, Int)] }
-    deriving (Show)
+    area (a, b) = product (b - a + 1)
+```
 
-(=+=) :: Range r => MultiRange r -> r -> MultiRange r
-(MultiRange m) =+= r = MultiRange $ (r, 1) : (mapMaybe isect m <> m)
-    where isect (s, m) = (, negate m) <$> (s =/= r)
+Now a `MultiRange` type is giving a list of ranges and their multiplicity. If a range of lights is turned off, we find the intersection with all current ranges and stack those with opposite sign.
+
+``` {.haskell #solution-day22}
+newtype MultiRange r = MultiRange { toList :: [(r, Int)] }
+    deriving (Show, Semigroup, Monoid)
 
 (=-=) :: Range r => MultiRange r -> r -> MultiRange r
 (MultiRange m) =-= r = MultiRange $ mapMaybe isect m <> m
-    where isect (s, m) = (, negate m) <$> (s =/= r)
+    where isect (s, m) = (, negate m) <$> (s `intersect` r)
+```
 
-solutionA :: Input -> MultiRange (V3 Int, V3 Int)
-solutionA = foldl' switch (MultiRange []) . filter (small . snd)
+To switch lights on, first switch them off, and then add to the list.
+
+``` {.haskell #solution-day22}
+(=+=) :: Range r => MultiRange r -> r -> MultiRange r
+m =+= r = (m =-= r) <> MultiRange [(r, 1)]
+
+runCommands :: Input -> Int
+runCommands = totalArea . foldl' switch (MultiRange []) 
     where switch m (CommandOn, r) = m =+= r
           switch m (CommandOff, r) = m =-= r
-          small (a, b) = all ((<=50) . abs) a && all ((<=50) . abs) b
+          totalArea (MultiRange m) = foldl' (\t (r, s) -> t + area r * s) 0 m
 
-solutionB :: b -> Int
-solutionB = const 0
+solutionA :: Input -> Int
+solutionA = runCommands . filter (small . snd)
+    where small (a, b) = all ((<=50) . abs) a && all ((<=50) . abs) b
+
+solutionB :: Input -> Int
+solutionB = runCommands
 ```
