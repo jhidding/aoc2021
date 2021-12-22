@@ -1,4 +1,7 @@
 # Day 21: Dirac Dice
+I reused the `Tally` structure that I made on day 6, and extended it such that `Tally Int` supports numeric operations. This way I computed the answer using distributions of integers, and distributions of game states.
+
+What I started with, was writing a monadic type class for playing the game. Considering that the game is independent for both players, I tried to solve this by simulation each player separately, but I got stuck in the bookkeeping. Then decided that keeping tally of numbers of game states was easier.
 
 ``` {.haskell file=app/Day21.hs}
 module Day21 where
@@ -9,8 +12,6 @@ import RIO.State (MonadState, State, get, gets, put, modify, execState)
 
 import Parsing (readInputParsing, string, integer, eol)
 import Lens.Micro.Platform ((&), (<%~), use, (%=), (.=), (<%=), (<<%=))
-import IntDist (IntDist)
-import qualified IntDist
 import qualified Tally
 import Tally (Tally)
 

@@ -8,8 +8,6 @@ import RIO.State (MonadState, State, get, gets, put, modify, execState)
 
 import Parsing (readInputParsing, string, integer, eol)
 import Lens.Micro.Platform ((&), (<%~), use, (%=), (.=), (<%=), (<<%=))
-import IntDist (IntDist)
-import qualified IntDist
 import qualified Tally
 import Tally (Tally)
 
