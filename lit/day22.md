@@ -51,12 +51,7 @@ class Range a where
 instance Range (Int, Int) where
     intersect (a1, a2) (b1, b2)
         | b1 > a2 || a1 > b2 = Nothing
-        | b1 >= a1 && b2 >= a2 = Just (b1, a2)
-        | a1 >= b1 && a2 >= b2 = Just (a1, b2)
-        | b1 >= a1 && b2 <= a2 = Just (b1, b2)
-        | a1 >= b1 && a2 <= b2 = Just (a1, a2)
-        | otherwise = error $ "no known configuration: "
-                            <> show ((a1, a2), (b1, b2))
+        | otherwise          = Just (max a1 b1, min a2 b2)
 
     area (a1, a2) = a2 - a1 + 1
 ```
