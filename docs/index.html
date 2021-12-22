@@ -2611,243 +2611,311 @@
 <span id="cb154-9"><a href="#cb154-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Tally</span></span>
 <span id="cb154-10"><a href="#cb154-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Tally</span> (<span class="dt">Tally</span>)</span>
 <span id="cb154-11"><a href="#cb154-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-12"><a href="#cb154-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Input</span> <span class="ot">=</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
-<span id="cb154-13"><a href="#cb154-13" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> (,) <span class="op">&lt;$</span> string <span class="st">&quot;Player 1 starting position: &quot;</span> <span class="op">&lt;*&gt;</span> integer <span class="op">&lt;*</span> eol</span>
-<span id="cb154-14"><a href="#cb154-14" aria-hidden="true" tabindex="-1"></a>             <span class="op">&lt;*</span> string <span class="st">&quot;Player 2 starting position: &quot;</span> <span class="op">&lt;*&gt;</span> integer <span class="op">&lt;*</span> eol</span>
-<span id="cb154-15"><a href="#cb154-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-16"><a href="#cb154-16" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">Input</span></span>
-<span id="cb154-17"><a href="#cb154-17" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day21.txt&quot;</span> inputP</span>
-<span id="cb154-18"><a href="#cb154-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-19"><a href="#cb154-19" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Player</span> <span class="ot">=</span> <span class="dt">Player1</span> <span class="op">|</span> <span class="dt">Player2</span></span>
-<span id="cb154-20"><a href="#cb154-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
-<span id="cb154-21"><a href="#cb154-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-22"><a href="#cb154-22" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">Game</span> m <span class="kw">where</span></span>
-<span id="cb154-23"><a href="#cb154-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">Dist</span><span class="ot"> m ::</span> <span class="op">*</span></span>
-<span id="cb154-24"><a href="#cb154-24" aria-hidden="true" tabindex="-1"></a><span class="ot">    roll ::</span> m (<span class="dt">Dist</span> m)</span>
-<span id="cb154-25"><a href="#cb154-25" aria-hidden="true" tabindex="-1"></a><span class="ot">    move ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">Dist</span> m <span class="ot">-&gt;</span> m ()</span>
-<span id="cb154-26"><a href="#cb154-26" aria-hidden="true" tabindex="-1"></a><span class="ot">    stop ::</span> m <span class="dt">Bool</span></span>
-<span id="cb154-27"><a href="#cb154-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-28"><a href="#cb154-28" aria-hidden="true" tabindex="-1"></a><span class="ot">turn ::</span> (<span class="dt">Game</span> m, <span class="dt">Num</span> (<span class="dt">Dist</span> m)) <span class="ot">=&gt;</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> m ()</span>
-<span id="cb154-29"><a href="#cb154-29" aria-hidden="true" tabindex="-1"></a>turn p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb154-30"><a href="#cb154-30" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">&lt;-</span> roll</span>
-<span id="cb154-31"><a href="#cb154-31" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> roll</span>
-<span id="cb154-32"><a href="#cb154-32" aria-hidden="true" tabindex="-1"></a>    c <span class="ot">&lt;-</span> roll</span>
-<span id="cb154-33"><a href="#cb154-33" aria-hidden="true" tabindex="-1"></a>    move p (a <span class="op">+</span> b <span class="op">+</span> c)</span>
-<span id="cb154-34"><a href="#cb154-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-35"><a href="#cb154-35" aria-hidden="true" tabindex="-1"></a><span class="ot">runUntilM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m <span class="dt">Bool</span>) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> m ()</span>
-<span id="cb154-36"><a href="#cb154-36" aria-hidden="true" tabindex="-1"></a>runUntilM _ [] <span class="ot">=</span> <span class="fu">return</span> ()</span>
-<span id="cb154-37"><a href="#cb154-37" aria-hidden="true" tabindex="-1"></a>runUntilM p (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb154-38"><a href="#cb154-38" aria-hidden="true" tabindex="-1"></a>    q <span class="ot">&lt;-</span> p x</span>
-<span id="cb154-39"><a href="#cb154-39" aria-hidden="true" tabindex="-1"></a>    unless q (runUntilM p xs)</span>
-<span id="cb154-40"><a href="#cb154-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-41"><a href="#cb154-41" aria-hidden="true" tabindex="-1"></a><span class="ot">play ::</span> (<span class="dt">Game</span> m, <span class="dt">Num</span> (<span class="dt">Dist</span> m)) <span class="ot">=&gt;</span> m ()</span>
-<span id="cb154-42"><a href="#cb154-42" aria-hidden="true" tabindex="-1"></a>play <span class="ot">=</span> runUntilM (\x <span class="ot">-&gt;</span> turn x <span class="op">&gt;&gt;</span> stop) (<span class="fu">cycle</span> [<span class="dt">Player1</span>, <span class="dt">Player2</span>])</span>
-<span id="cb154-43"><a href="#cb154-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-44"><a href="#cb154-44" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">PlayerData</span> <span class="ot">=</span> <span class="dt">PlayerData</span></span>
-<span id="cb154-45"><a href="#cb154-45" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> _playerPos ::</span> <span class="dt">Int</span></span>
-<span id="cb154-46"><a href="#cb154-46" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> _playerScore ::</span> <span class="dt">Int</span></span>
-<span id="cb154-47"><a href="#cb154-47" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
-<span id="cb154-48"><a href="#cb154-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-49"><a href="#cb154-49" aria-hidden="true" tabindex="-1"></a><span class="ot">pos ::</span> <span class="dt">Lens&#39;</span> <span class="dt">PlayerData</span> <span class="dt">Int</span></span>
-<span id="cb154-50"><a href="#cb154-50" aria-hidden="true" tabindex="-1"></a>pos <span class="ot">=</span> lens _playerPos (\p x <span class="ot">-&gt;</span> p{_playerPos <span class="ot">=</span> x})</span>
-<span id="cb154-51"><a href="#cb154-51" aria-hidden="true" tabindex="-1"></a><span class="ot">score ::</span> <span class="dt">Lens&#39;</span> <span class="dt">PlayerData</span> <span class="dt">Int</span></span>
-<span id="cb154-52"><a href="#cb154-52" aria-hidden="true" tabindex="-1"></a>score <span class="ot">=</span> lens _playerScore (\p x <span class="ot">-&gt;</span> p{_playerScore <span class="ot">=</span> x})</span>
-<span id="cb154-53"><a href="#cb154-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-54"><a href="#cb154-54" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">GameData</span> <span class="ot">=</span> <span class="dt">GameData</span></span>
-<span id="cb154-55"><a href="#cb154-55" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> _die100 ::</span> <span class="dt">Int</span></span>
-<span id="cb154-56"><a href="#cb154-56" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> _player1 ::</span> <span class="dt">PlayerData</span></span>
-<span id="cb154-57"><a href="#cb154-57" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> _player2 ::</span> <span class="dt">PlayerData</span></span>
-<span id="cb154-58"><a href="#cb154-58" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
-<span id="cb154-59"><a href="#cb154-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-60"><a href="#cb154-60" aria-hidden="true" tabindex="-1"></a><span class="ot">die100 ::</span> <span class="dt">Lens&#39;</span> <span class="dt">GameData</span> <span class="dt">Int</span></span>
-<span id="cb154-61"><a href="#cb154-61" aria-hidden="true" tabindex="-1"></a>die100 <span class="ot">=</span> lens _die100 (\g d <span class="ot">-&gt;</span> g{_die100 <span class="ot">=</span> d})</span>
-<span id="cb154-62"><a href="#cb154-62" aria-hidden="true" tabindex="-1"></a><span class="ot">player1 ::</span> <span class="dt">Lens&#39;</span> <span class="dt">GameData</span> <span class="dt">PlayerData</span></span>
-<span id="cb154-63"><a href="#cb154-63" aria-hidden="true" tabindex="-1"></a>player1 <span class="ot">=</span> lens _player1 (\g p <span class="ot">-&gt;</span> g{_player1 <span class="ot">=</span> p})</span>
-<span id="cb154-64"><a href="#cb154-64" aria-hidden="true" tabindex="-1"></a><span class="ot">player2 ::</span> <span class="dt">Lens&#39;</span> <span class="dt">GameData</span> <span class="dt">PlayerData</span></span>
-<span id="cb154-65"><a href="#cb154-65" aria-hidden="true" tabindex="-1"></a>player2 <span class="ot">=</span> lens _player2 (\g p <span class="ot">-&gt;</span> g{_player2 <span class="ot">=</span> p})</span>
-<span id="cb154-66"><a href="#cb154-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-67"><a href="#cb154-67" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">GameA</span> a <span class="ot">=</span> <span class="dt">GameA</span> {<span class="ot"> gameStateA ::</span> <span class="dt">State</span> <span class="dt">GameData</span> a }</span>
-<span id="cb154-68"><a href="#cb154-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Functor</span>, <span class="dt">Applicative</span>, <span class="dt">Monad</span>, <span class="dt">MonadState</span> <span class="dt">GameData</span>)</span>
-<span id="cb154-69"><a href="#cb154-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-70"><a href="#cb154-70" aria-hidden="true" tabindex="-1"></a>select <span class="dt">Player1</span> <span class="ot">=</span> player1</span>
-<span id="cb154-71"><a href="#cb154-71" aria-hidden="true" tabindex="-1"></a>select <span class="dt">Player2</span> <span class="ot">=</span> player2</span>
-<span id="cb154-72"><a href="#cb154-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-73"><a href="#cb154-73" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Game</span> <span class="dt">GameA</span> <span class="kw">where</span></span>
-<span id="cb154-74"><a href="#cb154-74" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">Dist</span> <span class="dt">GameA</span> <span class="ot">=</span> <span class="dt">Int</span></span>
-<span id="cb154-75"><a href="#cb154-75" aria-hidden="true" tabindex="-1"></a>    roll <span class="ot">=</span> <span class="kw">do</span> { x <span class="ot">&lt;-</span> die100 <span class="op">&lt;&lt;%=</span> (<span class="op">+</span> <span class="dv">1</span>);</span>
-<span id="cb154-76"><a href="#cb154-76" aria-hidden="true" tabindex="-1"></a>                <span class="fu">return</span> <span class="op">$</span> x <span class="ot">`mod`</span> <span class="dv">100</span> <span class="op">+</span> <span class="dv">1</span> }</span>
-<span id="cb154-77"><a href="#cb154-77" aria-hidden="true" tabindex="-1"></a>    move p i <span class="ot">=</span> modify (gscore p <span class="op">.</span> gmove p i)</span>
-<span id="cb154-78"><a href="#cb154-78" aria-hidden="true" tabindex="-1"></a>    stop <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb154-79"><a href="#cb154-79" aria-hidden="true" tabindex="-1"></a>        p1 <span class="ot">&lt;-</span> use <span class="op">$</span> player1 <span class="op">.</span> score</span>
-<span id="cb154-80"><a href="#cb154-80" aria-hidden="true" tabindex="-1"></a>        p2 <span class="ot">&lt;-</span> use <span class="op">$</span> player2 <span class="op">.</span> score</span>
-<span id="cb154-81"><a href="#cb154-81" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> (p1 <span class="op">&gt;=</span> <span class="dv">1000</span> <span class="op">||</span> p2 <span class="op">&gt;=</span> <span class="dv">1000</span>)</span>
-<span id="cb154-82"><a href="#cb154-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-83"><a href="#cb154-83" aria-hidden="true" tabindex="-1"></a><span class="ot">runGameA ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span></span>
-<span id="cb154-84"><a href="#cb154-84" aria-hidden="true" tabindex="-1"></a>runGameA (p1, p2) <span class="ot">=</span> execState (gameStateA play)</span>
-<span id="cb154-85"><a href="#cb154-85" aria-hidden="true" tabindex="-1"></a>    <span class="op">$</span> <span class="dt">GameData</span> <span class="dv">0</span> (<span class="dt">PlayerData</span> p1 <span class="dv">0</span>) (<span class="dt">PlayerData</span> p2 <span class="dv">0</span>)</span>
-<span id="cb154-86"><a href="#cb154-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-87"><a href="#cb154-87" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> output <span class="op">.</span> runGameA</span>
-<span id="cb154-88"><a href="#cb154-88" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> output g <span class="ot">=</span> <span class="fu">min</span> (g <span class="op">^.</span> player1 <span class="op">.</span> score)</span>
-<span id="cb154-89"><a href="#cb154-89" aria-hidden="true" tabindex="-1"></a>                         (g <span class="op">^.</span> player2 <span class="op">.</span> score)</span>
-<span id="cb154-90"><a href="#cb154-90" aria-hidden="true" tabindex="-1"></a>                   <span class="op">*</span> (g <span class="op">^.</span> die100)</span>
-<span id="cb154-91"><a href="#cb154-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-92"><a href="#cb154-92" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">GameState</span> <span class="ot">=</span> <span class="dt">Either</span> <span class="dt">Player</span> <span class="dt">GameData</span></span>
-<span id="cb154-93"><a href="#cb154-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-94"><a href="#cb154-94" aria-hidden="true" tabindex="-1"></a><span class="ot">gmove ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span></span>
-<span id="cb154-95"><a href="#cb154-95" aria-hidden="true" tabindex="-1"></a>gmove p i gd <span class="ot">=</span> gd <span class="op">&amp;</span> select p <span class="op">.</span> pos <span class="op">%~</span> (\x <span class="ot">-&gt;</span> (x <span class="op">+</span> i <span class="op">-</span> <span class="dv">1</span>) <span class="ot">`mod`</span> <span class="dv">10</span> <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb154-96"><a href="#cb154-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-97"><a href="#cb154-97" aria-hidden="true" tabindex="-1"></a><span class="ot">gscore ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span></span>
-<span id="cb154-98"><a href="#cb154-98" aria-hidden="true" tabindex="-1"></a>gscore p gd <span class="ot">=</span> gd <span class="op">&amp;</span> select p <span class="op">.</span> score <span class="op">%~</span> (<span class="op">+</span> s)</span>
-<span id="cb154-99"><a href="#cb154-99" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> s <span class="ot">=</span> gd <span class="op">^.</span> select p <span class="op">.</span> pos</span>
-<span id="cb154-100"><a href="#cb154-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-101"><a href="#cb154-101" aria-hidden="true" tabindex="-1"></a>gwin p gd <span class="ot">=</span> <span class="kw">if</span> gd <span class="op">^.</span> select p <span class="op">.</span> score <span class="op">&gt;=</span> <span class="dv">21</span></span>
-<span id="cb154-102"><a href="#cb154-102" aria-hidden="true" tabindex="-1"></a>               <span class="kw">then</span> <span class="dt">Left</span> p <span class="kw">else</span> <span class="dt">Right</span> gd</span>
-<span id="cb154-103"><a href="#cb154-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-104"><a href="#cb154-104" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">GameB</span> a <span class="ot">=</span> <span class="dt">GameB</span> {<span class="ot"> gameStateB ::</span> <span class="dt">State</span> (<span class="dt">Tally</span> <span class="dt">GameState</span>) a }</span>
-<span id="cb154-105"><a href="#cb154-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Functor</span>, <span class="dt">Applicative</span>, <span class="dt">Monad</span>, <span class="dt">MonadState</span> (<span class="dt">Tally</span> <span class="dt">GameState</span>))</span>
-<span id="cb154-106"><a href="#cb154-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-107"><a href="#cb154-107" aria-hidden="true" tabindex="-1"></a><span class="ot">solve ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">GameState</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">GameState</span></span>
-<span id="cb154-108"><a href="#cb154-108" aria-hidden="true" tabindex="-1"></a>solve p _ g<span class="op">@</span>(<span class="dt">Left</span> _) <span class="ot">=</span> Tally.singleton g</span>
-<span id="cb154-109"><a href="#cb154-109" aria-hidden="true" tabindex="-1"></a>solve p i (<span class="dt">Right</span> gd) <span class="ot">=</span> Tally.cmap (\i <span class="ot">-&gt;</span> gwin p <span class="op">$</span> gscore p <span class="op">$</span> gmove p i gd) i</span>
-<span id="cb154-110"><a href="#cb154-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-111"><a href="#cb154-111" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Game</span> <span class="dt">GameB</span> <span class="kw">where</span></span>
-<span id="cb154-112"><a href="#cb154-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">Dist</span> <span class="dt">GameB</span> <span class="ot">=</span> <span class="dt">Tally</span> <span class="dt">Int</span></span>
-<span id="cb154-113"><a href="#cb154-113" aria-hidden="true" tabindex="-1"></a>    roll <span class="ot">=</span> <span class="fu">return</span> <span class="op">$</span> Tally.fromList [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]</span>
-<span id="cb154-114"><a href="#cb154-114" aria-hidden="true" tabindex="-1"></a>    move p i <span class="ot">=</span> modify (Tally.cbind (solve p i))</span>
-<span id="cb154-115"><a href="#cb154-115" aria-hidden="true" tabindex="-1"></a>    stop <span class="ot">=</span> gets (<span class="fu">all</span> isLeft <span class="op">.</span> Tally.distinct)</span>
-<span id="cb154-116"><a href="#cb154-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-117"><a href="#cb154-117" aria-hidden="true" tabindex="-1"></a><span class="ot">runGameB ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">GameState</span></span>
-<span id="cb154-118"><a href="#cb154-118" aria-hidden="true" tabindex="-1"></a>runGameB (p1, p2) <span class="ot">=</span> execState (gameStateB play)</span>
-<span id="cb154-119"><a href="#cb154-119" aria-hidden="true" tabindex="-1"></a>    <span class="op">$</span> Tally.singleton <span class="op">$</span> <span class="dt">Right</span></span>
-<span id="cb154-120"><a href="#cb154-120" aria-hidden="true" tabindex="-1"></a>    <span class="op">$</span> <span class="dt">GameData</span> <span class="dv">0</span> (<span class="dt">PlayerData</span> p1 <span class="dv">0</span>) (<span class="dt">PlayerData</span> p2 <span class="dv">0</span>)</span>
-<span id="cb154-121"><a href="#cb154-121" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-122"><a href="#cb154-122" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> runGameB</span>
-<span id="cb154-123"><a href="#cb154-123" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb154-12"><a href="#cb154-12" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day21<span class="op">&gt;&gt;</span></span>
+<span id="cb154-13"><a href="#cb154-13" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>abstract<span class="op">-</span>day21<span class="op">&gt;&gt;</span></span>
+<span id="cb154-14"><a href="#cb154-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>game<span class="op">-</span>state<span class="op">-</span>day21<span class="op">&gt;&gt;</span></span>
+<span id="cb154-15"><a href="#cb154-15" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day21<span class="op">&gt;&gt;</span></span>
+<span id="cb154-16"><a href="#cb154-16" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
+<p>Obligatory parser of the day:</p>
+<div class="named-code-block">
+<p>«parser-day21»</p>
+<div class="sourceCode" id="cb155"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Input</span> <span class="ot">=</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb155-2"><a href="#cb155-2" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> (,) <span class="op">&lt;$</span> string <span class="st">&quot;Player 1 starting position: &quot;</span> <span class="op">&lt;*&gt;</span> integer <span class="op">&lt;*</span> eol</span>
+<span id="cb155-3"><a href="#cb155-3" aria-hidden="true" tabindex="-1"></a>             <span class="op">&lt;*</span> string <span class="st">&quot;Player 2 starting position: &quot;</span> <span class="op">&lt;*&gt;</span> integer <span class="op">&lt;*</span> eol</span>
+<span id="cb155-4"><a href="#cb155-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb155-5"><a href="#cb155-5" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">Input</span></span>
+<span id="cb155-6"><a href="#cb155-6" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day21.txt&quot;</span> inputP</span></code></pre></div>
+</div>
+<section id="abstract-implementation" class="level2">
+<h2>Abstract implementation</h2>
+<p>Specifying game rules is often cleanest using a monadic type class. Here I have an associated type that gives the equivalent of a scalar (so <code>Int</code> for part A, and <code>Tally Int</code> for part B).</p>
+<div class="named-code-block">
+<p>«abstract-day21»</p>
+<div class="sourceCode" id="cb156"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Player</span> <span class="ot">=</span> <span class="dt">Player1</span> <span class="op">|</span> <span class="dt">Player2</span></span>
+<span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
+<span id="cb156-3"><a href="#cb156-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb156-4"><a href="#cb156-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">Game</span> m <span class="kw">where</span></span>
+<span id="cb156-5"><a href="#cb156-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">Dist</span><span class="ot"> m ::</span> <span class="op">*</span></span>
+<span id="cb156-6"><a href="#cb156-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    roll ::</span> m (<span class="dt">Dist</span> m)</span>
+<span id="cb156-7"><a href="#cb156-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    move ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">Dist</span> m <span class="ot">-&gt;</span> m ()</span>
+<span id="cb156-8"><a href="#cb156-8" aria-hidden="true" tabindex="-1"></a><span class="ot">    stop ::</span> m <span class="dt">Bool</span></span>
+<span id="cb156-9"><a href="#cb156-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb156-10"><a href="#cb156-10" aria-hidden="true" tabindex="-1"></a><span class="ot">turn ::</span> (<span class="dt">Game</span> m, <span class="dt">Num</span> (<span class="dt">Dist</span> m)) <span class="ot">=&gt;</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> m ()</span>
+<span id="cb156-11"><a href="#cb156-11" aria-hidden="true" tabindex="-1"></a>turn p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb156-12"><a href="#cb156-12" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">&lt;-</span> roll</span>
+<span id="cb156-13"><a href="#cb156-13" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> roll</span>
+<span id="cb156-14"><a href="#cb156-14" aria-hidden="true" tabindex="-1"></a>    c <span class="ot">&lt;-</span> roll</span>
+<span id="cb156-15"><a href="#cb156-15" aria-hidden="true" tabindex="-1"></a>    move p (a <span class="op">+</span> b <span class="op">+</span> c)</span>
+<span id="cb156-16"><a href="#cb156-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb156-17"><a href="#cb156-17" aria-hidden="true" tabindex="-1"></a><span class="ot">runUntilM ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m <span class="dt">Bool</span>) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> m ()</span>
+<span id="cb156-18"><a href="#cb156-18" aria-hidden="true" tabindex="-1"></a>runUntilM _ [] <span class="ot">=</span> <span class="fu">return</span> ()</span>
+<span id="cb156-19"><a href="#cb156-19" aria-hidden="true" tabindex="-1"></a>runUntilM p (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb156-20"><a href="#cb156-20" aria-hidden="true" tabindex="-1"></a>    q <span class="ot">&lt;-</span> p x</span>
+<span id="cb156-21"><a href="#cb156-21" aria-hidden="true" tabindex="-1"></a>    unless q (runUntilM p xs)</span>
+<span id="cb156-22"><a href="#cb156-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb156-23"><a href="#cb156-23" aria-hidden="true" tabindex="-1"></a><span class="ot">play ::</span> (<span class="dt">Game</span> m, <span class="dt">Num</span> (<span class="dt">Dist</span> m)) <span class="ot">=&gt;</span> m ()</span>
+<span id="cb156-24"><a href="#cb156-24" aria-hidden="true" tabindex="-1"></a>play <span class="ot">=</span> runUntilM (\x <span class="ot">-&gt;</span> turn x <span class="op">&gt;&gt;</span> stop) (<span class="fu">cycle</span> [<span class="dt">Player1</span>, <span class="dt">Player2</span>])</span></code></pre></div>
+</div>
+</section>
+<section id="game-data" class="level2">
+<h2>Game data</h2>
+<p>To encode the game state, I have two data types <code>PlayerData</code> and <code>GameData</code>. Then some lenses to ease into manipulating these types. To be honest, I don’t like lenses. There are too many operators and combinators making the code start to look like APL or J (yes, that’s a bad thing).</p>
+<div class="named-code-block">
+<p>«game-state-day21»</p>
+<div class="sourceCode" id="cb157"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">PlayerData</span> <span class="ot">=</span> <span class="dt">PlayerData</span></span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> _playerPos ::</span> <span class="dt">Int</span></span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> _playerScore ::</span> <span class="dt">Int</span></span>
+<span id="cb157-4"><a href="#cb157-4" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
+<span id="cb157-5"><a href="#cb157-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-6"><a href="#cb157-6" aria-hidden="true" tabindex="-1"></a><span class="ot">pos ::</span> <span class="dt">Lens&#39;</span> <span class="dt">PlayerData</span> <span class="dt">Int</span></span>
+<span id="cb157-7"><a href="#cb157-7" aria-hidden="true" tabindex="-1"></a>pos <span class="ot">=</span> lens _playerPos (\p x <span class="ot">-&gt;</span> p{_playerPos <span class="ot">=</span> x})</span>
+<span id="cb157-8"><a href="#cb157-8" aria-hidden="true" tabindex="-1"></a><span class="ot">score ::</span> <span class="dt">Lens&#39;</span> <span class="dt">PlayerData</span> <span class="dt">Int</span></span>
+<span id="cb157-9"><a href="#cb157-9" aria-hidden="true" tabindex="-1"></a>score <span class="ot">=</span> lens _playerScore (\p x <span class="ot">-&gt;</span> p{_playerScore <span class="ot">=</span> x})</span>
+<span id="cb157-10"><a href="#cb157-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-11"><a href="#cb157-11" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">GameData</span> <span class="ot">=</span> <span class="dt">GameData</span></span>
+<span id="cb157-12"><a href="#cb157-12" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> _die100 ::</span> <span class="dt">Int</span></span>
+<span id="cb157-13"><a href="#cb157-13" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> _player1 ::</span> <span class="dt">PlayerData</span></span>
+<span id="cb157-14"><a href="#cb157-14" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> _player2 ::</span> <span class="dt">PlayerData</span></span>
+<span id="cb157-15"><a href="#cb157-15" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
+<span id="cb157-16"><a href="#cb157-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-17"><a href="#cb157-17" aria-hidden="true" tabindex="-1"></a><span class="ot">die100 ::</span> <span class="dt">Lens&#39;</span> <span class="dt">GameData</span> <span class="dt">Int</span></span>
+<span id="cb157-18"><a href="#cb157-18" aria-hidden="true" tabindex="-1"></a>die100 <span class="ot">=</span> lens _die100 (\g d <span class="ot">-&gt;</span> g{_die100 <span class="ot">=</span> d})</span>
+<span id="cb157-19"><a href="#cb157-19" aria-hidden="true" tabindex="-1"></a><span class="ot">player1 ::</span> <span class="dt">Lens&#39;</span> <span class="dt">GameData</span> <span class="dt">PlayerData</span></span>
+<span id="cb157-20"><a href="#cb157-20" aria-hidden="true" tabindex="-1"></a>player1 <span class="ot">=</span> lens _player1 (\g p <span class="ot">-&gt;</span> g{_player1 <span class="ot">=</span> p})</span>
+<span id="cb157-21"><a href="#cb157-21" aria-hidden="true" tabindex="-1"></a><span class="ot">player2 ::</span> <span class="dt">Lens&#39;</span> <span class="dt">GameData</span> <span class="dt">PlayerData</span></span>
+<span id="cb157-22"><a href="#cb157-22" aria-hidden="true" tabindex="-1"></a>player2 <span class="ot">=</span> lens _player2 (\g p <span class="ot">-&gt;</span> g{_player2 <span class="ot">=</span> p})</span></code></pre></div>
+</div>
+<p>Now we can define some helper functions to do moving and scoring.</p>
+<div class="named-code-block">
+<p>«game-state-day21»</p>
+<div class="sourceCode" id="cb158"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a>select <span class="dt">Player1</span> <span class="ot">=</span> player1</span>
+<span id="cb158-2"><a href="#cb158-2" aria-hidden="true" tabindex="-1"></a>select <span class="dt">Player2</span> <span class="ot">=</span> player2</span>
+<span id="cb158-3"><a href="#cb158-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb158-4"><a href="#cb158-4" aria-hidden="true" tabindex="-1"></a><span class="ot">gmove ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span></span>
+<span id="cb158-5"><a href="#cb158-5" aria-hidden="true" tabindex="-1"></a>gmove player step state <span class="ot">=</span> </span>
+<span id="cb158-6"><a href="#cb158-6" aria-hidden="true" tabindex="-1"></a>    state <span class="op">&amp;</span> select player <span class="op">.</span> pos</span>
+<span id="cb158-7"><a href="#cb158-7" aria-hidden="true" tabindex="-1"></a>          <span class="op">%~</span> (\x <span class="ot">-&gt;</span> (x <span class="op">+</span> step <span class="op">-</span> <span class="dv">1</span>) <span class="ot">`mod`</span> <span class="dv">10</span> <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb158-8"><a href="#cb158-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb158-9"><a href="#cb158-9" aria-hidden="true" tabindex="-1"></a><span class="ot">gscore ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span></span>
+<span id="cb158-10"><a href="#cb158-10" aria-hidden="true" tabindex="-1"></a>gscore player state <span class="ot">=</span></span>
+<span id="cb158-11"><a href="#cb158-11" aria-hidden="true" tabindex="-1"></a>    state <span class="op">&amp;</span> select player <span class="op">.</span> score</span>
+<span id="cb158-12"><a href="#cb158-12" aria-hidden="true" tabindex="-1"></a>          <span class="op">%~</span> (<span class="op">+</span> state <span class="op">^.</span> select player <span class="op">.</span> pos)</span></code></pre></div>
+</div>
+</section>
+<section id="part-a-1" class="level2">
+<h2>Part A</h2>
+<p>Now to solve part A, we run the game in a <code>State</code> monad.</p>
+<div class="named-code-block">
+<p>«solution-day21»</p>
+<div class="sourceCode" id="cb159"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">GameA</span> a <span class="ot">=</span> <span class="dt">GameA</span> {<span class="ot"> gameStateA ::</span> <span class="dt">State</span> <span class="dt">GameData</span> a }</span>
+<span id="cb159-2"><a href="#cb159-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Functor</span>, <span class="dt">Applicative</span>, <span class="dt">Monad</span>, <span class="dt">MonadState</span> <span class="dt">GameData</span>)</span>
+<span id="cb159-3"><a href="#cb159-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-4"><a href="#cb159-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Game</span> <span class="dt">GameA</span> <span class="kw">where</span></span>
+<span id="cb159-5"><a href="#cb159-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">Dist</span> <span class="dt">GameA</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb159-6"><a href="#cb159-6" aria-hidden="true" tabindex="-1"></a>    roll <span class="ot">=</span> <span class="kw">do</span> x <span class="ot">&lt;-</span> use die100</span>
+<span id="cb159-7"><a href="#cb159-7" aria-hidden="true" tabindex="-1"></a>              die100 <span class="op">%=</span> (<span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb159-8"><a href="#cb159-8" aria-hidden="true" tabindex="-1"></a>              <span class="fu">return</span> <span class="op">$</span> x <span class="ot">`mod`</span> <span class="dv">100</span> <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb159-9"><a href="#cb159-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-10"><a href="#cb159-10" aria-hidden="true" tabindex="-1"></a>    move p i <span class="ot">=</span> modify (gscore p <span class="op">.</span> gmove p i)</span>
+<span id="cb159-11"><a href="#cb159-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-12"><a href="#cb159-12" aria-hidden="true" tabindex="-1"></a>    stop <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb159-13"><a href="#cb159-13" aria-hidden="true" tabindex="-1"></a>        p1 <span class="ot">&lt;-</span> use <span class="op">$</span> player1 <span class="op">.</span> score</span>
+<span id="cb159-14"><a href="#cb159-14" aria-hidden="true" tabindex="-1"></a>        p2 <span class="ot">&lt;-</span> use <span class="op">$</span> player2 <span class="op">.</span> score</span>
+<span id="cb159-15"><a href="#cb159-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> (p1 <span class="op">&gt;=</span> <span class="dv">1000</span> <span class="op">||</span> p2 <span class="op">&gt;=</span> <span class="dv">1000</span>)</span>
+<span id="cb159-16"><a href="#cb159-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-17"><a href="#cb159-17" aria-hidden="true" tabindex="-1"></a><span class="ot">runGameA ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span></span>
+<span id="cb159-18"><a href="#cb159-18" aria-hidden="true" tabindex="-1"></a>runGameA (p1, p2) <span class="ot">=</span> execState (gameStateA play)</span>
+<span id="cb159-19"><a href="#cb159-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">$</span> <span class="dt">GameData</span> <span class="dv">0</span> (<span class="dt">PlayerData</span> p1 <span class="dv">0</span>) (<span class="dt">PlayerData</span> p2 <span class="dv">0</span>)</span>
+<span id="cb159-20"><a href="#cb159-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-21"><a href="#cb159-21" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> output <span class="op">.</span> runGameA</span>
+<span id="cb159-22"><a href="#cb159-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> output g <span class="ot">=</span> <span class="fu">min</span> (g <span class="op">^.</span> player1 <span class="op">.</span> score)</span>
+<span id="cb159-23"><a href="#cb159-23" aria-hidden="true" tabindex="-1"></a>                         (g <span class="op">^.</span> player2 <span class="op">.</span> score)</span>
+<span id="cb159-24"><a href="#cb159-24" aria-hidden="true" tabindex="-1"></a>                   <span class="op">*</span> (g <span class="op">^.</span> die100)</span></code></pre></div>
+</div>
+</section>
+<section id="part-b-1" class="level2">
+<h2>Part B</h2>
+<p>For part B we can reuse everything we already have, replacing the normal integers with a <code>Tally Int</code>, and keeping game state in a <code>Tally GameState</code>.</p>
+<section id="calculating-with-distributions" class="level3">
+<h3>Calculating with distributions</h3>
+<p>Implementing <code>Num</code> on <code>Tally n</code>. It is interesting to note that multiplication in this space is not the same as repeated addition. This makes sense though. Doing</p>
+<div class="sourceCode" id="cb160"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="kw">let</span> a <span class="ot">=</span> fromList [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]</span>
+<span id="cb160-2"><a href="#cb160-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="dv">3</span> <span class="op">*</span> a</span>
+<span id="cb160-3"><a href="#cb160-3" aria-hidden="true" tabindex="-1"></a>[(<span class="dv">3</span>, <span class="dv">1</span>), (<span class="dv">6</span>, <span class="dv">1</span>), (<span class="dv">9</span>, <span class="dv">1</span>)]</span>
+<span id="cb160-4"><a href="#cb160-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> a <span class="op">+</span> a <span class="op">+</span> a</span>
+<span id="cb160-5"><a href="#cb160-5" aria-hidden="true" tabindex="-1"></a>[(<span class="dv">3</span>, <span class="dv">1</span>), (<span class="dv">4</span>, <span class="dv">3</span>), (<span class="dv">5</span>, <span class="dv">6</span>), (<span class="dv">6</span>, <span class="dv">7</span>), (<span class="dv">7</span>, <span class="dv">6</span>), (<span class="dv">8</span>, <span class="dv">3</span>), (<span class="dv">9</span>, <span class="dv">1</span>)]</span></code></pre></div>
+<p>Given the overengineered solution of day 6, implementing <code>Num</code> is straight forward.</p>
 <div class="named-code-block">
 <p>«tally»</p>
-<div class="sourceCode" id="cb155"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Integral</span> n) <span class="ot">=&gt;</span> <span class="dt">Num</span> (<span class="dt">Tally</span> n) <span class="kw">where</span></span>
-<span id="cb155-2"><a href="#cb155-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">+</span>) <span class="ot">=</span> cliftA2 (<span class="op">+</span>)</span>
-<span id="cb155-3"><a href="#cb155-3" aria-hidden="true" tabindex="-1"></a>    (<span class="op">-</span>) <span class="ot">=</span> cliftA2 (<span class="op">-</span>)</span>
-<span id="cb155-4"><a href="#cb155-4" aria-hidden="true" tabindex="-1"></a>    (<span class="op">*</span>) <span class="ot">=</span> cliftA2 (<span class="op">*</span>)</span>
-<span id="cb155-5"><a href="#cb155-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">negate</span> <span class="ot">=</span> cmap <span class="fu">negate</span></span>
-<span id="cb155-6"><a href="#cb155-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">abs</span> <span class="ot">=</span> cmap <span class="fu">abs</span></span>
-<span id="cb155-7"><a href="#cb155-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fromInteger</span> <span class="ot">=</span> singleton <span class="op">.</span> <span class="fu">fromInteger</span></span>
-<span id="cb155-8"><a href="#cb155-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">signum</span> <span class="ot">=</span> cmap <span class="fu">signum</span></span></code></pre></div>
+<div class="sourceCode" id="cb161"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">Integral</span> n) <span class="ot">=&gt;</span> <span class="dt">Num</span> (<span class="dt">Tally</span> n) <span class="kw">where</span></span>
+<span id="cb161-2"><a href="#cb161-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">+</span>) <span class="ot">=</span> cliftA2 (<span class="op">+</span>)</span>
+<span id="cb161-3"><a href="#cb161-3" aria-hidden="true" tabindex="-1"></a>    (<span class="op">-</span>) <span class="ot">=</span> cliftA2 (<span class="op">-</span>)</span>
+<span id="cb161-4"><a href="#cb161-4" aria-hidden="true" tabindex="-1"></a>    (<span class="op">*</span>) <span class="ot">=</span> cliftA2 (<span class="op">*</span>)</span>
+<span id="cb161-5"><a href="#cb161-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">negate</span> <span class="ot">=</span> cmap <span class="fu">negate</span></span>
+<span id="cb161-6"><a href="#cb161-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">abs</span> <span class="ot">=</span> cmap <span class="fu">abs</span></span>
+<span id="cb161-7"><a href="#cb161-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fromInteger</span> <span class="ot">=</span> singleton <span class="op">.</span> <span class="fu">fromInteger</span></span>
+<span id="cb161-8"><a href="#cb161-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">signum</span> <span class="ot">=</span> cmap <span class="fu">signum</span></span></code></pre></div>
 </div>
+</section>
+<section id="game-state" class="level3">
+<h3>Game state</h3>
+<p>The <code>GameState</code> now includes a state that tells if a player has alread won. The <code>gwin</code> function (monadic on <code>Either Player a</code>) determines if the game state should switch to one of the players winning.</p>
+<div class="named-code-block">
+<p>«solution-day21»</p>
+<div class="sourceCode" id="cb162"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">GameState</span> <span class="ot">=</span> <span class="dt">Either</span> <span class="dt">Player</span> <span class="dt">GameData</span></span>
+<span id="cb162-2"><a href="#cb162-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb162-3"><a href="#cb162-3" aria-hidden="true" tabindex="-1"></a><span class="ot">gwin ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">GameData</span> <span class="ot">-&gt;</span> <span class="dt">GameState</span></span>
+<span id="cb162-4"><a href="#cb162-4" aria-hidden="true" tabindex="-1"></a>gwin player gameData <span class="ot">=</span></span>
+<span id="cb162-5"><a href="#cb162-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> gameData <span class="op">^.</span> select player <span class="op">.</span> score <span class="op">&gt;=</span> <span class="dv">21</span></span>
+<span id="cb162-6"><a href="#cb162-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> <span class="dt">Left</span> player <span class="kw">else</span> <span class="dt">Right</span> gameData</span></code></pre></div>
+</div>
+<p>With it comes a new <code>tmove</code> action that is monadic over <code>Tally a</code>. It’s almost a shame that I have to enter explicitely that further dice throws can be ignored after a player has won. Maybe there is a way to use the monadic action over <code>Either Player a</code> to stop the game when its over, but I haven’t found it.</p>
+<div class="named-code-block">
+<p>«solution-day21»</p>
+<div class="sourceCode" id="cb163"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="ot">tmove ::</span> <span class="dt">Player</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">GameState</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">GameState</span></span>
+<span id="cb163-2"><a href="#cb163-2" aria-hidden="true" tabindex="-1"></a>tmove _      _  g<span class="op">@</span>(<span class="dt">Left</span> _)   <span class="ot">=</span> Tally.singleton g</span>
+<span id="cb163-3"><a href="#cb163-3" aria-hidden="true" tabindex="-1"></a>tmove player step (<span class="dt">Right</span> gameData) <span class="ot">=</span></span>
+<span id="cb163-4"><a href="#cb163-4" aria-hidden="true" tabindex="-1"></a>    Tally.cmap (\i <span class="ot">-&gt;</span> gwin player <span class="op">$</span> gscore player</span>
+<span id="cb163-5"><a href="#cb163-5" aria-hidden="true" tabindex="-1"></a>                    <span class="op">$</span> gmove player i gameData) step</span></code></pre></div>
+</div>
+</section>
+<section id="running-the-game" class="level3">
+<h3>Running the game</h3>
+<p>Considering the increase of complexity, it is amazing how little work we needed to do to solve part B now. (Of course, this is a cleaned up version, and it took me ages to figure out this solution.)</p>
+<div class="named-code-block">
+<p>«solution-day21»</p>
+<div class="sourceCode" id="cb164"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">GameB</span> a <span class="ot">=</span> <span class="dt">GameB</span> {<span class="ot"> gameStateB ::</span> <span class="dt">State</span> (<span class="dt">Tally</span> <span class="dt">GameState</span>) a }</span>
+<span id="cb164-2"><a href="#cb164-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Functor</span>, <span class="dt">Applicative</span>, <span class="dt">Monad</span>, <span class="dt">MonadState</span> (<span class="dt">Tally</span> <span class="dt">GameState</span>))</span>
+<span id="cb164-3"><a href="#cb164-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb164-4"><a href="#cb164-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Game</span> <span class="dt">GameB</span> <span class="kw">where</span></span>
+<span id="cb164-5"><a href="#cb164-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> <span class="dt">Dist</span> <span class="dt">GameB</span> <span class="ot">=</span> <span class="dt">Tally</span> <span class="dt">Int</span></span>
+<span id="cb164-6"><a href="#cb164-6" aria-hidden="true" tabindex="-1"></a>    roll <span class="ot">=</span> <span class="fu">return</span> <span class="op">$</span> Tally.fromList [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]</span>
+<span id="cb164-7"><a href="#cb164-7" aria-hidden="true" tabindex="-1"></a>    move p i <span class="ot">=</span> modify (Tally.cbind (tmove p i))</span>
+<span id="cb164-8"><a href="#cb164-8" aria-hidden="true" tabindex="-1"></a>    stop <span class="ot">=</span> gets (<span class="fu">all</span> isLeft <span class="op">.</span> Tally.distinct)</span>
+<span id="cb164-9"><a href="#cb164-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb164-10"><a href="#cb164-10" aria-hidden="true" tabindex="-1"></a><span class="ot">runGameB ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Tally</span> <span class="dt">GameState</span></span>
+<span id="cb164-11"><a href="#cb164-11" aria-hidden="true" tabindex="-1"></a>runGameB (p1, p2) <span class="ot">=</span> execState (gameStateB play)</span>
+<span id="cb164-12"><a href="#cb164-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">$</span> Tally.singleton <span class="op">$</span> <span class="dt">Right</span></span>
+<span id="cb164-13"><a href="#cb164-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">$</span> <span class="dt">GameData</span> <span class="dv">0</span> (<span class="dt">PlayerData</span> p1 <span class="dv">0</span>) (<span class="dt">PlayerData</span> p2 <span class="dv">0</span>)</span>
+<span id="cb164-14"><a href="#cb164-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb164-15"><a href="#cb164-15" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> runGameB</span></code></pre></div>
+</div>
+</section>
+</section>
 </section>
 <section id="day-22-reactor-reboot" class="level1">
 <h1>Day 22: Reactor Reboot</h1>
 <p>For today’s puzzle it is immediately clear what the second part is about. We need to find the number of lights turned on in a crazy large space.</p>
 <div class="named-code-block">
 <p>file:app/Day22.hs</p>
-<div class="sourceCode" id="cb156"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day22</span> <span class="kw">where</span></span>
-<span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-3"><a href="#cb156-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb156-4"><a href="#cb156-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
-<span id="cb156-5"><a href="#cb156-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V3</span> (<span class="dt">V3</span>(..), _x, _y, _z)</span>
-<span id="cb156-6"><a href="#cb156-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span></span>
-<span id="cb156-7"><a href="#cb156-7" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, integer, lexeme, readInputParsing, eol, string, sepEndBy1 )</span>
-<span id="cb156-8"><a href="#cb156-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-9"><a href="#cb156-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day22<span class="op">&gt;&gt;</span></span>
-<span id="cb156-10"><a href="#cb156-10" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day22<span class="op">&gt;&gt;</span></span>
-<span id="cb156-11"><a href="#cb156-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb165"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day22</span> <span class="kw">where</span></span>
+<span id="cb165-2"><a href="#cb165-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-3"><a href="#cb165-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb165-4"><a href="#cb165-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb165-5"><a href="#cb165-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V3</span> (<span class="dt">V3</span>(..), _x, _y, _z)</span>
+<span id="cb165-6"><a href="#cb165-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Parsing</span></span>
+<span id="cb165-7"><a href="#cb165-7" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, integer, lexeme, readInputParsing, eol, string, sepEndBy1 )</span>
+<span id="cb165-8"><a href="#cb165-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-9"><a href="#cb165-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">-</span>day22<span class="op">&gt;&gt;</span></span>
+<span id="cb165-10"><a href="#cb165-10" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>day22<span class="op">&gt;&gt;</span></span>
+<span id="cb165-11"><a href="#cb165-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 <p>Obligatory parser of the day:</p>
 <div class="named-code-block">
 <p>«parser-day22»</p>
-<div class="sourceCode" id="cb157"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">V3Range</span> <span class="ot">=</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>)</span>
-<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Command</span> <span class="ot">=</span> <span class="dt">CommandOn</span> <span class="op">|</span> <span class="dt">CommandOff</span> <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Bounded</span>, <span class="dt">Enum</span>)</span>
-<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Input</span> <span class="ot">=</span> [(<span class="dt">Command</span>, <span class="dt">V3Range</span>)]</span>
-<span id="cb157-4"><a href="#cb157-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb157-5"><a href="#cb157-5" aria-hidden="true" tabindex="-1"></a><span class="ot">intRangeP ::</span> <span class="dt">Parser</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
-<span id="cb157-6"><a href="#cb157-6" aria-hidden="true" tabindex="-1"></a>intRangeP <span class="ot">=</span> (,) <span class="op">&lt;$&gt;</span> integer <span class="op">&lt;*</span> string <span class="st">&quot;..&quot;</span> <span class="op">&lt;*&gt;</span> integer</span>
-<span id="cb157-7"><a href="#cb157-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb157-8"><a href="#cb157-8" aria-hidden="true" tabindex="-1"></a><span class="ot">rangeP ::</span> <span class="dt">Parser</span> (<span class="dt">Command</span>, <span class="dt">V3Range</span>)</span>
-<span id="cb157-9"><a href="#cb157-9" aria-hidden="true" tabindex="-1"></a>rangeP <span class="ot">=</span> (,) <span class="op">&lt;$&gt;</span> lexeme (<span class="dt">CommandOn</span> <span class="op">&lt;$</span> string <span class="st">&quot;on&quot;</span> <span class="op">&lt;|&gt;</span> (<span class="dt">CommandOff</span> <span class="op">&lt;$</span> string <span class="st">&quot;off&quot;</span>))</span>
-<span id="cb157-10"><a href="#cb157-10" aria-hidden="true" tabindex="-1"></a>             <span class="op">&lt;*&gt;</span> (<span class="kw">do</span> (xmin, xmax) <span class="ot">&lt;-</span> string <span class="st">&quot;x=&quot;</span> <span class="op">*&gt;</span> intRangeP</span>
-<span id="cb157-11"><a href="#cb157-11" aria-hidden="true" tabindex="-1"></a>                     string <span class="st">&quot;,&quot;</span></span>
-<span id="cb157-12"><a href="#cb157-12" aria-hidden="true" tabindex="-1"></a>                     (ymin, ymax) <span class="ot">&lt;-</span> string <span class="st">&quot;y=&quot;</span> <span class="op">*&gt;</span> intRangeP</span>
-<span id="cb157-13"><a href="#cb157-13" aria-hidden="true" tabindex="-1"></a>                     string <span class="st">&quot;,&quot;</span></span>
-<span id="cb157-14"><a href="#cb157-14" aria-hidden="true" tabindex="-1"></a>                     (zmin, zmax) <span class="ot">&lt;-</span> string <span class="st">&quot;z=&quot;</span> <span class="op">*&gt;</span> intRangeP</span>
-<span id="cb157-15"><a href="#cb157-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">return</span> (<span class="dt">V3</span> xmin ymin zmin, <span class="dt">V3</span> xmax ymax zmax))</span>
-<span id="cb157-16"><a href="#cb157-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb157-17"><a href="#cb157-17" aria-hidden="true" tabindex="-1"></a><span class="ot">inputP ::</span> <span class="dt">Parser</span> <span class="dt">Input</span></span>
-<span id="cb157-18"><a href="#cb157-18" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> rangeP <span class="ot">`sepEndBy1`</span> eol</span>
-<span id="cb157-19"><a href="#cb157-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb157-20"><a href="#cb157-20" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">Input</span></span>
-<span id="cb157-21"><a href="#cb157-21" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day22.txt&quot;</span> inputP</span></code></pre></div>
+<div class="sourceCode" id="cb166"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb166-1"><a href="#cb166-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">V3Range</span> <span class="ot">=</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>)</span>
+<span id="cb166-2"><a href="#cb166-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Command</span> <span class="ot">=</span> <span class="dt">CommandOn</span> <span class="op">|</span> <span class="dt">CommandOff</span> <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Bounded</span>, <span class="dt">Enum</span>)</span>
+<span id="cb166-3"><a href="#cb166-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Input</span> <span class="ot">=</span> [(<span class="dt">Command</span>, <span class="dt">V3Range</span>)]</span>
+<span id="cb166-4"><a href="#cb166-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb166-5"><a href="#cb166-5" aria-hidden="true" tabindex="-1"></a><span class="ot">intRangeP ::</span> <span class="dt">Parser</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb166-6"><a href="#cb166-6" aria-hidden="true" tabindex="-1"></a>intRangeP <span class="ot">=</span> (,) <span class="op">&lt;$&gt;</span> integer <span class="op">&lt;*</span> string <span class="st">&quot;..&quot;</span> <span class="op">&lt;*&gt;</span> integer</span>
+<span id="cb166-7"><a href="#cb166-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb166-8"><a href="#cb166-8" aria-hidden="true" tabindex="-1"></a><span class="ot">rangeP ::</span> <span class="dt">Parser</span> (<span class="dt">Command</span>, <span class="dt">V3Range</span>)</span>
+<span id="cb166-9"><a href="#cb166-9" aria-hidden="true" tabindex="-1"></a>rangeP <span class="ot">=</span> (,) <span class="op">&lt;$&gt;</span> lexeme (<span class="dt">CommandOn</span> <span class="op">&lt;$</span> string <span class="st">&quot;on&quot;</span> <span class="op">&lt;|&gt;</span> (<span class="dt">CommandOff</span> <span class="op">&lt;$</span> string <span class="st">&quot;off&quot;</span>))</span>
+<span id="cb166-10"><a href="#cb166-10" aria-hidden="true" tabindex="-1"></a>             <span class="op">&lt;*&gt;</span> (<span class="kw">do</span> (xmin, xmax) <span class="ot">&lt;-</span> string <span class="st">&quot;x=&quot;</span> <span class="op">*&gt;</span> intRangeP</span>
+<span id="cb166-11"><a href="#cb166-11" aria-hidden="true" tabindex="-1"></a>                     string <span class="st">&quot;,&quot;</span></span>
+<span id="cb166-12"><a href="#cb166-12" aria-hidden="true" tabindex="-1"></a>                     (ymin, ymax) <span class="ot">&lt;-</span> string <span class="st">&quot;y=&quot;</span> <span class="op">*&gt;</span> intRangeP</span>
+<span id="cb166-13"><a href="#cb166-13" aria-hidden="true" tabindex="-1"></a>                     string <span class="st">&quot;,&quot;</span></span>
+<span id="cb166-14"><a href="#cb166-14" aria-hidden="true" tabindex="-1"></a>                     (zmin, zmax) <span class="ot">&lt;-</span> string <span class="st">&quot;z=&quot;</span> <span class="op">*&gt;</span> intRangeP</span>
+<span id="cb166-15"><a href="#cb166-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">return</span> (<span class="dt">V3</span> xmin ymin zmin, <span class="dt">V3</span> xmax ymax zmax))</span>
+<span id="cb166-16"><a href="#cb166-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb166-17"><a href="#cb166-17" aria-hidden="true" tabindex="-1"></a><span class="ot">inputP ::</span> <span class="dt">Parser</span> <span class="dt">Input</span></span>
+<span id="cb166-18"><a href="#cb166-18" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> rangeP <span class="ot">`sepEndBy1`</span> eol</span>
+<span id="cb166-19"><a href="#cb166-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb166-20"><a href="#cb166-20" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">Input</span></span>
+<span id="cb166-21"><a href="#cb166-21" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> readInputParsing <span class="st">&quot;data/day22.txt&quot;</span> inputP</span></code></pre></div>
 </div>
 <p>I define a class <code>Range</code> on which an <code>intersection</code> and <code>area</code> are defined. This has a rather straight forward implementation on <code>(Int, Int)</code>.</p>
 <div class="named-code-block">
 <p>«solution-day22»</p>
-<div class="sourceCode" id="cb158"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Range</span> a <span class="kw">where</span></span>
-<span id="cb158-2"><a href="#cb158-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    intersect ::</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
-<span id="cb158-3"><a href="#cb158-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    area ::</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb158-4"><a href="#cb158-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb158-5"><a href="#cb158-5" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Range</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="kw">where</span></span>
-<span id="cb158-6"><a href="#cb158-6" aria-hidden="true" tabindex="-1"></a>    intersect (a1, a2) (b1, b2)</span>
-<span id="cb158-7"><a href="#cb158-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> b1 <span class="op">&gt;</span> a2 <span class="op">||</span> a1 <span class="op">&gt;</span> b2 <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb158-8"><a href="#cb158-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> b1 <span class="op">&gt;=</span> a1 <span class="op">&amp;&amp;</span> b2 <span class="op">&gt;=</span> a2 <span class="ot">=</span> <span class="dt">Just</span> (b1, a2)</span>
-<span id="cb158-9"><a href="#cb158-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> a1 <span class="op">&gt;=</span> b1 <span class="op">&amp;&amp;</span> a2 <span class="op">&gt;=</span> b2 <span class="ot">=</span> <span class="dt">Just</span> (a1, b2)</span>
-<span id="cb158-10"><a href="#cb158-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> b1 <span class="op">&gt;=</span> a1 <span class="op">&amp;&amp;</span> b2 <span class="op">&lt;=</span> a2 <span class="ot">=</span> <span class="dt">Just</span> (b1, b2)</span>
-<span id="cb158-11"><a href="#cb158-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> a1 <span class="op">&gt;=</span> b1 <span class="op">&amp;&amp;</span> a2 <span class="op">&lt;=</span> b2 <span class="ot">=</span> <span class="dt">Just</span> (a1, a2)</span>
-<span id="cb158-12"><a href="#cb158-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;no known configuration: &quot;</span></span>
-<span id="cb158-13"><a href="#cb158-13" aria-hidden="true" tabindex="-1"></a>                            <span class="op">&lt;&gt;</span> <span class="fu">show</span> ((a1, a2), (b1, b2))</span>
-<span id="cb158-14"><a href="#cb158-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb158-15"><a href="#cb158-15" aria-hidden="true" tabindex="-1"></a>    area (a1, a2) <span class="ot">=</span> a2 <span class="op">-</span> a1 <span class="op">+</span> <span class="dv">1</span></span></code></pre></div>
+<div class="sourceCode" id="cb167"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Range</span> a <span class="kw">where</span></span>
+<span id="cb167-2"><a href="#cb167-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    intersect ::</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb167-3"><a href="#cb167-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    area ::</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb167-4"><a href="#cb167-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-5"><a href="#cb167-5" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Range</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="kw">where</span></span>
+<span id="cb167-6"><a href="#cb167-6" aria-hidden="true" tabindex="-1"></a>    intersect (a1, a2) (b1, b2)</span>
+<span id="cb167-7"><a href="#cb167-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> b1 <span class="op">&gt;</span> a2 <span class="op">||</span> a1 <span class="op">&gt;</span> b2 <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb167-8"><a href="#cb167-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> b1 <span class="op">&gt;=</span> a1 <span class="op">&amp;&amp;</span> b2 <span class="op">&gt;=</span> a2 <span class="ot">=</span> <span class="dt">Just</span> (b1, a2)</span>
+<span id="cb167-9"><a href="#cb167-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> a1 <span class="op">&gt;=</span> b1 <span class="op">&amp;&amp;</span> a2 <span class="op">&gt;=</span> b2 <span class="ot">=</span> <span class="dt">Just</span> (a1, b2)</span>
+<span id="cb167-10"><a href="#cb167-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> b1 <span class="op">&gt;=</span> a1 <span class="op">&amp;&amp;</span> b2 <span class="op">&lt;=</span> a2 <span class="ot">=</span> <span class="dt">Just</span> (b1, b2)</span>
+<span id="cb167-11"><a href="#cb167-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> a1 <span class="op">&gt;=</span> b1 <span class="op">&amp;&amp;</span> a2 <span class="op">&lt;=</span> b2 <span class="ot">=</span> <span class="dt">Just</span> (a1, a2)</span>
+<span id="cb167-12"><a href="#cb167-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;no known configuration: &quot;</span></span>
+<span id="cb167-13"><a href="#cb167-13" aria-hidden="true" tabindex="-1"></a>                            <span class="op">&lt;&gt;</span> <span class="fu">show</span> ((a1, a2), (b1, b2))</span>
+<span id="cb167-14"><a href="#cb167-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-15"><a href="#cb167-15" aria-hidden="true" tabindex="-1"></a>    area (a1, a2) <span class="ot">=</span> a2 <span class="op">-</span> a1 <span class="op">+</span> <span class="dv">1</span></span></code></pre></div>
 </div>
 <p>Now, for <code>(V3 Int, V3 Int)</code> it is just the combination of the integer intersections.</p>
 <div class="named-code-block">
 <p>«solution-day22»</p>
-<div class="sourceCode" id="cb159"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Range</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>) <span class="kw">where</span></span>
-<span id="cb159-2"><a href="#cb159-2" aria-hidden="true" tabindex="-1"></a>    intersect (a1, a2) (b1, b2) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb159-3"><a href="#cb159-3" aria-hidden="true" tabindex="-1"></a>        (x1, x2) <span class="ot">&lt;-</span> (a1 <span class="op">^.</span> _x, a2 <span class="op">^.</span> _x) <span class="ot">`intersect`</span> (b1 <span class="op">^.</span> _x, b2 <span class="op">^.</span> _x)</span>
-<span id="cb159-4"><a href="#cb159-4" aria-hidden="true" tabindex="-1"></a>        (y1, y2) <span class="ot">&lt;-</span> (a1 <span class="op">^.</span> _y, a2 <span class="op">^.</span> _y) <span class="ot">`intersect`</span> (b1 <span class="op">^.</span> _y, b2 <span class="op">^.</span> _y)</span>
-<span id="cb159-5"><a href="#cb159-5" aria-hidden="true" tabindex="-1"></a>        (z1, z2) <span class="ot">&lt;-</span> (a1 <span class="op">^.</span> _z, a2 <span class="op">^.</span> _z) <span class="ot">`intersect`</span> (b1 <span class="op">^.</span> _z, b2 <span class="op">^.</span> _z)</span>
-<span id="cb159-6"><a href="#cb159-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> (<span class="dt">V3</span> x1 y1 z1, <span class="dt">V3</span> x2 y2 z2)</span>
-<span id="cb159-7"><a href="#cb159-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb159-8"><a href="#cb159-8" aria-hidden="true" tabindex="-1"></a>    area (a, b) <span class="ot">=</span> <span class="fu">product</span> (b <span class="op">-</span> a <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb168"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb168-1"><a href="#cb168-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Range</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>) <span class="kw">where</span></span>
+<span id="cb168-2"><a href="#cb168-2" aria-hidden="true" tabindex="-1"></a>    intersect (a1, a2) (b1, b2) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb168-3"><a href="#cb168-3" aria-hidden="true" tabindex="-1"></a>        (x1, x2) <span class="ot">&lt;-</span> (a1 <span class="op">^.</span> _x, a2 <span class="op">^.</span> _x) <span class="ot">`intersect`</span> (b1 <span class="op">^.</span> _x, b2 <span class="op">^.</span> _x)</span>
+<span id="cb168-4"><a href="#cb168-4" aria-hidden="true" tabindex="-1"></a>        (y1, y2) <span class="ot">&lt;-</span> (a1 <span class="op">^.</span> _y, a2 <span class="op">^.</span> _y) <span class="ot">`intersect`</span> (b1 <span class="op">^.</span> _y, b2 <span class="op">^.</span> _y)</span>
+<span id="cb168-5"><a href="#cb168-5" aria-hidden="true" tabindex="-1"></a>        (z1, z2) <span class="ot">&lt;-</span> (a1 <span class="op">^.</span> _z, a2 <span class="op">^.</span> _z) <span class="ot">`intersect`</span> (b1 <span class="op">^.</span> _z, b2 <span class="op">^.</span> _z)</span>
+<span id="cb168-6"><a href="#cb168-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> (<span class="dt">V3</span> x1 y1 z1, <span class="dt">V3</span> x2 y2 z2)</span>
+<span id="cb168-7"><a href="#cb168-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb168-8"><a href="#cb168-8" aria-hidden="true" tabindex="-1"></a>    area (a, b) <span class="ot">=</span> <span class="fu">product</span> (b <span class="op">-</span> a <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
 </div>
 <p>Now a <code>MultiRange</code> type is giving a list of ranges and their multiplicity. If a range of lights is turned off, we find the intersection with all current ranges and stack those with opposite sign.</p>
 <div class="named-code-block">
 <p>«solution-day22»</p>
-<div class="sourceCode" id="cb160"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">MultiRange</span> r <span class="ot">=</span> <span class="dt">MultiRange</span> {<span class="ot"> toList ::</span> [(r, <span class="dt">Int</span>)] }</span>
-<span id="cb160-2"><a href="#cb160-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Semigroup</span>, <span class="dt">Monoid</span>)</span>
-<span id="cb160-3"><a href="#cb160-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb160-4"><a href="#cb160-4" aria-hidden="true" tabindex="-1"></a><span class="ot">(=-=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> <span class="dt">MultiRange</span> r <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> <span class="dt">MultiRange</span> r</span>
-<span id="cb160-5"><a href="#cb160-5" aria-hidden="true" tabindex="-1"></a>(<span class="dt">MultiRange</span> m) <span class="op">=-=</span> r <span class="ot">=</span> <span class="dt">MultiRange</span> <span class="op">$</span> mapMaybe isect m <span class="op">&lt;&gt;</span> m</span>
-<span id="cb160-6"><a href="#cb160-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> isect (s, m) <span class="ot">=</span> (, <span class="fu">negate</span> m) <span class="op">&lt;$&gt;</span> (s <span class="ot">`intersect`</span> r)</span></code></pre></div>
+<div class="sourceCode" id="cb169"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">MultiRange</span> r <span class="ot">=</span> <span class="dt">MultiRange</span> {<span class="ot"> toList ::</span> [(r, <span class="dt">Int</span>)] }</span>
+<span id="cb169-2"><a href="#cb169-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Semigroup</span>, <span class="dt">Monoid</span>)</span>
+<span id="cb169-3"><a href="#cb169-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb169-4"><a href="#cb169-4" aria-hidden="true" tabindex="-1"></a><span class="ot">(=-=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> <span class="dt">MultiRange</span> r <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> <span class="dt">MultiRange</span> r</span>
+<span id="cb169-5"><a href="#cb169-5" aria-hidden="true" tabindex="-1"></a>(<span class="dt">MultiRange</span> m) <span class="op">=-=</span> r <span class="ot">=</span> <span class="dt">MultiRange</span> <span class="op">$</span> mapMaybe isect m <span class="op">&lt;&gt;</span> m</span>
+<span id="cb169-6"><a href="#cb169-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> isect (s, m) <span class="ot">=</span> (, <span class="fu">negate</span> m) <span class="op">&lt;$&gt;</span> (s <span class="ot">`intersect`</span> r)</span></code></pre></div>
 </div>
 <p>To switch lights on, first switch them off, and then add to the list.</p>
 <div class="named-code-block">
 <p>«solution-day22»</p>
-<div class="sourceCode" id="cb161"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(=+=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> <span class="dt">MultiRange</span> r <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> <span class="dt">MultiRange</span> r</span>
-<span id="cb161-2"><a href="#cb161-2" aria-hidden="true" tabindex="-1"></a>m <span class="op">=+=</span> r <span class="ot">=</span> (m <span class="op">=-=</span> r) <span class="op">&lt;&gt;</span> <span class="dt">MultiRange</span> [(r, <span class="dv">1</span>)]</span>
-<span id="cb161-3"><a href="#cb161-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb161-4"><a href="#cb161-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runCommands ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb161-5"><a href="#cb161-5" aria-hidden="true" tabindex="-1"></a>runCommands <span class="ot">=</span> totalArea <span class="op">.</span> foldl&#39; switch (<span class="dt">MultiRange</span> []) </span>
-<span id="cb161-6"><a href="#cb161-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> switch m (<span class="dt">CommandOn</span>, r) <span class="ot">=</span> m <span class="op">=+=</span> r</span>
-<span id="cb161-7"><a href="#cb161-7" aria-hidden="true" tabindex="-1"></a>          switch m (<span class="dt">CommandOff</span>, r) <span class="ot">=</span> m <span class="op">=-=</span> r</span>
-<span id="cb161-8"><a href="#cb161-8" aria-hidden="true" tabindex="-1"></a>          totalArea (<span class="dt">MultiRange</span> m) <span class="ot">=</span> foldl&#39; (\t (r, s) <span class="ot">-&gt;</span> t <span class="op">+</span> area r <span class="op">*</span> s) <span class="dv">0</span> m</span>
-<span id="cb161-9"><a href="#cb161-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb161-10"><a href="#cb161-10" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb161-11"><a href="#cb161-11" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> runCommands <span class="op">.</span> <span class="fu">filter</span> (small <span class="op">.</span> <span class="fu">snd</span>)</span>
-<span id="cb161-12"><a href="#cb161-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> small (a, b) <span class="ot">=</span> <span class="fu">all</span> ((<span class="op">&lt;=</span><span class="dv">50</span>) <span class="op">.</span> <span class="fu">abs</span>) a <span class="op">&amp;&amp;</span> <span class="fu">all</span> ((<span class="op">&lt;=</span><span class="dv">50</span>) <span class="op">.</span> <span class="fu">abs</span>) b</span>
-<span id="cb161-13"><a href="#cb161-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb161-14"><a href="#cb161-14" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb161-15"><a href="#cb161-15" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> runCommands</span></code></pre></div>
+<div class="sourceCode" id="cb170"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(=+=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> <span class="dt">MultiRange</span> r <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> <span class="dt">MultiRange</span> r</span>
+<span id="cb170-2"><a href="#cb170-2" aria-hidden="true" tabindex="-1"></a>m <span class="op">=+=</span> r <span class="ot">=</span> (m <span class="op">=-=</span> r) <span class="op">&lt;&gt;</span> <span class="dt">MultiRange</span> [(r, <span class="dv">1</span>)]</span>
+<span id="cb170-3"><a href="#cb170-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb170-4"><a href="#cb170-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runCommands ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb170-5"><a href="#cb170-5" aria-hidden="true" tabindex="-1"></a>runCommands <span class="ot">=</span> totalArea <span class="op">.</span> foldl&#39; switch (<span class="dt">MultiRange</span> []) </span>
+<span id="cb170-6"><a href="#cb170-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> switch m (<span class="dt">CommandOn</span>, r) <span class="ot">=</span> m <span class="op">=+=</span> r</span>
+<span id="cb170-7"><a href="#cb170-7" aria-hidden="true" tabindex="-1"></a>          switch m (<span class="dt">CommandOff</span>, r) <span class="ot">=</span> m <span class="op">=-=</span> r</span>
+<span id="cb170-8"><a href="#cb170-8" aria-hidden="true" tabindex="-1"></a>          totalArea (<span class="dt">MultiRange</span> m) <span class="ot">=</span> foldl&#39; (\t (r, s) <span class="ot">-&gt;</span> t <span class="op">+</span> area r <span class="op">*</span> s) <span class="dv">0</span> m</span>
+<span id="cb170-9"><a href="#cb170-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb170-10"><a href="#cb170-10" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb170-11"><a href="#cb170-11" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> runCommands <span class="op">.</span> <span class="fu">filter</span> (small <span class="op">.</span> <span class="fu">snd</span>)</span>
+<span id="cb170-12"><a href="#cb170-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> small (a, b) <span class="ot">=</span> <span class="fu">all</span> ((<span class="op">&lt;=</span><span class="dv">50</span>) <span class="op">.</span> <span class="fu">abs</span>) a <span class="op">&amp;&amp;</span> <span class="fu">all</span> ((<span class="op">&lt;=</span><span class="dv">50</span>) <span class="op">.</span> <span class="fu">abs</span>) b</span>
+<span id="cb170-13"><a href="#cb170-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb170-14"><a href="#cb170-14" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionB ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb170-15"><a href="#cb170-15" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> runCommands</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-boiler-plate" class="level1">
 <h1>Appendix: Boiler plate</h1>
 <div class="named-code-block">
 <p>«run-solutions»</p>
-<div class="sourceCode" id="cb162"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb162-2"><a href="#cb162-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA</span>
-<span id="cb162-3"><a href="#cb162-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb162-4"><a href="#cb162-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
-<span id="cb162-5"><a href="#cb162-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
+<div class="sourceCode" id="cb171"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runA ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb171-2"><a href="#cb171-2" aria-hidden="true" tabindex="-1"></a>runA <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionA</span>
+<span id="cb171-3"><a href="#cb171-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-4"><a href="#cb171-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runB ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env ()</span>
+<span id="cb171-5"><a href="#cb171-5" aria-hidden="true" tabindex="-1"></a>runB <span class="ot">=</span> readInput <span class="op">&gt;&gt;=</span> logInfo <span class="op">.</span> display <span class="op">.</span> tshow <span class="op">.</span> solutionB</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-output" class="level1">
@@ -2855,83 +2923,83 @@
 <p>RIO is missing easy functions for standard output, it’s a bit principled in that regard.</p>
 <div class="named-code-block">
 <p>file:app/Print.hs</p>
-<div class="sourceCode" id="cb163"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Print</span> <span class="kw">where</span></span>
-<span id="cb163-2"><a href="#cb163-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb163-3"><a href="#cb163-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb163-4"><a href="#cb163-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb163-5"><a href="#cb163-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (putStr)</span>
-<span id="cb163-6"><a href="#cb163-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
-<span id="cb163-7"><a href="#cb163-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb163-8"><a href="#cb163-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span><span class="ot"> ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
-<span id="cb163-9"><a href="#cb163-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span> <span class="ot">=</span> <span class="fu">putStr</span> <span class="op">.</span> Text.encodeUtf8</span>
-<span id="cb163-10"><a href="#cb163-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb163-11"><a href="#cb163-11" aria-hidden="true" tabindex="-1"></a><span class="ot">printLn ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
-<span id="cb163-12"><a href="#cb163-12" aria-hidden="true" tabindex="-1"></a>printLn <span class="ot">=</span> <span class="fu">print</span> <span class="op">.</span> (<span class="op">&lt;&gt;</span> <span class="st">&quot;\n&quot;</span>) </span>
-<span id="cb163-13"><a href="#cb163-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb163-14"><a href="#cb163-14" aria-hidden="true" tabindex="-1"></a><span class="ot">printCoords ::</span> <span class="dt">MonadIO</span> m <span class="ot">=&gt;</span> [<span class="dt">Ix2</span>] <span class="ot">-&gt;</span> m ()</span>
-<span id="cb163-15"><a href="#cb163-15" aria-hidden="true" tabindex="-1"></a>printCoords <span class="ot">=</span> <span class="fu">mapM_</span> (\(x <span class="op">:.</span> y) <span class="ot">-&gt;</span> printLn <span class="op">$</span> tshow x <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow y)</span></code></pre></div>
+<div class="sourceCode" id="cb172"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb172-1"><a href="#cb172-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Print</span> <span class="kw">where</span></span>
+<span id="cb172-2"><a href="#cb172-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb172-3"><a href="#cb172-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb172-4"><a href="#cb172-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb172-5"><a href="#cb172-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.ByteString</span> (putStr)</span>
+<span id="cb172-6"><a href="#cb172-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Massiv.Array</span> (<span class="dt">Ix2</span>(..))</span>
+<span id="cb172-7"><a href="#cb172-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb172-8"><a href="#cb172-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span><span class="ot"> ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
+<span id="cb172-9"><a href="#cb172-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span> <span class="ot">=</span> <span class="fu">putStr</span> <span class="op">.</span> Text.encodeUtf8</span>
+<span id="cb172-10"><a href="#cb172-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb172-11"><a href="#cb172-11" aria-hidden="true" tabindex="-1"></a><span class="ot">printLn ::</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> m ()</span>
+<span id="cb172-12"><a href="#cb172-12" aria-hidden="true" tabindex="-1"></a>printLn <span class="ot">=</span> <span class="fu">print</span> <span class="op">.</span> (<span class="op">&lt;&gt;</span> <span class="st">&quot;\n&quot;</span>) </span>
+<span id="cb172-13"><a href="#cb172-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb172-14"><a href="#cb172-14" aria-hidden="true" tabindex="-1"></a><span class="ot">printCoords ::</span> <span class="dt">MonadIO</span> m <span class="ot">=&gt;</span> [<span class="dt">Ix2</span>] <span class="ot">-&gt;</span> m ()</span>
+<span id="cb172-15"><a href="#cb172-15" aria-hidden="true" tabindex="-1"></a>printCoords <span class="ot">=</span> <span class="fu">mapM_</span> (\(x <span class="op">:.</span> y) <span class="ot">-&gt;</span> printLn <span class="op">$</span> tshow x <span class="op">&lt;&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tshow y)</span></code></pre></div>
 </div>
 </section>
 <section id="appendix-parsing" class="level1">
 <h1>Appendix: Parsing</h1>
 <div class="named-code-block">
 <p>file:app/Parsing.hs</p>
-<div class="sourceCode" id="cb164"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
-<span id="cb164-2"><a href="#cb164-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
-<span id="cb164-3"><a href="#cb164-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit</span>
-<span id="cb164-4"><a href="#cb164-4" aria-hidden="true" tabindex="-1"></a>    , digitArray, dropUntilEol )</span>
-<span id="cb164-5"><a href="#cb164-5" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
-<span id="cb164-6"><a href="#cb164-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-7"><a href="#cb164-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb164-8"><a href="#cb164-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord, <span class="dt">GeneralCategory</span>(<span class="dt">LineSeparator</span>), generalCategory)</span>
-<span id="cb164-9"><a href="#cb164-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb164-10"><a href="#cb164-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb164-11"><a href="#cb164-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-12"><a href="#cb164-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb164-13"><a href="#cb164-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
-<span id="cb164-14"><a href="#cb164-14" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>), takeWhileP )</span>
-<span id="cb164-15"><a href="#cb164-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
-<span id="cb164-16"><a href="#cb164-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
-<span id="cb164-17"><a href="#cb164-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb164-18"><a href="#cb164-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-19"><a href="#cb164-19" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
-<span id="cb164-20"><a href="#cb164-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-21"><a href="#cb164-21" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
-<span id="cb164-22"><a href="#cb164-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-23"><a href="#cb164-23" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb164-24"><a href="#cb164-24" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
-<span id="cb164-25"><a href="#cb164-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-26"><a href="#cb164-26" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb164-27"><a href="#cb164-27" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
-<span id="cb164-28"><a href="#cb164-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
-<span id="cb164-29"><a href="#cb164-29" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
-<span id="cb164-30"><a href="#cb164-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-31"><a href="#cb164-31" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
-<span id="cb164-32"><a href="#cb164-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
-<span id="cb164-33"><a href="#cb164-33" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb164-34"><a href="#cb164-34" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
-<span id="cb164-35"><a href="#cb164-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb164-36"><a href="#cb164-36" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
-<span id="cb164-37"><a href="#cb164-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-38"><a href="#cb164-38" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb164-39"><a href="#cb164-39" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
-<span id="cb164-40"><a href="#cb164-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-41"><a href="#cb164-41" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb164-42"><a href="#cb164-42" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb164-43"><a href="#cb164-43" aria-hidden="true" tabindex="-1"></a>    sign_ <span class="ot">&lt;-</span> <span class="fu">maybe</span> <span class="dv">1</span> (<span class="fu">const</span> (<span class="op">-</span><span class="dv">1</span>)) <span class="op">&lt;$&gt;</span> optional (char <span class="ch">&#39;-&#39;</span>)</span>
-<span id="cb164-44"><a href="#cb164-44" aria-hidden="true" tabindex="-1"></a>    abs_  <span class="ot">&lt;-</span> lexeme L.decimal</span>
-<span id="cb164-45"><a href="#cb164-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (sign_ <span class="op">*</span> abs_)</span>
-<span id="cb164-46"><a href="#cb164-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-47"><a href="#cb164-47" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb164-48"><a href="#cb164-48" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
-<span id="cb164-49"><a href="#cb164-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span>
-<span id="cb164-50"><a href="#cb164-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-51"><a href="#cb164-51" aria-hidden="true" tabindex="-1"></a><span class="ot">dropUntilEol ::</span> <span class="dt">Parser</span> ()</span>
-<span id="cb164-52"><a href="#cb164-52" aria-hidden="true" tabindex="-1"></a>dropUntilEol <span class="ot">=</span> void <span class="op">$</span> takeWhileP (<span class="dt">Just</span> <span class="st">&quot;reading to eol&quot;</span>)</span>
-<span id="cb164-53"><a href="#cb164-53" aria-hidden="true" tabindex="-1"></a>                                 (<span class="op">/=</span> <span class="ch">&#39;\n&#39;</span>)</span>
-<span id="cb164-54"><a href="#cb164-54" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&gt;&gt;</span> eol</span>
-<span id="cb164-55"><a href="#cb164-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-56"><a href="#cb164-56" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb173"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb173-1"><a href="#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Parsing</span></span>
+<span id="cb173-2"><a href="#cb173-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Parser</span>, hspace, string, char, readInputParsing, lexeme</span>
+<span id="cb173-3"><a href="#cb173-3" aria-hidden="true" tabindex="-1"></a>    , integer, eol, sepEndBy1, sepBy1, failOnException, digit</span>
+<span id="cb173-4"><a href="#cb173-4" aria-hidden="true" tabindex="-1"></a>    , digitArray, dropUntilEol )</span>
+<span id="cb173-5"><a href="#cb173-5" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb173-6"><a href="#cb173-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-7"><a href="#cb173-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
+<span id="cb173-8"><a href="#cb173-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.Char</span> (ord, <span class="dt">GeneralCategory</span>(<span class="dt">LineSeparator</span>), generalCategory)</span>
+<span id="cb173-9"><a href="#cb173-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Set</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb173-10"><a href="#cb173-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb173-11"><a href="#cb173-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-12"><a href="#cb173-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb173-13"><a href="#cb173-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">ParseErrorBundle</span>, <span class="dt">Parsec</span>, parse, errorBundlePretty, sepEndBy1</span>
+<span id="cb173-14"><a href="#cb173-14" aria-hidden="true" tabindex="-1"></a>    , sepBy1, fancyFailure, <span class="dt">ErrorFancy</span>(<span class="op">..</span>), takeWhileP )</span>
+<span id="cb173-15"><a href="#cb173-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (hspace, string, char, eol)</span>
+<span id="cb173-16"><a href="#cb173-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char</span> <span class="kw">as</span> <span class="dt">C</span></span>
+<span id="cb173-17"><a href="#cb173-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb173-18"><a href="#cb173-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-19"><a href="#cb173-19" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Massiv.Array</span> <span class="kw">as</span> <span class="dt">A</span></span>
+<span id="cb173-20"><a href="#cb173-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-21"><a href="#cb173-21" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> <span class="dt">Void</span> <span class="dt">Text</span></span>
+<span id="cb173-22"><a href="#cb173-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-23"><a href="#cb173-23" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb173-24"><a href="#cb173-24" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb173-25"><a href="#cb173-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-26"><a href="#cb173-26" aria-hidden="true" tabindex="-1"></a><span class="ot">failOnException ::</span> (<span class="dt">Exception</span> e) <span class="ot">=&gt;</span> <span class="dt">Either</span> e a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb173-27"><a href="#cb173-27" aria-hidden="true" tabindex="-1"></a>failOnException <span class="ot">=</span> <span class="fu">either</span> convertError <span class="fu">return</span></span>
+<span id="cb173-28"><a href="#cb173-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> convertError <span class="ot">=</span> fancyFailure <span class="op">.</span> Set.singleton</span>
+<span id="cb173-29"><a href="#cb173-29" aria-hidden="true" tabindex="-1"></a>                       <span class="op">.</span> <span class="dt">ErrorFail</span> <span class="op">.</span> displayException</span>
+<span id="cb173-30"><a href="#cb173-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-31"><a href="#cb173-31" aria-hidden="true" tabindex="-1"></a><span class="ot">readInputParsing ::</span> (<span class="dt">MonadReader</span> env m, <span class="dt">MonadIO</span> m, <span class="dt">HasLogFunc</span> env)</span>
+<span id="cb173-32"><a href="#cb173-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ot">=&gt;</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> m a</span>
+<span id="cb173-33"><a href="#cb173-33" aria-hidden="true" tabindex="-1"></a>readInputParsing file p <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb173-34"><a href="#cb173-34" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> parse p file <span class="op">&lt;$&gt;</span> readFileUtf8 file</span>
+<span id="cb173-35"><a href="#cb173-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb173-36"><a href="#cb173-36" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> x</span>
+<span id="cb173-37"><a href="#cb173-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-38"><a href="#cb173-38" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb173-39"><a href="#cb173-39" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme hspace</span>
+<span id="cb173-40"><a href="#cb173-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-41"><a href="#cb173-41" aria-hidden="true" tabindex="-1"></a><span class="ot">integer ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb173-42"><a href="#cb173-42" aria-hidden="true" tabindex="-1"></a>integer <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb173-43"><a href="#cb173-43" aria-hidden="true" tabindex="-1"></a>    sign_ <span class="ot">&lt;-</span> <span class="fu">maybe</span> <span class="dv">1</span> (<span class="fu">const</span> (<span class="op">-</span><span class="dv">1</span>)) <span class="op">&lt;$&gt;</span> optional (char <span class="ch">&#39;-&#39;</span>)</span>
+<span id="cb173-44"><a href="#cb173-44" aria-hidden="true" tabindex="-1"></a>    abs_  <span class="ot">&lt;-</span> lexeme L.decimal</span>
+<span id="cb173-45"><a href="#cb173-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (sign_ <span class="op">*</span> abs_)</span>
+<span id="cb173-46"><a href="#cb173-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-47"><a href="#cb173-47" aria-hidden="true" tabindex="-1"></a><span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb173-48"><a href="#cb173-48" aria-hidden="true" tabindex="-1"></a>digit <span class="ot">=</span> toValue <span class="op">&lt;$&gt;</span> C.digitChar</span>
+<span id="cb173-49"><a href="#cb173-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> toValue c <span class="ot">=</span> <span class="fu">ord</span> c <span class="op">-</span> <span class="fu">ord</span> <span class="ch">&#39;0&#39;</span></span>
+<span id="cb173-50"><a href="#cb173-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-51"><a href="#cb173-51" aria-hidden="true" tabindex="-1"></a><span class="ot">dropUntilEol ::</span> <span class="dt">Parser</span> ()</span>
+<span id="cb173-52"><a href="#cb173-52" aria-hidden="true" tabindex="-1"></a>dropUntilEol <span class="ot">=</span> void <span class="op">$</span> takeWhileP (<span class="dt">Just</span> <span class="st">&quot;reading to eol&quot;</span>)</span>
+<span id="cb173-53"><a href="#cb173-53" aria-hidden="true" tabindex="-1"></a>                                 (<span class="op">/=</span> <span class="ch">&#39;\n&#39;</span>)</span>
+<span id="cb173-54"><a href="#cb173-54" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&gt;&gt;</span> eol</span>
+<span id="cb173-55"><a href="#cb173-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-56"><a href="#cb173-56" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>digit<span class="op">-</span>array<span class="op">-</span>parser<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 </section>
         </div>
