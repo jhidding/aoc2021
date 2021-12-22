@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day22.hs
--- ~\~ begin <<lit/day22.md|app/Day22.hs>>[0]
+# Day 22: Reactor Reboot
+
+``` {.haskell file=app/Day22.hs}
 module Day22 where
 
 import RIO
@@ -8,7 +9,12 @@ import Linear.V3 (V3(..), _x, _y, _z)
 import Parsing
     ( Parser, integer, lexeme, readInputParsing, eol, string, sepEndBy1 )
 
--- ~\~ begin <<lit/day22.md|parser-day22>>[0]
+<<parser-day22>>
+<<solution-day22>>
+<<run-solutions>>
+```
+
+``` {.haskell #parser-day22}
 type V3Range = (V3 Int, V3 Int)
 data Command = CommandOn | CommandOff deriving (Show, Eq, Ord, Bounded, Enum)
 type Input = [(Command, V3Range)]
@@ -31,8 +37,9 @@ inputP = rangeP `sepEndBy1` eol
 
 readInput :: (HasLogFunc env) => RIO env Input
 readInput = readInputParsing "data/day22.txt" inputP
--- ~\~ end
--- ~\~ begin <<lit/day22.md|solution-day22>>[0]
+```
+
+``` {.haskell #solution-day22}
 class Range a where
     intersect :: a -> a -> Maybe a
 
@@ -74,12 +81,4 @@ solutionA = foldl' switch (MultiRange []) . filter (small . snd)
 
 solutionB :: b -> Int
 solutionB = const 0
--- ~\~ end
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+```
