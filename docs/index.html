@@ -2872,27 +2872,24 @@
 <span id="cb168-7"><a href="#cb168-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb168-8"><a href="#cb168-8" aria-hidden="true" tabindex="-1"></a>    area (a, b) <span class="ot">=</span> <span class="fu">product</span> (b <span class="op">-</span> a <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
 </div>
-<p>Now a <code>MultiRange</code> type is giving a list of ranges and their multiplicity. If a range of lights is turned off, we find the intersection with all current ranges and stack those with opposite sign.</p>
+<p>Now a <code>[(r, Int)]</code> type is giving a list of ranges and their multiplicity. If a range of lights is turned off, we find the intersection with all current ranges and stack those with opposite sign.</p>
 <div class="named-code-block">
 <p>«solution-day22»</p>
-<div class="sourceCode" id="cb169"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">MultiRange</span> r <span class="ot">=</span> <span class="dt">MultiRange</span> {<span class="ot"> toList ::</span> [(r, <span class="dt">Int</span>)] }</span>
-<span id="cb169-2"><a href="#cb169-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Semigroup</span>, <span class="dt">Monoid</span>)</span>
-<span id="cb169-3"><a href="#cb169-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb169-4"><a href="#cb169-4" aria-hidden="true" tabindex="-1"></a><span class="ot">(=-=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> <span class="dt">MultiRange</span> r <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> <span class="dt">MultiRange</span> r</span>
-<span id="cb169-5"><a href="#cb169-5" aria-hidden="true" tabindex="-1"></a>(<span class="dt">MultiRange</span> m) <span class="op">=-=</span> r <span class="ot">=</span> <span class="dt">MultiRange</span> <span class="op">$</span> mapMaybe isect m <span class="op">&lt;&gt;</span> m</span>
-<span id="cb169-6"><a href="#cb169-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> isect (s, m) <span class="ot">=</span> (, <span class="fu">negate</span> m) <span class="op">&lt;$&gt;</span> (s <span class="ot">`intersect`</span> r)</span></code></pre></div>
+<div class="sourceCode" id="cb169"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(=-=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> [(r, <span class="dt">Int</span>)] <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> [(r, <span class="dt">Int</span>)]</span>
+<span id="cb169-2"><a href="#cb169-2" aria-hidden="true" tabindex="-1"></a>m <span class="op">=-=</span> r <span class="ot">=</span> mapMaybe isect m <span class="op">&lt;&gt;</span> m</span>
+<span id="cb169-3"><a href="#cb169-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> isect (s, m) <span class="ot">=</span> (, <span class="fu">negate</span> m) <span class="op">&lt;$&gt;</span> (s <span class="ot">`intersect`</span> r)</span></code></pre></div>
 </div>
 <p>To switch lights on, first switch them off, and then add to the list.</p>
 <div class="named-code-block">
 <p>«solution-day22»</p>
-<div class="sourceCode" id="cb170"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(=+=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> <span class="dt">MultiRange</span> r <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> <span class="dt">MultiRange</span> r</span>
-<span id="cb170-2"><a href="#cb170-2" aria-hidden="true" tabindex="-1"></a>m <span class="op">=+=</span> r <span class="ot">=</span> (m <span class="op">=-=</span> r) <span class="op">&lt;&gt;</span> <span class="dt">MultiRange</span> [(r, <span class="dv">1</span>)]</span>
+<div class="sourceCode" id="cb170"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(=+=) ::</span> <span class="dt">Range</span> r <span class="ot">=&gt;</span> [(r, <span class="dt">Int</span>)] <span class="ot">-&gt;</span> r <span class="ot">-&gt;</span> [(r, <span class="dt">Int</span>)]</span>
+<span id="cb170-2"><a href="#cb170-2" aria-hidden="true" tabindex="-1"></a>m <span class="op">=+=</span> r <span class="ot">=</span> (r, <span class="dv">1</span>) <span class="op">:</span> (m <span class="op">=-=</span> r)</span>
 <span id="cb170-3"><a href="#cb170-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb170-4"><a href="#cb170-4" aria-hidden="true" tabindex="-1"></a><span class="ot">runCommands ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb170-5"><a href="#cb170-5" aria-hidden="true" tabindex="-1"></a>runCommands <span class="ot">=</span> totalArea <span class="op">.</span> foldl&#39; switch (<span class="dt">MultiRange</span> []) </span>
+<span id="cb170-5"><a href="#cb170-5" aria-hidden="true" tabindex="-1"></a>runCommands <span class="ot">=</span> totalArea <span class="op">.</span> foldl&#39; switch []</span>
 <span id="cb170-6"><a href="#cb170-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> switch m (<span class="dt">CommandOn</span>, r) <span class="ot">=</span> m <span class="op">=+=</span> r</span>
 <span id="cb170-7"><a href="#cb170-7" aria-hidden="true" tabindex="-1"></a>          switch m (<span class="dt">CommandOff</span>, r) <span class="ot">=</span> m <span class="op">=-=</span> r</span>
-<span id="cb170-8"><a href="#cb170-8" aria-hidden="true" tabindex="-1"></a>          totalArea (<span class="dt">MultiRange</span> m) <span class="ot">=</span> foldl&#39; (\t (r, s) <span class="ot">-&gt;</span> t <span class="op">+</span> area r <span class="op">*</span> s) <span class="dv">0</span> m</span>
+<span id="cb170-8"><a href="#cb170-8" aria-hidden="true" tabindex="-1"></a>          totalArea <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> (\(r, s) <span class="ot">-&gt;</span> area r <span class="op">*</span> s)</span>
 <span id="cb170-9"><a href="#cb170-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb170-10"><a href="#cb170-10" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">Input</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb170-11"><a href="#cb170-11" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> runCommands <span class="op">.</span> <span class="fu">filter</span> (small <span class="op">.</span> <span class="fu">snd</span>)</span>

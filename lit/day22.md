@@ -69,28 +69,25 @@ instance Range (V3 Int, V3 Int) where
     area (a, b) = product (b - a + 1)
 ```
 
-Now a `MultiRange` type is giving a list of ranges and their multiplicity. If a range of lights is turned off, we find the intersection with all current ranges and stack those with opposite sign.
+Now a `[(r, Int)]` type is giving a list of ranges and their multiplicity. If a range of lights is turned off, we find the intersection with all current ranges and stack those with opposite sign.
 
 ``` {.haskell #solution-day22}
-newtype MultiRange r = MultiRange { toList :: [(r, Int)] }
-    deriving (Show, Semigroup, Monoid)
-
-(=-=) :: Range r => MultiRange r -> r -> MultiRange r
-(MultiRange m) =-= r = MultiRange $ mapMaybe isect m <> m
+(=-=) :: Range r => [(r, Int)] -> r -> [(r, Int)]
+m =-= r = mapMaybe isect m <> m
     where isect (s, m) = (, negate m) <$> (s `intersect` r)
 ```
 
 To switch lights on, first switch them off, and then add to the list.
 
 ``` {.haskell #solution-day22}
-(=+=) :: Range r => MultiRange r -> r -> MultiRange r
-m =+= r = (m =-= r) <> MultiRange [(r, 1)]
+(=+=) :: Range r => [(r, Int)] -> r -> [(r, Int)]
+m =+= r = (r, 1) : (m =-= r)
 
 runCommands :: Input -> Int
-runCommands = totalArea . foldl' switch (MultiRange []) 
+runCommands = totalArea . foldl' switch []
     where switch m (CommandOn, r) = m =+= r
           switch m (CommandOff, r) = m =-= r
-          totalArea (MultiRange m) = foldl' (\t (r, s) -> t + area r * s) 0 m
+          totalArea = sum . map (\(r, s) -> area r * s)
 
 solutionA :: Input -> Int
 solutionA = runCommands . filter (small . snd)
