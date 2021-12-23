@@ -11,26 +11,38 @@ import Text.Megaparsec.Char (char, eol)
 
 import Linear.V2 (V2(..))
 
-data Amphipod
+data AmphipodType
     = Amber | Bronze | Copper | Desert
     deriving (Show, Eq, Ord)
 
 data Tile
     = Wall
-    | Pod Amphipod
+    | Amphipod AmphipodType
     | Empty
     deriving (Show, Eq, Ord)
 
-type Input = Map (V2 Int) Tile
+isEmpty :: Tile -> Bool
+isEmpty Empty = True
+isEmpty _     = False
+
+isAmphipod :: Tile -> Bool
+isAmphipod (Amphipod _) = True
+isAmphipod _            = False
+
+amphipodType :: Tile -> Maybe AmphipodType
+amphipodType (Amphipod x) = Just x
+amphipodType _            = Nothing
+
+type World = Map (V2 Int) Tile
 
 type Parser a = ParsecT Void Text (State (V2 Int)) a
 
 tileP :: Parser Tile
 tileP =  (char '#' $> Wall)
-     <|> (char 'A' $> Pod Amber)
-     <|> (char 'B' $> Pod Bronze)
-     <|> (char 'C' $> Pod Copper)
-     <|> (char 'D' $> Pod Desert)
+     <|> (char 'A' $> Amphipod Amber)
+     <|> (char 'B' $> Amphipod Bronze)
+     <|> (char 'C' $> Amphipod Copper)
+     <|> (char 'D' $> Amphipod Desert)
      <|> (char '.' $> Empty)
 
 newlineP :: Parser ()
@@ -43,7 +55,7 @@ cellP = do
     newlineP <|> modify (+ V2 1 0)
     return $ (loc,) <$> tile
 
-inputP :: Parser Input
+inputP :: Parser World
 inputP = Map.fromList . catMaybes <$> some cellP
 
 instance Display (ParseErrorBundle Text Void) where
@@ -56,6 +68,27 @@ readInput = do
            return $ evalState (runParserT inputP "data/day23.txt" txt)
                               (V2 0 0)
 
+energyPerMove :: Map AmphipodType Int
+energyPerMove = Map.fromList
+    [(Amber, 1), (Bronze, 10), (Copper, 100), (Desert, 1000)]
+
+neighbours :: V2 Int -> [V2 Int]
+neighbours p = (p +) <$> [V2 (-1) 0, V2 1 0, V2 0 (-1), V2 0 1]
+
+destinations :: Map AmphipodType [V2 Int]
+destinations = Map.fromList
+    [(Amber,  [V2 3 2, V2 3 3])
+    ,(Bronze, [V2 5 2, V2 5 3])
+    ,(Copper, [V2 7 2, V2 7 3])
+    ,(Desert, [V2 9 2, V2 9 3])]
+
+keepMoving :: [V2 Int]
+keepMoving = [V2 3 1, V2 5 1, V2 7 1, V2 9 1]
+
+legalMoves :: World -> [(V2 Int, V2 Int, Int)]
+legalMoves w =
+    where candidates = Map.filterWithKey (\k v -> isAmphipod v && canMove k) w
+          canMove p = any mapMaybe (w Map.!?) (neighbours p)
 
 solutionA = id
 solutionB = const 0
