@@ -2906,97 +2906,148 @@
 <div class="sourceCode" id="cb171"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day23</span> <span class="kw">where</span></span>
 <span id="cb171-2"><a href="#cb171-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb171-3"><a href="#cb171-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO</span></span>
-<span id="cb171-4"><a href="#cb171-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
-<span id="cb171-5"><a href="#cb171-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
-<span id="cb171-6"><a href="#cb171-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.State</span> (<span class="dt">State</span>(..), evalState, get, modify)</span>
-<span id="cb171-7"><a href="#cb171-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span> (<span class="dt">ParsecT</span>(..), <span class="dt">ParseErrorBundle</span>, errorBundlePretty, runParserT, sepEndBy1)</span>
-<span id="cb171-8"><a href="#cb171-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (char, eol)</span>
-<span id="cb171-9"><a href="#cb171-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-10"><a href="#cb171-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V2</span> (<span class="dt">V2</span>(..))</span>
-<span id="cb171-11"><a href="#cb171-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-12"><a href="#cb171-12" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">AmphipodType</span></span>
-<span id="cb171-13"><a href="#cb171-13" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Amber</span> <span class="op">|</span> <span class="dt">Bronze</span> <span class="op">|</span> <span class="dt">Copper</span> <span class="op">|</span> <span class="dt">Desert</span></span>
-<span id="cb171-14"><a href="#cb171-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
-<span id="cb171-15"><a href="#cb171-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-16"><a href="#cb171-16" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Tile</span></span>
-<span id="cb171-17"><a href="#cb171-17" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Wall</span></span>
-<span id="cb171-18"><a href="#cb171-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Amphipod</span> <span class="dt">AmphipodType</span></span>
-<span id="cb171-19"><a href="#cb171-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Empty</span></span>
-<span id="cb171-20"><a href="#cb171-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
-<span id="cb171-21"><a href="#cb171-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-22"><a href="#cb171-22" aria-hidden="true" tabindex="-1"></a><span class="ot">isEmpty ::</span> <span class="dt">Tile</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb171-23"><a href="#cb171-23" aria-hidden="true" tabindex="-1"></a>isEmpty <span class="dt">Empty</span> <span class="ot">=</span> <span class="dt">True</span></span>
-<span id="cb171-24"><a href="#cb171-24" aria-hidden="true" tabindex="-1"></a>isEmpty _     <span class="ot">=</span> <span class="dt">False</span></span>
-<span id="cb171-25"><a href="#cb171-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-26"><a href="#cb171-26" aria-hidden="true" tabindex="-1"></a><span class="ot">isAmphipod ::</span> <span class="dt">Tile</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb171-27"><a href="#cb171-27" aria-hidden="true" tabindex="-1"></a>isAmphipod (<span class="dt">Amphipod</span> _) <span class="ot">=</span> <span class="dt">True</span></span>
-<span id="cb171-28"><a href="#cb171-28" aria-hidden="true" tabindex="-1"></a>isAmphipod _            <span class="ot">=</span> <span class="dt">False</span></span>
-<span id="cb171-29"><a href="#cb171-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-30"><a href="#cb171-30" aria-hidden="true" tabindex="-1"></a><span class="ot">amphipodType ::</span> <span class="dt">Tile</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">AmphipodType</span></span>
-<span id="cb171-31"><a href="#cb171-31" aria-hidden="true" tabindex="-1"></a>amphipodType (<span class="dt">Amphipod</span> x) <span class="ot">=</span> <span class="dt">Just</span> x</span>
-<span id="cb171-32"><a href="#cb171-32" aria-hidden="true" tabindex="-1"></a>amphipodType _            <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb171-33"><a href="#cb171-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-34"><a href="#cb171-34" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">World</span> <span class="ot">=</span> <span class="dt">Map</span> (<span class="dt">V2</span> <span class="dt">Int</span>) <span class="dt">Tile</span></span>
-<span id="cb171-35"><a href="#cb171-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-36"><a href="#cb171-36" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> a <span class="ot">=</span> <span class="dt">ParsecT</span> <span class="dt">Void</span> <span class="dt">Text</span> (<span class="dt">State</span> (<span class="dt">V2</span> <span class="dt">Int</span>)) a</span>
-<span id="cb171-37"><a href="#cb171-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-38"><a href="#cb171-38" aria-hidden="true" tabindex="-1"></a><span class="ot">tileP ::</span> <span class="dt">Parser</span> <span class="dt">Tile</span></span>
-<span id="cb171-39"><a href="#cb171-39" aria-hidden="true" tabindex="-1"></a>tileP <span class="ot">=</span>  (char <span class="ch">&#39;#&#39;</span> <span class="op">$&gt;</span> <span class="dt">Wall</span>)</span>
-<span id="cb171-40"><a href="#cb171-40" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;A&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Amber</span>)</span>
-<span id="cb171-41"><a href="#cb171-41" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;B&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Bronze</span>)</span>
-<span id="cb171-42"><a href="#cb171-42" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;C&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Copper</span>)</span>
-<span id="cb171-43"><a href="#cb171-43" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;D&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Desert</span>)</span>
-<span id="cb171-44"><a href="#cb171-44" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;.&#39;</span> <span class="op">$&gt;</span> <span class="dt">Empty</span>)</span>
-<span id="cb171-45"><a href="#cb171-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-46"><a href="#cb171-46" aria-hidden="true" tabindex="-1"></a><span class="ot">newlineP ::</span> <span class="dt">Parser</span> ()</span>
-<span id="cb171-47"><a href="#cb171-47" aria-hidden="true" tabindex="-1"></a>newlineP <span class="ot">=</span> eol <span class="op">&gt;&gt;</span> modify (\(<span class="dt">V2</span> x y) <span class="ot">-&gt;</span> <span class="dt">V2</span> <span class="dv">0</span> (y<span class="op">+</span><span class="dv">1</span>))</span>
-<span id="cb171-48"><a href="#cb171-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-49"><a href="#cb171-49" aria-hidden="true" tabindex="-1"></a><span class="ot">cellP ::</span> <span class="dt">Parser</span> (<span class="dt">Maybe</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">Tile</span>))</span>
-<span id="cb171-50"><a href="#cb171-50" aria-hidden="true" tabindex="-1"></a>cellP <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb171-51"><a href="#cb171-51" aria-hidden="true" tabindex="-1"></a>    tile <span class="ot">&lt;-</span> (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span> tileP) <span class="op">&lt;|&gt;</span> (<span class="dt">Nothing</span> <span class="op">&lt;$</span> char <span class="ch">&#39; &#39;</span>)</span>
-<span id="cb171-52"><a href="#cb171-52" aria-hidden="true" tabindex="-1"></a>    loc <span class="ot">&lt;-</span> get</span>
-<span id="cb171-53"><a href="#cb171-53" aria-hidden="true" tabindex="-1"></a>    newlineP <span class="op">&lt;|&gt;</span> modify (<span class="op">+</span> <span class="dt">V2</span> <span class="dv">1</span> <span class="dv">0</span>)</span>
-<span id="cb171-54"><a href="#cb171-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> (loc,) <span class="op">&lt;$&gt;</span> tile</span>
-<span id="cb171-55"><a href="#cb171-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-56"><a href="#cb171-56" aria-hidden="true" tabindex="-1"></a><span class="ot">inputP ::</span> <span class="dt">Parser</span> <span class="dt">World</span></span>
-<span id="cb171-57"><a href="#cb171-57" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> Map.fromList <span class="op">.</span> catMaybes <span class="op">&lt;$&gt;</span> some cellP</span>
-<span id="cb171-58"><a href="#cb171-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-59"><a href="#cb171-59" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
-<span id="cb171-60"><a href="#cb171-60" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
-<span id="cb171-61"><a href="#cb171-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-62"><a href="#cb171-62" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">Input</span></span>
-<span id="cb171-63"><a href="#cb171-63" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb171-64"><a href="#cb171-64" aria-hidden="true" tabindex="-1"></a>    txt <span class="ot">&lt;-</span> readFileUtf8 <span class="st">&quot;data/day23.txt&quot;</span></span>
-<span id="cb171-65"><a href="#cb171-65" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
-<span id="cb171-66"><a href="#cb171-66" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> <span class="op">$</span> evalState (runParserT inputP <span class="st">&quot;data/day23.txt&quot;</span> txt)</span>
-<span id="cb171-67"><a href="#cb171-67" aria-hidden="true" tabindex="-1"></a>                              (<span class="dt">V2</span> <span class="dv">0</span> <span class="dv">0</span>)</span>
-<span id="cb171-68"><a href="#cb171-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-69"><a href="#cb171-69" aria-hidden="true" tabindex="-1"></a><span class="ot">energyPerMove ::</span> <span class="dt">Map</span> <span class="dt">AmphipodType</span> <span class="dt">Int</span></span>
-<span id="cb171-70"><a href="#cb171-70" aria-hidden="true" tabindex="-1"></a>energyPerMove <span class="ot">=</span> Map.fromList</span>
-<span id="cb171-71"><a href="#cb171-71" aria-hidden="true" tabindex="-1"></a>    [(<span class="dt">Amber</span>, <span class="dv">1</span>), (<span class="dt">Bronze</span>, <span class="dv">10</span>), (<span class="dt">Copper</span>, <span class="dv">100</span>), (<span class="dt">Desert</span>, <span class="dv">1000</span>)]</span>
-<span id="cb171-72"><a href="#cb171-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-73"><a href="#cb171-73" aria-hidden="true" tabindex="-1"></a><span class="ot">neighbours ::</span> <span class="dt">V2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
-<span id="cb171-74"><a href="#cb171-74" aria-hidden="true" tabindex="-1"></a>neighbours p <span class="ot">=</span> (p <span class="op">+</span>) <span class="op">&lt;$&gt;</span> [<span class="dt">V2</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">0</span>, <span class="dt">V2</span> <span class="dv">1</span> <span class="dv">0</span>, <span class="dt">V2</span> <span class="dv">0</span> (<span class="op">-</span><span class="dv">1</span>), <span class="dt">V2</span> <span class="dv">0</span> <span class="dv">1</span>]</span>
-<span id="cb171-75"><a href="#cb171-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-76"><a href="#cb171-76" aria-hidden="true" tabindex="-1"></a><span class="ot">destinations ::</span> <span class="dt">Map</span> <span class="dt">AmphipodType</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
-<span id="cb171-77"><a href="#cb171-77" aria-hidden="true" tabindex="-1"></a>destinations <span class="ot">=</span> Map.fromList</span>
-<span id="cb171-78"><a href="#cb171-78" aria-hidden="true" tabindex="-1"></a>    [(<span class="dt">Amber</span>,  [<span class="dt">V2</span> <span class="dv">3</span> <span class="dv">2</span>, <span class="dt">V2</span> <span class="dv">3</span> <span class="dv">3</span>])</span>
-<span id="cb171-79"><a href="#cb171-79" aria-hidden="true" tabindex="-1"></a>    ,(<span class="dt">Bronze</span>, [<span class="dt">V2</span> <span class="dv">5</span> <span class="dv">2</span>, <span class="dt">V2</span> <span class="dv">5</span> <span class="dv">3</span>])</span>
-<span id="cb171-80"><a href="#cb171-80" aria-hidden="true" tabindex="-1"></a>    ,(<span class="dt">Copper</span>, [<span class="dt">V2</span> <span class="dv">7</span> <span class="dv">2</span>, <span class="dt">V2</span> <span class="dv">7</span> <span class="dv">3</span>])</span>
-<span id="cb171-81"><a href="#cb171-81" aria-hidden="true" tabindex="-1"></a>    ,(<span class="dt">Desert</span>, [<span class="dt">V2</span> <span class="dv">9</span> <span class="dv">2</span>, <span class="dt">V2</span> <span class="dv">9</span> <span class="dv">3</span>])]</span>
-<span id="cb171-82"><a href="#cb171-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-83"><a href="#cb171-83" aria-hidden="true" tabindex="-1"></a><span class="ot">keepMoving ::</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
-<span id="cb171-84"><a href="#cb171-84" aria-hidden="true" tabindex="-1"></a>keepMoving <span class="ot">=</span> [<span class="dt">V2</span> <span class="dv">3</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">5</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">7</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">9</span> <span class="dv">1</span>]</span>
-<span id="cb171-85"><a href="#cb171-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-86"><a href="#cb171-86" aria-hidden="true" tabindex="-1"></a><span class="ot">legalMoves ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> [(<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">Int</span>)]</span>
-<span id="cb171-87"><a href="#cb171-87" aria-hidden="true" tabindex="-1"></a>legalMoves w <span class="ot">=</span></span>
-<span id="cb171-88"><a href="#cb171-88" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> candidates <span class="ot">=</span> Map.filterWithKey (\k v <span class="ot">-&gt;</span> isAmphipod v <span class="op">&amp;&amp;</span> canMove k) w</span>
-<span id="cb171-89"><a href="#cb171-89" aria-hidden="true" tabindex="-1"></a>          canMove p <span class="ot">=</span> <span class="fu">any</span> mapMaybe (w <span class="op">Map.!?</span>) (neighbours p)</span>
-<span id="cb171-90"><a href="#cb171-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-91"><a href="#cb171-91" aria-hidden="true" tabindex="-1"></a>solutionA <span class="ot">=</span> <span class="fu">id</span></span>
-<span id="cb171-92"><a href="#cb171-92" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">const</span> <span class="dv">0</span></span>
-<span id="cb171-93"><a href="#cb171-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-94"><a href="#cb171-94" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb171-4"><a href="#cb171-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List</span> (find)</span>
+<span id="cb171-5"><a href="#cb171-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.List.Partial</span> (tail)</span>
+<span id="cb171-6"><a href="#cb171-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Map</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb171-7"><a href="#cb171-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">RIO.Text</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb171-8"><a href="#cb171-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">RIO.State</span> (<span class="dt">State</span>(..), evalState, get, modify)</span>
+<span id="cb171-9"><a href="#cb171-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Tuple</span> (swap)</span>
+<span id="cb171-10"><a href="#cb171-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-11"><a href="#cb171-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span> (<span class="dt">ParsecT</span>(..), <span class="dt">ParseErrorBundle</span>, errorBundlePretty, runParserT, sepEndBy1)</span>
+<span id="cb171-12"><a href="#cb171-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span> (char, eol)</span>
+<span id="cb171-13"><a href="#cb171-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-14"><a href="#cb171-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V2</span> (<span class="dt">V2</span>(..))</span>
+<span id="cb171-15"><a href="#cb171-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Dijkstra</span> (minDist)</span>
+<span id="cb171-16"><a href="#cb171-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-17"><a href="#cb171-17" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">AmphipodType</span></span>
+<span id="cb171-18"><a href="#cb171-18" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Amber</span> <span class="op">|</span> <span class="dt">Bronze</span> <span class="op">|</span> <span class="dt">Copper</span> <span class="op">|</span> <span class="dt">Desert</span></span>
+<span id="cb171-19"><a href="#cb171-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
+<span id="cb171-20"><a href="#cb171-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-21"><a href="#cb171-21" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Tile</span></span>
+<span id="cb171-22"><a href="#cb171-22" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Wall</span></span>
+<span id="cb171-23"><a href="#cb171-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Amphipod</span> <span class="dt">AmphipodType</span></span>
+<span id="cb171-24"><a href="#cb171-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Empty</span></span>
+<span id="cb171-25"><a href="#cb171-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
+<span id="cb171-26"><a href="#cb171-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-27"><a href="#cb171-27" aria-hidden="true" tabindex="-1"></a><span class="ot">isAmphipod ::</span> <span class="dt">Tile</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb171-28"><a href="#cb171-28" aria-hidden="true" tabindex="-1"></a>isAmphipod (<span class="dt">Amphipod</span> _) <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb171-29"><a href="#cb171-29" aria-hidden="true" tabindex="-1"></a>isAmphipod _            <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb171-30"><a href="#cb171-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-31"><a href="#cb171-31" aria-hidden="true" tabindex="-1"></a><span class="ot">amphipodType ::</span> <span class="dt">Tile</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">AmphipodType</span></span>
+<span id="cb171-32"><a href="#cb171-32" aria-hidden="true" tabindex="-1"></a>amphipodType (<span class="dt">Amphipod</span> x) <span class="ot">=</span> <span class="dt">Just</span> x</span>
+<span id="cb171-33"><a href="#cb171-33" aria-hidden="true" tabindex="-1"></a>amphipodType _            <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb171-34"><a href="#cb171-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-35"><a href="#cb171-35" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">World</span> <span class="ot">=</span> <span class="dt">Map</span> (<span class="dt">V2</span> <span class="dt">Int</span>) <span class="dt">Tile</span></span>
+<span id="cb171-36"><a href="#cb171-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-37"><a href="#cb171-37" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> a <span class="ot">=</span> <span class="dt">ParsecT</span> <span class="dt">Void</span> <span class="dt">Text</span> (<span class="dt">State</span> (<span class="dt">V2</span> <span class="dt">Int</span>)) a</span>
+<span id="cb171-38"><a href="#cb171-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-39"><a href="#cb171-39" aria-hidden="true" tabindex="-1"></a><span class="ot">tileP ::</span> <span class="dt">Parser</span> <span class="dt">Tile</span></span>
+<span id="cb171-40"><a href="#cb171-40" aria-hidden="true" tabindex="-1"></a>tileP <span class="ot">=</span>  (char <span class="ch">&#39;#&#39;</span> <span class="op">$&gt;</span> <span class="dt">Wall</span>)</span>
+<span id="cb171-41"><a href="#cb171-41" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;A&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Amber</span>)</span>
+<span id="cb171-42"><a href="#cb171-42" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;B&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Bronze</span>)</span>
+<span id="cb171-43"><a href="#cb171-43" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;C&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Copper</span>)</span>
+<span id="cb171-44"><a href="#cb171-44" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;D&#39;</span> <span class="op">$&gt;</span> <span class="dt">Amphipod</span> <span class="dt">Desert</span>)</span>
+<span id="cb171-45"><a href="#cb171-45" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;|&gt;</span> (char <span class="ch">&#39;.&#39;</span> <span class="op">$&gt;</span> <span class="dt">Empty</span>)</span>
+<span id="cb171-46"><a href="#cb171-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-47"><a href="#cb171-47" aria-hidden="true" tabindex="-1"></a><span class="ot">newlineP ::</span> <span class="dt">Parser</span> ()</span>
+<span id="cb171-48"><a href="#cb171-48" aria-hidden="true" tabindex="-1"></a>newlineP <span class="ot">=</span> eol <span class="op">&gt;&gt;</span> modify (\(<span class="dt">V2</span> x y) <span class="ot">-&gt;</span> <span class="dt">V2</span> <span class="dv">0</span> (y<span class="op">+</span><span class="dv">1</span>))</span>
+<span id="cb171-49"><a href="#cb171-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-50"><a href="#cb171-50" aria-hidden="true" tabindex="-1"></a><span class="ot">cellP ::</span> <span class="dt">Parser</span> (<span class="dt">Maybe</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">Tile</span>))</span>
+<span id="cb171-51"><a href="#cb171-51" aria-hidden="true" tabindex="-1"></a>cellP <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb171-52"><a href="#cb171-52" aria-hidden="true" tabindex="-1"></a>    tile <span class="ot">&lt;-</span> (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span> tileP) <span class="op">&lt;|&gt;</span> (<span class="dt">Nothing</span> <span class="op">&lt;$</span> char <span class="ch">&#39; &#39;</span>)</span>
+<span id="cb171-53"><a href="#cb171-53" aria-hidden="true" tabindex="-1"></a>    loc <span class="ot">&lt;-</span> get</span>
+<span id="cb171-54"><a href="#cb171-54" aria-hidden="true" tabindex="-1"></a>    newlineP <span class="op">&lt;|&gt;</span> modify (<span class="op">+</span> <span class="dt">V2</span> <span class="dv">1</span> <span class="dv">0</span>)</span>
+<span id="cb171-55"><a href="#cb171-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> (loc,) <span class="op">&lt;$&gt;</span> tile</span>
+<span id="cb171-56"><a href="#cb171-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-57"><a href="#cb171-57" aria-hidden="true" tabindex="-1"></a><span class="ot">inputP ::</span> <span class="dt">Parser</span> <span class="dt">World</span></span>
+<span id="cb171-58"><a href="#cb171-58" aria-hidden="true" tabindex="-1"></a>inputP <span class="ot">=</span> Map.fromList <span class="op">.</span> catMaybes <span class="op">&lt;$&gt;</span> some cellP</span>
+<span id="cb171-59"><a href="#cb171-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-60"><a href="#cb171-60" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Display</span> (<span class="dt">ParseErrorBundle</span> <span class="dt">Text</span> <span class="dt">Void</span>) <span class="kw">where</span></span>
+<span id="cb171-61"><a href="#cb171-61" aria-hidden="true" tabindex="-1"></a>    textDisplay <span class="ot">=</span> Text.pack <span class="op">.</span> errorBundlePretty</span>
+<span id="cb171-62"><a href="#cb171-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-63"><a href="#cb171-63" aria-hidden="true" tabindex="-1"></a><span class="ot">readInput ::</span> (<span class="dt">HasLogFunc</span> env) <span class="ot">=&gt;</span> <span class="dt">RIO</span> env <span class="dt">World</span></span>
+<span id="cb171-64"><a href="#cb171-64" aria-hidden="true" tabindex="-1"></a>readInput <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb171-65"><a href="#cb171-65" aria-hidden="true" tabindex="-1"></a>    txt <span class="ot">&lt;-</span> readFileUtf8 <span class="st">&quot;data/day23.txt&quot;</span></span>
+<span id="cb171-66"><a href="#cb171-66" aria-hidden="true" tabindex="-1"></a>    <span class="fu">either</span> (\e <span class="ot">-&gt;</span> <span class="kw">do</span> { logError <span class="op">$</span> display e; exitFailure })</span>
+<span id="cb171-67"><a href="#cb171-67" aria-hidden="true" tabindex="-1"></a>           <span class="fu">return</span> <span class="op">$</span> evalState (runParserT inputP <span class="st">&quot;data/day23.txt&quot;</span> txt)</span>
+<span id="cb171-68"><a href="#cb171-68" aria-hidden="true" tabindex="-1"></a>                              (<span class="dt">V2</span> <span class="dv">0</span> <span class="dv">0</span>)</span>
+<span id="cb171-69"><a href="#cb171-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-70"><a href="#cb171-70" aria-hidden="true" tabindex="-1"></a><span class="ot">energyPerMove ::</span> <span class="dt">Map</span> <span class="dt">AmphipodType</span> <span class="dt">Int</span></span>
+<span id="cb171-71"><a href="#cb171-71" aria-hidden="true" tabindex="-1"></a>energyPerMove <span class="ot">=</span> Map.fromList</span>
+<span id="cb171-72"><a href="#cb171-72" aria-hidden="true" tabindex="-1"></a>    [(<span class="dt">Amber</span>, <span class="dv">1</span>), (<span class="dt">Bronze</span>, <span class="dv">10</span>), (<span class="dt">Copper</span>, <span class="dv">100</span>), (<span class="dt">Desert</span>, <span class="dv">1000</span>)]</span>
+<span id="cb171-73"><a href="#cb171-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-74"><a href="#cb171-74" aria-hidden="true" tabindex="-1"></a><span class="ot">neighbours ::</span> <span class="dt">V2</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
+<span id="cb171-75"><a href="#cb171-75" aria-hidden="true" tabindex="-1"></a>neighbours p <span class="ot">=</span> (p <span class="op">+</span>) <span class="op">&lt;$&gt;</span> [<span class="dt">V2</span> (<span class="op">-</span><span class="dv">1</span>) <span class="dv">0</span>, <span class="dt">V2</span> <span class="dv">1</span> <span class="dv">0</span>, <span class="dt">V2</span> <span class="dv">0</span> (<span class="op">-</span><span class="dv">1</span>), <span class="dt">V2</span> <span class="dv">0</span> <span class="dv">1</span>]</span>
+<span id="cb171-76"><a href="#cb171-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-77"><a href="#cb171-77" aria-hidden="true" tabindex="-1"></a><span class="ot">destination ::</span> <span class="dt">Map</span> <span class="dt">AmphipodType</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
+<span id="cb171-78"><a href="#cb171-78" aria-hidden="true" tabindex="-1"></a>destination <span class="ot">=</span> Map.fromList</span>
+<span id="cb171-79"><a href="#cb171-79" aria-hidden="true" tabindex="-1"></a>    [(<span class="dt">Amber</span>,  [<span class="dt">V2</span> <span class="dv">3</span> <span class="dv">5</span>, <span class="dt">V2</span> <span class="dv">3</span> <span class="dv">4</span>, <span class="dt">V2</span> <span class="dv">3</span> <span class="dv">3</span>, <span class="dt">V2</span> <span class="dv">3</span> <span class="dv">2</span>])</span>
+<span id="cb171-80"><a href="#cb171-80" aria-hidden="true" tabindex="-1"></a>    ,(<span class="dt">Bronze</span>, [<span class="dt">V2</span> <span class="dv">5</span> <span class="dv">5</span>, <span class="dt">V2</span> <span class="dv">5</span> <span class="dv">4</span>, <span class="dt">V2</span> <span class="dv">5</span> <span class="dv">3</span>, <span class="dt">V2</span> <span class="dv">5</span> <span class="dv">2</span>])</span>
+<span id="cb171-81"><a href="#cb171-81" aria-hidden="true" tabindex="-1"></a>    ,(<span class="dt">Copper</span>, [<span class="dt">V2</span> <span class="dv">7</span> <span class="dv">5</span>, <span class="dt">V2</span> <span class="dv">7</span> <span class="dv">4</span>, <span class="dt">V2</span> <span class="dv">7</span> <span class="dv">3</span>, <span class="dt">V2</span> <span class="dv">7</span> <span class="dv">2</span>])</span>
+<span id="cb171-82"><a href="#cb171-82" aria-hidden="true" tabindex="-1"></a>    ,(<span class="dt">Desert</span>, [<span class="dt">V2</span> <span class="dv">9</span> <span class="dv">5</span>, <span class="dt">V2</span> <span class="dv">9</span> <span class="dv">4</span>, <span class="dt">V2</span> <span class="dv">9</span> <span class="dv">3</span>, <span class="dt">V2</span> <span class="dv">9</span> <span class="dv">2</span>])]</span>
+<span id="cb171-83"><a href="#cb171-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-84"><a href="#cb171-84" aria-hidden="true" tabindex="-1"></a><span class="ot">inside ::</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
+<span id="cb171-85"><a href="#cb171-85" aria-hidden="true" tabindex="-1"></a>inside <span class="ot">=</span> join <span class="op">$</span> Map.elems destination</span>
+<span id="cb171-86"><a href="#cb171-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-87"><a href="#cb171-87" aria-hidden="true" tabindex="-1"></a><span class="ot">outside ::</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
+<span id="cb171-88"><a href="#cb171-88" aria-hidden="true" tabindex="-1"></a>outside <span class="ot">=</span> [<span class="dt">V2</span> <span class="dv">1</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">2</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">4</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">6</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">8</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">10</span> <span class="dv">1</span>, <span class="dt">V2</span> <span class="dv">11</span> <span class="dv">1</span>]</span>
+<span id="cb171-89"><a href="#cb171-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-90"><a href="#cb171-90" aria-hidden="true" tabindex="-1"></a><span class="ot">pathOut ::</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
+<span id="cb171-91"><a href="#cb171-91" aria-hidden="true" tabindex="-1"></a>pathOut (<span class="dt">V2</span> x y, <span class="dt">V2</span> u v) <span class="ot">=</span> up <span class="op">&lt;&gt;</span> side</span>
+<span id="cb171-92"><a href="#cb171-92" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> up   <span class="ot">=</span> [<span class="dt">V2</span> x y&#39; <span class="op">|</span> y&#39; <span class="ot">&lt;-</span> [y, y<span class="op">-</span><span class="dv">1</span> <span class="op">..</span> v<span class="op">+</span><span class="dv">1</span>]]</span>
+<span id="cb171-93"><a href="#cb171-93" aria-hidden="true" tabindex="-1"></a>          side <span class="ot">=</span> [<span class="dt">V2</span> x&#39; v <span class="op">|</span> x&#39; <span class="ot">&lt;-</span> [x, x <span class="op">+</span> <span class="fu">signum</span> (u <span class="op">-</span> x) <span class="op">..</span> u]]</span>
+<span id="cb171-94"><a href="#cb171-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-95"><a href="#cb171-95" aria-hidden="true" tabindex="-1"></a><span class="ot">pathIn ::</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> [<span class="dt">V2</span> <span class="dt">Int</span>]</span>
+<span id="cb171-96"><a href="#cb171-96" aria-hidden="true" tabindex="-1"></a>pathIn <span class="ot">=</span> <span class="fu">reverse</span> <span class="op">.</span> pathOut <span class="op">.</span> swap</span>
+<span id="cb171-97"><a href="#cb171-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-98"><a href="#cb171-98" aria-hidden="true" tabindex="-1"></a><span class="ot">pathFree ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> [<span class="dt">V2</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb171-99"><a href="#cb171-99" aria-hidden="true" tabindex="-1"></a>pathFree world <span class="ot">=</span> <span class="fu">all</span> ((<span class="op">==</span> <span class="dt">Just</span> <span class="dt">Empty</span>) <span class="op">.</span> (world <span class="op">Map.!?</span>)) <span class="op">.</span> <span class="fu">tail</span></span>
+<span id="cb171-100"><a href="#cb171-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-101"><a href="#cb171-101" aria-hidden="true" tabindex="-1"></a><span class="ot">roomAvailable ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> <span class="dt">AmphipodType</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">V2</span> <span class="dt">Int</span>)</span>
+<span id="cb171-102"><a href="#cb171-102" aria-hidden="true" tabindex="-1"></a>roomAvailable world amph <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb171-103"><a href="#cb171-103" aria-hidden="true" tabindex="-1"></a>    cells <span class="ot">&lt;-</span> destination <span class="op">Map.!?</span> amph</span>
+<span id="cb171-104"><a href="#cb171-104" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> occupants <span class="ot">=</span> <span class="fu">filter</span> isAmphipod <span class="op">$</span> mapMaybe (world <span class="op">Map.!?</span>) cells</span>
+<span id="cb171-105"><a href="#cb171-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> <span class="fu">all</span> (<span class="op">==</span> <span class="dt">Amphipod</span> amph) occupants</span>
+<span id="cb171-106"><a href="#cb171-106" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> find ((<span class="op">==</span> <span class="dt">Just</span> <span class="dt">Empty</span>) <span class="op">.</span> (world <span class="op">Map.!?</span>)) cells</span>
+<span id="cb171-107"><a href="#cb171-107" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> <span class="dt">Nothing</span></span>
+<span id="cb171-108"><a href="#cb171-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-109"><a href="#cb171-109" aria-hidden="true" tabindex="-1"></a><span class="ot">legalMoveIn ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> [(<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>)]</span>
+<span id="cb171-110"><a href="#cb171-110" aria-hidden="true" tabindex="-1"></a>legalMoveIn world <span class="ot">=</span> <span class="fu">filter</span> (pathFree world <span class="op">.</span> pathIn)  candidates</span>
+<span id="cb171-111"><a href="#cb171-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> candidates <span class="ot">=</span> [(src, tgt) <span class="op">|</span> src <span class="ot">&lt;-</span> outside</span>
+<span id="cb171-112"><a href="#cb171-112" aria-hidden="true" tabindex="-1"></a>                                   , <span class="fu">maybe</span> <span class="dt">False</span> isAmphipod (world <span class="op">Map.!?</span> src)</span>
+<span id="cb171-113"><a href="#cb171-113" aria-hidden="true" tabindex="-1"></a>                                   , tgt <span class="ot">&lt;-</span> maybeToList (roomAvailable world </span>
+<span id="cb171-114"><a href="#cb171-114" aria-hidden="true" tabindex="-1"></a>                                        <span class="op">=&lt;&lt;</span> amphipodType <span class="op">=&lt;&lt;</span> world <span class="op">Map.!?</span> src)]</span>
+<span id="cb171-115"><a href="#cb171-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-116"><a href="#cb171-116" aria-hidden="true" tabindex="-1"></a><span class="ot">legalMoveOut ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> [(<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>)]</span>
+<span id="cb171-117"><a href="#cb171-117" aria-hidden="true" tabindex="-1"></a>legalMoveOut world <span class="ot">=</span> <span class="fu">filter</span> (pathFree world <span class="op">.</span> pathOut) candidates</span>
+<span id="cb171-118"><a href="#cb171-118" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> candidates <span class="ot">=</span> [(src, tgt) <span class="op">|</span> src <span class="ot">&lt;-</span> inside</span>
+<span id="cb171-119"><a href="#cb171-119" aria-hidden="true" tabindex="-1"></a>                                   , <span class="fu">maybe</span> <span class="dt">False</span> isAmphipod (world <span class="op">Map.!?</span> src)</span>
+<span id="cb171-120"><a href="#cb171-120" aria-hidden="true" tabindex="-1"></a>                                   , tgt <span class="ot">&lt;-</span> outside</span>
+<span id="cb171-121"><a href="#cb171-121" aria-hidden="true" tabindex="-1"></a>                                   , world <span class="op">Map.!?</span> tgt <span class="op">==</span> <span class="dt">Just</span> <span class="dt">Empty</span>]</span>
+<span id="cb171-122"><a href="#cb171-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-123"><a href="#cb171-123" aria-hidden="true" tabindex="-1"></a><span class="ot">cost ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb171-124"><a href="#cb171-124" aria-hidden="true" tabindex="-1"></a>cost world (src, tgt) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb171-125"><a href="#cb171-125" aria-hidden="true" tabindex="-1"></a>    amph <span class="ot">&lt;-</span> amphipodType <span class="op">=&lt;&lt;</span> world <span class="op">Map.!?</span> src</span>
+<span id="cb171-126"><a href="#cb171-126" aria-hidden="true" tabindex="-1"></a>    gpm <span class="ot">&lt;-</span> energyPerMove <span class="op">Map.!?</span> amph</span>
+<span id="cb171-127"><a href="#cb171-127" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dist <span class="ot">=</span> <span class="fu">sum</span> (<span class="fu">abs</span> (tgt <span class="op">-</span> src))</span>
+<span id="cb171-128"><a href="#cb171-128" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> dist <span class="op">*</span> gpm</span>
+<span id="cb171-129"><a href="#cb171-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-130"><a href="#cb171-130" aria-hidden="true" tabindex="-1"></a><span class="ot">legalMoves ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> [((<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>), <span class="dt">Int</span>)]</span>
+<span id="cb171-131"><a href="#cb171-131" aria-hidden="true" tabindex="-1"></a>legalMoves w <span class="ot">=</span> mapMaybe addCost <span class="op">$</span> legalMoveIn w <span class="op">&lt;&gt;</span> legalMoveOut w</span>
+<span id="cb171-132"><a href="#cb171-132" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> addCost m <span class="ot">=</span> (m,) <span class="op">&lt;$&gt;</span> cost w m</span>
+<span id="cb171-133"><a href="#cb171-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-134"><a href="#cb171-134" aria-hidden="true" tabindex="-1"></a><span class="ot">applyMove ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> (<span class="dt">V2</span> <span class="dt">Int</span>, <span class="dt">V2</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">World</span></span>
+<span id="cb171-135"><a href="#cb171-135" aria-hidden="true" tabindex="-1"></a>applyMove world (src, tgt) <span class="ot">=</span> Map.update (\_ <span class="ot">-&gt;</span> world <span class="op">Map.!?</span> src) tgt</span>
+<span id="cb171-136"><a href="#cb171-136" aria-hidden="true" tabindex="-1"></a>                           <span class="op">$</span> Map.insert src <span class="dt">Empty</span> world</span>
+<span id="cb171-137"><a href="#cb171-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-138"><a href="#cb171-138" aria-hidden="true" tabindex="-1"></a><span class="ot">solutionA ::</span> <span class="dt">World</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb171-139"><a href="#cb171-139" aria-hidden="true" tabindex="-1"></a>solutionA world <span class="ot">=</span> minDist legalMoves applyMove world goal</span>
+<span id="cb171-140"><a href="#cb171-140" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> goal <span class="ot">=</span> Map.fromList (<span class="fu">foldMap</span> (\(a, cs) <span class="ot">-&gt;</span> (,<span class="dt">Amphipod</span> a) <span class="op">&lt;$&gt;</span> cs)</span>
+<span id="cb171-141"><a href="#cb171-141" aria-hidden="true" tabindex="-1"></a>                                       (Map.toList destination)) <span class="op">&lt;&gt;</span> world</span>
+<span id="cb171-142"><a href="#cb171-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-143"><a href="#cb171-143" aria-hidden="true" tabindex="-1"></a>solutionB <span class="ot">=</span> <span class="fu">const</span> <span class="dv">0</span></span>
+<span id="cb171-144"><a href="#cb171-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-145"><a href="#cb171-145" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>run<span class="op">-</span>solutions<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 </section>
 <section id="appendix-boiler-plate" class="level1">

@@ -26,30 +26,30 @@ toLoc :: DistLoc i a -> i
 toLoc (DistLoc (l, _)) = l
 -- ~\~ end
 -- ~\~ begin <<lit/day15.md|dijkstra-generic>>[1]
-minDist :: forall n a. (Ord n, Ord a, Num a, Bounded a)
-        => (n -> [n]) -> (n -> n -> Maybe a) -> n -> n -> a
-minDist neighbours distance start end
+minDist :: forall n m a. (Ord n, Ord a, Num a, Bounded a)
+        => (n -> [(m, a)]) -> (n -> m -> n) -> n -> n -> Maybe a
+minDist neighbours move start end
   = go Set.empty (Q.singleton $ DistLoc (start, 0)) (Map.singleton start 0) start
-  where go :: Set n -> Q.MinQueue (DistLoc n a) -> Map n a -> n -> a
+  where go :: Set n -> Q.MinQueue (DistLoc n a) -> Map n a -> n -> Maybe a
         go visited marked dists pos
-          | pos == end         = currentDist pos
-          | pos `Set.member` visited = go visited marked'' dists (toLoc $ Q.findMin marked'')
-          | otherwise          = go (pos `Set.insert` visited) marked' dists' (toLoc $ Q.findMin marked')
-          where unvisitedNeighbours = filter (`Set.notMember` visited) (neighbours pos)
+          | pos == end         = Just $ currentDist pos
+          | pos `Set.member` visited = go visited marked'' dists . toLoc =<< Q.getMin marked''
+          | otherwise          = go (pos `Set.insert` visited) marked' dists' . toLoc =<< Q.getMin marked'
+          where unvisitedEdges = filter ( (`Set.notMember` visited) 
+                                        . move pos . fst ) (neighbours pos)
                 currentDist node = fromMaybe maxBound (dists !? node)
 
-                distLoc :: n -> Maybe (DistLoc n a)
-                distLoc node = do
-                    let v = currentDist node
-                    x <- dists !? pos
-                    dx <- distance pos node
-                    return $ DistLoc (node, min v (x + dx))
+                distLoc :: (m, a) -> DistLoc n a
+                distLoc (edge, cost) = DistLoc (node, min v (w + cost))
+                    where node = move pos edge
+                          v = currentDist node
+                          w = currentDist pos
 
-                newDists = mapMaybe distLoc unvisitedNeighbours
+                newDists = map distLoc unvisitedEdges
                 dists' = foldl' (\m (DistLoc (i, x)) -> Map.insert i x m) dists newDists
 
                 marked' :: Q.MinQueue (DistLoc n a)
-                marked' = Q.deleteMin marked <> Q.fromList (mapMaybe distLoc unvisitedNeighbours)
+                marked' = Q.deleteMin marked <> Q.fromList newDists
                 marked'' = Q.deleteMin marked
 -- ~\~ end
 -- ~\~ begin <<lit/day15.md|dijkstra-array>>[0]
