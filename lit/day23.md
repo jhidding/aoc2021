@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day23.hs
--- ~\~ begin <<lit/day23.md|app/Day23.hs>>[0]
+# Day 23: Amphipod
+
+``` {.haskell file=app/Day23.hs}
 module Day23 where
 
 import RIO
@@ -60,11 +61,5 @@ readInput = do
 solutionA = id
 solutionB = const 0
 
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+<<run-solutions>>
+```
