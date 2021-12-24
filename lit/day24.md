@@ -1,5 +1,6 @@
--- ~\~ language=Haskell filename=app/Day24.hs
--- ~\~ begin <<lit/day24.md|app/Day24.hs>>[0]
+# Day 24: Arithmetic Logic Unit
+
+``` {.haskell file=app/Day24.hs}
 module Day24 where
 
 import RIO
@@ -67,11 +68,5 @@ eval (Add a b) = resolve b  modify a
 solutionA = id
 solutionB = const 0
 
--- ~\~ begin <<lit/boilerplate.md|run-solutions>>[0]
-runA :: (HasLogFunc env) => RIO env ()
-runA = readInput >>= logInfo . display . tshow . solutionA
-
-runB :: (HasLogFunc env) => RIO env ()
-runB = readInput >>= logInfo . display . tshow . solutionB
--- ~\~ end
--- ~\~ end
+<<run-solutions>>
+```

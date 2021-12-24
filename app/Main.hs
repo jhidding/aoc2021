@@ -56,7 +56,7 @@ solutions = Map.fromList
     , ("21", (Day21.runA, Day21.runB))
     , ("22", (Day22.runA, Day22.runB))
     , ("23", (Day23.runA, Day23.runB))
---    , ("24", (Day24.runA, Day24.runB))
+    , ("24", (Day24.runA, Day24.runB))
     ]
 
 data CommandArgs = CommandArgs
